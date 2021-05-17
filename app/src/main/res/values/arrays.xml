@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- put the name of your feature here -->
+    <string-array name="features">
+        <item>RMS</item>
+        <item>ZCR</item>
+        <item>PSD</item>
+    </string-array>
+
+    <string-array name="samplingrateEntries">
+        <item>48000 Hz</item>
+        <item>44100 Hz</item>
+        <item>16000 Hz</item>
+    </string-array>
+
+    <string-array name="samplingrateValues">
+        <item>48000</item>
+        <item>44100</item>
+        <item>16000</item>
+    </string-array>
+
+    <string-array name="inputProfileWithA2DP">
+        <item>A2DP</item>
+        <item>RFCOMM</item>
+        <item>PHANTOM</item>
+        <item>USB</item>
+        <item>INTERNAL_MIC</item>
+        <item>STANDALONE</item>
+    </string-array>
+
+    <string-array name="inputProfile">
+        <item>STANDALONE</item>
+        <item>RFCOMM</item>
+    </string-array>
+
+    <integer-array name="batteryStates">
+        <item>10</item>
+        <item>5</item>
+    </integer-array>
+
+    <string-array name="devices"></string-array>
+
+    <string-array name="permissionMessages">
+        <item>Please grant permission to read/write storage</item>
+        <item>Please grant permission to read/write storage</item>
+        <item>Please grant permission to read/write storage</item>
+        <item>Come on.</item>
+        <item>Really? This is how you want to play?</item>
+        <item>Dont be like that!</item>
+        <item>You are being ridiculous</item>
+        <item>Goddamn it, give me permission!</item>
+        <item>GIVE ME PERMISSION!!!</item>
+        <item>SCREW YOU!</item>
+    </string-array>
+
+    <integer-array name="battery_placeholder_weight">
+        <item name="battery_placeholder_weight">3</item>
+    </integer-array>
+</resources>

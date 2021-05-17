@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolBarHeightWithPadding"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/lighterGray"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="@dimen/toolBarPadding">
+
+        <View
+            android:id="@+id/Action_Back"
+            android:layout_width="32dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_weight="0"
+            android:background="@drawable/ic_arrow_back_black_24dp">
+
+        </View>
+
+        <View
+            android:id="@+id/Action_Forward"
+            android:layout_width="32dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_weight="0"
+            android:background="@drawable/ic_arrow_forward_black_24dp"></View>
+
+        <View
+            android:id="@+id/Action_Revert"
+            android:layout_width="32dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_weight="0"
+            android:background="@drawable/ic_refresh_black_24dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/progressBarHeight"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/progress"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/progressBarHeight"
+            android:layout_weight="0"
+            android:background="@color/JadeRed">
+        </View>
+
+        <View
+            android:id="@+id/regress"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/progressBarHeight"
+            android:layout_weight="0"
+            android:background="@color/JadeGray">
+        </View>
+
+    </LinearLayout>
+
+    <!-- "Progress Bar" -->
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:layout_weight="1">
+    </androidx.viewpager.widget.ViewPager>
+</LinearLayout>

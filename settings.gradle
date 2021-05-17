@@ -1,0 +1,3 @@
+include ':app'
+rootProject.name = "olMEGA_MobileSoftware_V2"
+

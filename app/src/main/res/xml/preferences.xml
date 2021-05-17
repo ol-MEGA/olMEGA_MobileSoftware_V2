@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" >
+
+    <PreferenceCategory android:title="@string/pref_head_Questionnaire">
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="selectedQuest"
+            android:title="@string/pref_whichQuest_title"
+            android:dialogTitle="@string/pref_whichQuest_dialogTitle"
+            android:summary="%s"/>
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:checked="true"
+            android:key="useQuestionnaireTimer"
+            android:title="@string/pref_activateTimer_title"
+            android:summary="@string/pref_activateTimer_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_head_General">
+        <EditTextPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="clientID"
+            android:title="@string/pref_clientID"
+            />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="autoStartActivity"
+            android:title="@string/pref_autostart_title"
+            android:summary="@string/pref_autostart_summary" />
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="inputProfile"
+            android:title="@string/pref_operationMode_title"
+            android:dialogTitle="@string/pref_operationMode_title"
+            android:summary="%s" />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:checked="true"
+            android:key="usbCutsConnection"
+            android:title="@string/pref_usbCutsConnection"
+            android:summary="@string/pref_usbCutsConnection_summary" />
+    </PreferenceCategory>
+
+    <!--<PreferenceCategory android:title="@string/pref_head_Processing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        android:defaultValue="@array/features"
+        android:dialogTitle="Select active features"
+        android:entries="@array/features"
+        android:entryValues="@array/features"
+        android:key="features"
+        android:title="@string/pref_features_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    </PreferenceCategory>-->
+
+    <!--<PreferenceCategory android:title="@string/pref_head_Recording"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <EditTextPreference
+            android:defaultValue="60"
+            android:key="chunklengthInS"
+            android:title="@string/pref_chunklengthInS_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="keepAudioCache"
+            android:title="@string/pref_keepAudioCache_title" />
+    </PreferenceCategory>-->
+
+    <PreferenceCategory
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="@string/pref_head_Administration">
+
+        <Preference
+            android:selectable="false"
+            android:enabled="true"
+            android:key="Version"
+            android:title="Version"
+            android:summary="" />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:key="isAdmin"
+            android:title="@string/pref_isAdmin_title"
+            />
+
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="killAppAndService"
+            android:title="@string/pref_killAppAndService" />
+
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="unsetDeviceAdmin"
+            android:summary="@string/pref_unsetAdmin_summary"
+            android:title="@string/pref_unsetAdmin_title" />
+
+        <Preference
+            android:key="checkForUpdate"
+            android:persistent="false"
+            android:title="Check for Update"
+            />
+    </PreferenceCategory>
+
+</PreferenceScreen>

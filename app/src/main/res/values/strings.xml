@@ -1,0 +1,84 @@
+<resources>
+    <string name="app_name">olMEGA</string>
+    <string name="buttonTextFinish">Push to complete</string>
+    <string name="infoTextRevert">Data was reverted</string>
+    <string name="infoTextSave">Data was saved</string>
+    <string name="infoError">Error</string>
+    <string name="infoCharging">Charging</string>
+    <string name="infoConnecting">Connecting</string>
+    <string name="hintTextAnswer">Please enter text here.</string>
+    <string name="pleaseWait">Please wait...</string>
+    <string name="buttonTextOkay">OK</string>
+    <string name="timeRemaining">Next Questionnaire scheduled in %h %m %s</string>
+    <string name="menuText">Take Questionnaire</string>
+    <string name="noQuestionnaires">Unable to load Questionnaire.</string>
+    <string name="noBluetooth">Unable to connect to device.</string>
+    <string name="batteryWarning">Please charge the smartphone.</string>
+    <string name="batteryCritical">Battery level critical - Application stopped.</string>
+    <string name="noUSB">Unable to find USB device.</string>
+
+    <string name="noInternet">No internet connection available.</string>
+
+    <string name="menuHelp">Help</string>
+    <string name="menuBack">Back</string>
+
+    <string name="help_headline">Handling of the\nQuestionnaire</string>
+    <string name="help_intro">Most of our questions feature one of these two formats:</string>
+    <string name="help_head_singl">Single choice</string>
+    <string name="help_text_single_01">This Symbol means an exclusive options.</string>
+    <string name="help_text_single_02">Try it!</string>
+    <string name="help_head_multi">Multiple choice</string>
+    <string name="help_text_multi_01">This symbol means you can choose more than one option.</string>
+    <string name="help_text_multi_02">For example this one</string>
+    <string name="help_text_multi_03">Or this one</string>
+    <string name="help_hint"><b>Hint:</b> Sometimes two or more answers will contradict each other. In that case, checking one will automatically uncheck the other(s).</string>
+    <string name="help_button_ready">Close</string>
+
+    <string name="swipeMessage">Please answer the question first.</string>
+    <string name="swipeOkay">Okay</string>
+
+    <string name="deviceOwnerMessage">Really unset Device Owner?</string>
+    <string name="killAppAndServiceMessage">Really kill App and Server?</string>
+    <string name="deviceOwnerYes">Yes</string>
+    <string name="deviceOwnerNo">No</string>
+
+    <string name="pref_head_Questionnaire">Questionnaire</string>
+    <string name="pref_head_General">General</string>
+    <string name="pref_head_Recording">Recording</string>
+    <string name="pref_head_Processing">Processing</string>
+    <string name="pref_head_Administration">Administration</string>
+
+    <string name="pref_isAdmin_title">Administrator</string>
+    <string name="pref_enableKioskMode_summary">For experimenters only</string>
+    <string name="pref_unsetAdmin_title">Unset Device Administrator</string>
+    <string name="pref_killAppAndService">Kill App and Service</string>
+    <string name="pref_unsetAdmin_summary">For uninstall only</string>
+    <string name="pref_button_scan_title">Connect</string>
+    <string name="pref_button_scan_summary">Scan Devices</string>
+    <string name="pref_activateTimer_title">Activate timer</string>
+    <string name="pref_activateTimer_summary">Start questionnaire at defined intervals</string>
+    <string name="pref_usbCutsConnection">USB cuts Connection</string>
+    <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
+    <string name="pref_clientID">ClientID</string>
+    <string name="pref_whichQuest_title">Select questionnaire</string>
+    <string name="pref_whichQuest_dialogTitle">Select questionnaire</string>
+    <string name="pref_forceAnswer_title">Force answers</string>
+    <string name="pref_forceAnswer_summary">No Swiping without Answer</string>
+    <string name="pref_forceAnswerDialog_title">Force Dialog</string>
+    <string name="pref_forceAnswerDialog_summary">Inform user via popup</string>
+    <string name="pref_autostart_title">Autostart</string>
+    <string name="pref_autostart_summary">Start app with system</string>
+    <string name="pref_maxBrightness_title">Display always bright</string>
+    <string name="pref_maxBrightness_summary">Keep display brightness maximum</string>
+    <string name="pref_operationMode_title">Operation Mode</string>
+    <string name="pref_samplerate_title">Sampling Rate</string>
+    <string name="pref_samplerate_summary">Recording sampling rate in Hz</string>
+    <string name="pref_chunklengthInS_title">Cache size in seconds</string>
+    <string name="pref_keepAudioCache_title">Keep cached audio data</string>
+    <string name="pref_features_title">Features</string>
+    <string name="pref_isWave_title">Cache in WAVE format</string>
+    <string name="pref_filterHp_title">Highpass filter</string>
+    <string name="pref_filterHpFrequency_title">Cutoff frequency in Hz</string>
+    <string name="pref_downsample_title">Downsampling</string>
+    <string name="pref_downsample_summary">Downsample audio (fixed factor 2)</string>
+</resources>

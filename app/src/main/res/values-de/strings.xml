@@ -1,0 +1,88 @@
+<resources>
+    <string name="app_name">olMEGA</string>
+    <string name="buttonTextFinish">Abschließen</string>
+    <string name="infoTextRevert">Daten wurden verworfen</string>
+    <string name="infoTextSave">Daten wurden gespeichert</string>
+    <string name="infoError">Fehler</string>
+    <string name="infoCharging">Gerät wird geladen</string>
+    <string name="infoConnecting">Verbindungsaufbau</string>
+    <string name="hintTextAnswer">Bitte hier klicken.</string>
+    <string name="pleaseWait">Bitte warten...</string>
+    <string name="buttonTextOkay">Weiter</string>
+    <string name="timeRemaining">Nächster Fragebogen geplant in %h %m %s</string>
+    <string name="menuText">Starte Fragebogen</string>
+    <string name="noQuestionnaires">Fragebogen kann nicht geladen werden.</string>
+    <string name="noBluetooth">Sendebox kann nicht gefunden werden.</string>
+    <string name="batteryWarning">Bitte laden Sie das Smartphone.</string>
+    <string name="batteryCritical">Batteriestand kritisch - Aufnahme unterbrochen.</string>
+    <string name="noUSB">USB Gerät nicht gefunden.</string>
+
+    <string name="noInternet">Keine Internetverbindung.</string>
+
+    <string name="swipeMessage">Bitte beantworten Sie die Frage.</string>
+    <string name="swipeOkay">Okay</string>
+
+    <string name="menuBack">Zurück</string>
+    <string name="menuHelp">Hilfe</string>
+
+    <string name="deviceOwnerMessage">Wirklich den Device Owner abschalten?</string>
+    <string name="killAppAndServiceMessage">Really kill App and Server?</string>
+    <string name="deviceOwnerYes">Ja</string>
+    <string name="deviceOwnerNo">Nein</string>
+
+    <string name="pref_head_Questionnaire">Fragebogen</string>
+    <string name="pref_head_General">Allgemein</string>
+    <string name="pref_head_Recording">Aufnahme</string>
+    <string name="pref_head_Processing">Verarbeitung</string>
+    <string name="pref_head_Administration">Verwaltung</string>
+
+
+    <string name="help_headline">Bedienung des\nFragebogens</string>
+    <string name="help_intro">Innerhalb des Fragebogens begegnen Ihnen hauptsächlich zwei Arten von Antworten:</string>
+    <string name="help_head_singl">Einfachantworten</string>
+    <string name="help_text_single_01">Dieses Symbol bedeutet, dass Sie nur eine Möglichkeit auswählen können</string>
+    <string name="help_text_single_02">Versuchen Sie es!</string>
+    <string name="help_head_multi">Mehrfachantworten</string>
+    <string name="help_text_multi_01">Bei diesem Symbol dürfen Sie mehrere Optionen auswählen</string>
+    <string name="help_text_multi_02">Zum Beispiel diese</string>
+    <string name="help_text_multi_03">Oder diese</string>
+    <string name="help_hint"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
+        Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
+        automatisch eine Antwort wieder ab.</string>
+    <string name="help_button_ready">Fertig</string>
+
+    <string name="pref_isAdmin_title">Administrator</string>
+    <string name="pref_enableKioskMode_summary">Nur für Personal</string>
+    <string name="pref_unsetAdmin_title">Device Administrator löschen</string>
+    <string name="pref_killAppAndService">Kill App and Service</string>
+    <string name="pref_unsetAdmin_summary">Nur zur Deinstallation</string>
+    <string name="pref_button_scan_title">Verbinden</string>
+    <string name="pref_button_scan_summary">Scanne Geräte</string>
+    <string name="pref_activateTimer_title">Timer benutzen</string>
+    <string name="pref_activateTimer_summary">Starte Fragebogen zu bestimmter Zeit</string>
+    <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
+    <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
+    <string name="pref_clientID">ClientID</string>
+    <string name="pref_whichQuest_title">Auswahl Fragebogen</string>
+    <string name="pref_whichQuest_dialogTitle">Auswahl Fragebogen</string>
+    <string name="pref_forceAnswer_title">Antworten erzwingen</string>
+    <string name="pref_forceAnswer_summary">Frage muss beantwortet werden</string>
+    <string name="pref_forceAnswerDialog_title">Dialog erzwingen</string>
+    <string name="pref_forceAnswerDialog_summary">Nutzer informieren</string>
+    <string name="pref_autostart_title">Autostart</string>
+    <string name="pref_autostart_summary">App automatisch starten</string>
+    <string name="pref_maxBrightness_title">Bildschirmhelligkeit</string>
+    <string name="pref_maxBrightness_summary">Display immer hell</string>
+    <string name="pref_operationMode_title">Input-Modus</string>
+    <string name="pref_samplerate_title">Sampling Frequenz</string>
+    <string name="pref_samplerate_summary">Sampling Frequenz in Hz</string>
+    <string name="pref_chunklengthInS_title">Cache Größe in Sekunden</string>
+    <string name="pref_keepAudioCache_title">Audiodaten behalten</string>
+    <string name="pref_features_title">Features</string>
+    <string name="pref_isWave_title">Cache im WAVE Format</string>
+    <string name="pref_filterHp_title">Hochpassfilter</string>
+    <string name="pref_filterHpFrequency_title">Grenzfrequenz in Hz</string>
+    <string name="pref_downsample_title">Downsampling</string>
+    <string name="pref_downsample_summary">Audio downsamplen (Faktor 2)</string>
+
+</resources>

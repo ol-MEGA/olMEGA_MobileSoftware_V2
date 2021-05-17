@@ -1,0 +1,84 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="SliderTextTopMargin_Left">20px</dimen>
+    <dimen name="SliderTextTopMargin_Top">-20px</dimen>
+    <dimen name="SliderTextTopMargin_Right">0px</dimen>
+    <dimen name="SliderTextTopMargin_Bottom">20px</dimen>
+
+    <dimen name="SliderTextMargin_Left">20px</dimen>
+    <dimen name="SliderTextMargin_Top">20px</dimen>
+    <dimen name="SliderTextMargin_Right">0px</dimen>
+    <dimen name="SliderTextMargin_Bottom">0px</dimen>
+
+    <dimen name="SliderTextBottomMargin_Left">20px</dimen>
+    <dimen name="SliderTextBottomMargin_Top">0px</dimen>
+    <dimen name="SliderTextBottomMargin_Right">0px</dimen>
+    <dimen name="SliderTextBottomMargin_Bottom">0px</dimen>
+
+    <dimen name="SliderTextPadding_Left">80px</dimen>
+    <dimen name="SliderTextPadding_Top">0px</dimen>
+    <dimen name="SliderTextPadding_Right">0px</dimen>
+    <dimen name="SliderTextPadding_Bottom">0px</dimen>
+
+    <dimen name="answerFinishMargin_Left">0px</dimen>
+    <dimen name="answerFinishMargin_Top">48px</dimen>
+    <dimen name="answerFinishMargin_Right">0px</dimen>
+    <dimen name="answerFinishMargin_Bottom">0px</dimen>
+
+    <dimen name="answerTextMargin_Left">48px</dimen>
+    <dimen name="answerTextMargin_Top">32px</dimen>
+    <dimen name="answerTextMargin_Right">24px</dimen>
+    <dimen name="answerTextMargin_Bottom">32px</dimen>
+
+    <dimen name="answerLayoutPadding_Left">16dp</dimen>
+    <dimen name="answerLayoutPadding_Top">16dp</dimen>
+    <dimen name="answerLayoutPadding_Right">16dp</dimen>
+    <dimen name="answerLayoutPadding_Bottom">16dp</dimen>
+
+    <dimen name="textSizeMenu">10sp</dimen>
+    <dimen name="textSizeQuestion">10sp</dimen>
+    <dimen name="textSizeAnswer">8sp</dimen>
+    <dimen name="textSizeProposed">26sp</dimen>
+    <dimen name="textSizeAnswerHelp">7sp</dimen>
+
+    <dimen name="minHeightRadio">20px</dimen>
+    <dimen name="minHeightCheckBox">20px</dimen>
+
+    <dimen name="answerTypeCheckBoxPadding_Left">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Top">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Right">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Bottom">18dp</dimen>
+
+    <dimen name="radioMinHeight">96px</dimen>
+    <dimen name="checkBoxMinHeight">96dp</dimen>
+    <dimen name="questionTextHeight">55dp</dimen>
+
+    <dimen name="preferencesButtonHeight">48dp</dimen>
+    <dimen name="preferencesButtonWidth">48dp</dimen>
+
+    <dimen name="toolbarHeight">32dp</dimen>
+    <dimen name="toolBarPadding">8dp</dimen>
+    <dimen name="toolBarHeightWithPadding">48dp</dimen>
+    <dimen name="progressBarHeight">6dp</dimen>
+    <dimen name="actionBarHeight">32dp</dimen>
+
+    <dimen name="battery_margin_left">1dp</dimen>
+    <dimen name="battery_margin_right">1dp</dimen>
+    <dimen name="batteryWidth">12dp</dimen>
+    <dimen name="batteryHeight">24dp</dimen>
+    <dimen name="battery_margin_top">4dp</dimen>
+    <dimen name="battery_margin_bottom">4dp</dimen>
+
+    <dimen name="charging_margin_left">1dp</dimen>
+    <dimen name="charging_margin_right">1dp</dimen>
+    <dimen name="charging_margin_top">2dp</dimen>
+    <dimen name="charging_margin_bottom">2dp</dimen>
+    <dimen name="charging_width">10dp</dimen>
+    <dimen name="charging_height">20dp</dimen>
+
+    <dimen name="splashScreenLogo_width">96dp</dimen>
+
+</resources>

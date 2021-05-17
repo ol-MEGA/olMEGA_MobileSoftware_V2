@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/HorizontalContainer">
+
+    <RelativeLayout
+        android:id="@+id/SliderContainer"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:background="@android:color/holo_green_light"
+        android:layout_gravity="center_horizontal">
+
+        <View
+            android:id="@+id/RemainView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </View>
+
+        <View
+            android:id="@+id/ResizeView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@color/JadeRed"
+            android:layout_alignParentBottom="true">
+        </View>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/AnswerTextContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/holo_blue_dark"
+        android:orientation="vertical">
+    </LinearLayout>
+
+</LinearLayout>
+
+

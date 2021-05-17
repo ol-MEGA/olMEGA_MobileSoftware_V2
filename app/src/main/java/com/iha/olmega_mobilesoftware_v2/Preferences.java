@@ -1,0 +1,45 @@
+package com.iha.olmega_mobilesoftware_v2;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
+import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+
+import java.io.File;
+import java.io.Serializable;
+
+public class Preferences {
+    SharedPreferences sharedPreferences;
+
+    public boolean isInKioskMode = false;
+    public boolean isDeviceOwner = false;
+    private Context mContext = null;
+
+    public Preferences(Context mcontext) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mcontext);
+        sharedPreferences.edit().putBoolean("killAppAndService", false).commit();
+        mContext = mcontext;
+    }
+
+    public void clearUnsetDeviceAdmin() {sharedPreferences.edit().putBoolean("unsetDeviceAdmin", false).commit();}
+
+    public static File UdaterSettings = new File(FileIO.getFolderPath() + File.separator + "UdaterSettings.xml");
+
+    public boolean isAdmin() {return sharedPreferences.getBoolean("isAdmin", false);}
+    public boolean usbCutsConnection() {return sharedPreferences.getBoolean("usbCutsConnection", true);}
+    public boolean autoStartActivity() {return sharedPreferences.getBoolean("autoStartActivity", true);}
+    public boolean forceAnswer() {return sharedPreferences.getBoolean("forceAnswer", true);}
+    //public boolean forceAnswerDialog() {return sharedPreferences.getBoolean("forceAnswerDialog", true);}
+    public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
+    public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
+    public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
+    public String clientID()  {return sharedPreferences.getString("clientID", "0000");}
+    public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
+    public String inputProfile() {
+        return sharedPreferences.getString("inputProfile", "");
+    }
+
+    public void onDestroy() {
+    }
+}

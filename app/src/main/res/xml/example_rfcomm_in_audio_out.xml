@@ -1,0 +1,3 @@
+<stage feature="StageRFCOMM" id="00">
+    <stage feature="StageAudioOutput" id="10"/>
+</stage>

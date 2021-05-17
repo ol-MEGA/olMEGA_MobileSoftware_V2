@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3f51b5</color>
+    <color name="colorPrimaryDark">#8F9092</color>
+    <color name="colorAccent">#c2102a</color>
+    <color name="Canvas">#FFFFFF</color>
+    <color name="lighterGray">#EEEEEE</color>
+    <color name="darkerGray">#888888</color>
+    <color name="AirplaneBlue">#59BEDF</color>
+    <color name="JadeRed">#c2102a</color>
+    <color name="JadeGray">#8F9092</color>
+    <color name="TextColor">#000000</color>
+    <color name="TextColor_Light">#888888</color>
+    <color name="BackgroundColor">#FFFFFF</color>
+
+    <color name="WebGray">#f2f2f2</color>
+
+    <color name="BatteryGreen">#5ec800</color>
+    <color name="BatteryYellow">#ffd200</color> <!-- #ffd200 -->
+
+    <color name="InternalMicOrange">#ffa500</color>
+    <color name="RfcommViolet">#7F00FF</color>
+    <color name="PhantomDarkBlue">#000099</color>
+
+    <color name="lighterBlue">#AAAAFF</color>
+</resources>

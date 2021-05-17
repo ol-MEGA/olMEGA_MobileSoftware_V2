@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolBarHeightWithPadding"
+        android:background="@color/lighterGray"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal"
+        android:padding="@dimen/toolBarPadding">
+
+        <View
+            android:id="@+id/logo"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:foreground="@drawable/logo" />
+        <TextView
+            android:id="@+id/Action_Logo"
+            android:layout_width="39dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="0.18"
+            android:fontFamily="sans-serif"
+            android:text="@string/menuHelp"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            />
+
+        <View
+            android:id="@+id/Action_Wifi"
+            android:layout_width="32dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_weight="0"
+            android:background="@android:drawable/ic_dialog_alert"
+            android:backgroundTint="@color/JadeRed"
+            android:visibility="gone"></View>
+        <View
+            android:id="@+id/Action_Record"
+            android:layout_width="32dp"
+            android:layout_height="@dimen/toolbarHeight"
+            android:layout_weight="0"
+            android:background="@android:drawable/ic_btn_speak_now"
+            android:backgroundTint="@android:color/darker_gray"
+            android:visibility="visible">
+        </View>
+        <RelativeLayout
+            android:layout_width="12dp"
+            android:layout_height="24dp"
+            android:layout_marginBottom="@dimen/battery_margin_top"
+            android:layout_marginTop="@dimen/battery_margin_bottom">
+
+            <LinearLayout
+                android:layout_width="@dimen/batteryWidth"
+                android:layout_height="@dimen/batteryHeight"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical">
+
+                <View
+                    android:id="@+id/battery_top"
+                    android:layout_width="10dp"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="@dimen/battery_margin_left"
+                    android:layout_marginEnd="@dimen/battery_margin_right"
+                    android:layout_weight="0.03" />
+
+                <View
+                    android:id="@+id/battery_reg"
+                    android:layout_width="9dp"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginStart="@dimen/battery_margin_left"
+                    android:layout_marginEnd="@dimen/battery_margin_right"
+                    android:layout_weight="0.47"
+                    android:background="@color/BackgroundColor" />
+
+                <View
+                    android:id="@+id/battery_prog"
+                    android:layout_width="9dp"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginStart="@dimen/battery_margin_left"
+                    android:layout_marginEnd="@dimen/battery_margin_right"
+                    android:layout_weight="0.47"
+                    android:background="@color/JadeRed" />
+
+                <View
+                    android:id="@+id/battery_bottom"
+                    android:layout_width="10dp"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="@dimen/battery_margin_left"
+                    android:layout_marginEnd="@dimen/battery_margin_right"
+                    android:layout_weight="0.03" />
+            </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/battery" />
+            <View
+                android:id="@+id/charging"
+                android:scaleX="-1"
+                android:layout_width="@dimen/charging_width"
+                android:layout_height="@dimen/charging_height"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/charging_margin_top"
+                android:layout_marginBottom="@dimen/charging_margin_bottom"
+                android:layout_marginStart="@dimen/charging_margin_left"
+                android:layout_marginEnd="@dimen/charging_margin_right"
+                android:background="@drawable/charging"/>
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/nextQuestTextView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:enabled="false"
+            android:gravity="center_vertical|center_horizontal"
+            android:textColor="@color/TextColor_Light"
+            android:textSize="18sp"
+            android:visibility="visible"
+            tools:visibility="visible" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/InfoTextView"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:autoSizeMaxTextSize="28pt"
+            android:autoSizeTextType="uniform"
+            android:gravity="center_vertical|center_horizontal"
+            android:textColor="@color/colorPrimary"
+            android:textSize="36sp"
+            android:visibility="visible"
+            tools:visibility="visible" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/DateTimeTextView"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:gravity="center_vertical|center_horizontal"
+            android:textColor="@color/TextColor_Light"
+            android:textSize="20sp"
+            android:visibility="visible"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+</LinearLayout>
