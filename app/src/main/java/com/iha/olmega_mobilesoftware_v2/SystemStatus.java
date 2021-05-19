@@ -100,7 +100,7 @@ public class SystemStatus {
                     acitivyStates.questionaireEnabled = false;
 
                     acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
-                    acitivyStates.BatteryState = acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel * 100 >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal;
+                    acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
                     // Charging State
                     if ((!preferences.isAdmin() && !Preferences().isInKioskMode) || (acitivyStates.isCharging && Preferences().usbCutsConnection())){
                         raiseAutomaticQuestionaire_TimerEventAt = -1;
@@ -274,7 +274,7 @@ public class SystemStatus {
         @Override
         public void onReceive(Context context, Intent intent) {
             BatteryManagerStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            acitivyStates.batteryLevel = intent.getIntExtra("level", 0) * 100;
+            acitivyStates.batteryLevel = intent.getIntExtra("level", 0);
             Refresh();
         }
     }

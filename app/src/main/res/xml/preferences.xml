@@ -34,7 +34,7 @@
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="autoStartActivity"
             android:title="@string/pref_autostart_title"
             android:summary="@string/pref_autostart_summary" />
@@ -105,7 +105,7 @@
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="isAdmin"
             android:title="@string/pref_isAdmin_title"
             />

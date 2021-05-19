@@ -18,8 +18,9 @@ public class AutostartReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent _intent) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean autostart = sharedPreferences.getBoolean("autoStartActivity", true);
+        boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
 
-        if (_intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) && autostart) {
+        if (_intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) && autostart && isAdmin == false) {
             Intent intent = new Intent(context, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);

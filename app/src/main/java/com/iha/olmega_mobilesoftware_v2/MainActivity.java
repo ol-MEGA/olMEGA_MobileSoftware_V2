@@ -147,25 +147,6 @@ public class MainActivity extends AppCompatActivity {
                 outStream.write(buffer);
             } catch (IOException e) { }
         }
-        if (!SystemStatus.AFExConfigFolder.exists())
-            SystemStatus.AFExConfigFolder.mkdirs();
-        if (SystemStatus.AFExConfigFolder.listFiles().length == 0) {
-            try {
-                File example_mic_in_speaker_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_mic_in_speaker_out.xml");
-                InputStream inputStream = getResources().openRawResource(R.raw.example_mic_in_speaker_out);
-                byte[] buffer = new byte[inputStream.available()];
-                inputStream.read(buffer);
-                OutputStream outStream = new FileOutputStream(example_mic_in_speaker_out);
-                outStream.write(buffer);
-
-                File example_rfcomm_in_audio_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_rfcomm_in_audio_out.xml");
-                inputStream = getResources().openRawResource(R.raw.example_rfcomm_in_audio_out);
-                buffer = new byte[inputStream.available()];
-                inputStream.read(buffer);
-                outStream = new FileOutputStream(example_rfcomm_in_audio_out);
-                outStream.write(buffer);
-            } catch (IOException e) { }
-        }
     }
 
     public void checkPermission() {
@@ -176,8 +157,40 @@ public class MainActivity extends AppCompatActivity {
                 neccessaryPermissionsIdx++;
                 checkPermission();
             }
-        } else
-            FileIO.getFolderPath();
+        } else {
+            File updaterSettings = new File(FileIO.getFolderPath() + File.separator + "UdaterSettings.xml");
+            if (!updaterSettings.isFile()) {
+                try {
+                InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
+                byte[] buffer = new byte[inputStream.available()];
+                inputStream.read(buffer);
+                OutputStream outStream = new FileOutputStream(updaterSettings);
+                outStream.write(buffer);
+                } catch (IOException e) {
+                }
+            }
+            if (!SystemStatus.AFExConfigFolder.exists())
+                SystemStatus.AFExConfigFolder.mkdirs();
+            if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
+                try {
+                    File example_mic_in_speaker_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_mic_in_speaker_out.xml");
+                    InputStream inputStream = getResources().openRawResource(R.raw.example_mic_in_speaker_out);
+                    byte[] buffer = new byte[inputStream.available()];
+                    inputStream.read(buffer);
+                    OutputStream outStream = new FileOutputStream(example_mic_in_speaker_out);
+                    outStream.write(buffer);
+
+                    File example_rfcomm_in_audio_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_rfcomm_in_audio_out.xml");
+                    inputStream = getResources().openRawResource(R.raw.example_rfcomm_in_audio_out);
+                    buffer = new byte[inputStream.available()];
+                    inputStream.read(buffer);
+                    outStream = new FileOutputStream(example_rfcomm_in_audio_out);
+                    outStream.write(buffer);
+                } catch (IOException e) {
+                }
+            }
+            new FileIO().scanQuestOptions();
+        }
     }
 
     @Override
@@ -390,26 +403,29 @@ public class MainActivity extends AppCompatActivity {
                                 findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
                             else
                                 findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
-                            View mBatteryProg = findViewById(R.id.battery_prog);
+                            View battery_bottom = findViewById(R.id.battery_bottom);
                             switch (acitivyStates.BatteryState) {
                                 case Normal:
-                                    mBatteryProg.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
+                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
                                     break;
                                 case Warning:
-                                    mBatteryProg.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
+                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
                                     break;
                                 case Critical:
-                                    mBatteryProg.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
+                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
                                     break;
                             }
                             // Batterie Level
-                            View mBatteryReg = findViewById(R.id.battery_reg);
-                            ViewGroup.LayoutParams params = mBatteryProg.getLayoutParams();
-                            params.height = (int) (acitivyStates.batteryLevel);
-                            mBatteryProg.setLayoutParams(params);
-                            params = mBatteryReg.getLayoutParams();
-                            params.height = (int) ((100 - acitivyStates.batteryLevel));
-                            mBatteryReg.setLayoutParams(params);
+                            ViewGroup.LayoutParams params = battery_bottom.getLayoutParams();
+                            params = findViewById(R.id.battery_bottom).getLayoutParams();
+                            params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
+                            battery_bottom.setLayoutParams(params);
+
+                            View battery_top = findViewById(R.id.battery_top);
+                            params = battery_top.getLayoutParams();
+                            params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
+                            battery_top.setLayoutParams(params);
+
                             if (acitivyStates.profileState == States.connected)
                                 findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
                             else

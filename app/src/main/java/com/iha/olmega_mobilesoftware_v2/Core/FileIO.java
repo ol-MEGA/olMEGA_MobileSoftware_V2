@@ -41,7 +41,7 @@ public class FileIO {
         final File baseDirectory = new File(Environment.getExternalStorageDirectory() +
                 File.separator + FOLDER_MAIN);
         if (!baseDirectory.exists()) {
-            baseDirectory.mkdir();
+            baseDirectory.mkdirs();
         }
         return baseDirectory.getAbsolutePath();
     }
@@ -156,8 +156,13 @@ public class FileIO {
         File tmp = new File(getFolderPath() + File.separator + FOLDER_QUEST + File.separator + FILE_TEMP);
 
         if (!dir.exists()) {
-            tmp.mkdirs();
-            new SingleMediaScanner(mContext, tmp);
+            dir.mkdirs();
+            try {
+                tmp.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //new SingleMediaScanner(mContext, tmp);
             //File fileLog = new File(getFolderPath() + File.separator + ControlService.FILENAME_LOG);
             //new SingleMediaScanner(mContext, fileLog);
         }

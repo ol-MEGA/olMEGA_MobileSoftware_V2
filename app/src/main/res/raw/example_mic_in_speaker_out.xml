@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <stage feature="StageAudioCapture" id="00">
-    <stage feature="StageAudioOutput" id="10"/>
+    <stage feature="StagePreHighpass" id="10" cutoff_hz="250">
+        <stage feature="StageProcPSD" id="11" blocksize="400" hopsize="200" blockout="2000" hopout="2000">
+            <stage feature="StageFeatureWrite" id="110" prefix="PSD" nfeatures="1026"/>
+        </stage>
+        <stage feature="StageProcRMS" id="12" blocksize="400" hopsize="200">
+            <stage feature="StageFeatureWrite" id="120" prefix="RMS" nfeatures="2"/>
+        </stage>
+        <stage feature="StageProcZCR" id="13" blocksize="400" hopsize="200">
+            <stage feature="StageFeatureWrite" id="130" prefix="ZCR" nfeatures="2"/>
+        </stage>
+    </stage>
+    <stage feature="StageAudioOutput" id="20"/>
 </stage>

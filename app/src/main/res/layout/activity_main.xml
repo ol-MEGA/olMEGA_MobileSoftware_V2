@@ -58,6 +58,7 @@
             android:layout_marginTop="@dimen/battery_margin_bottom">
 
             <LinearLayout
+                android:id="@+id/BatterieView"
                 android:layout_width="@dimen/batteryWidth"
                 android:layout_height="@dimen/batteryHeight"
                 android:layout_gravity="center_vertical"
@@ -68,36 +69,14 @@
                     android:layout_width="10dp"
                     android:layout_height="0dp"
                     android:layout_marginStart="@dimen/battery_margin_left"
-                    android:layout_marginEnd="@dimen/battery_margin_right"
-                    android:layout_weight="0.03" />
-
-                <View
-                    android:id="@+id/battery_reg"
-                    android:layout_width="9dp"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginStart="@dimen/battery_margin_left"
-                    android:layout_marginEnd="@dimen/battery_margin_right"
-                    android:layout_weight="0.47"
-                    android:background="@color/BackgroundColor" />
-
-                <View
-                    android:id="@+id/battery_prog"
-                    android:layout_width="9dp"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginStart="@dimen/battery_margin_left"
-                    android:layout_marginEnd="@dimen/battery_margin_right"
-                    android:layout_weight="0.47"
-                    android:background="@color/JadeRed" />
+                    android:layout_marginEnd="@dimen/battery_margin_right" />
 
                 <View
                     android:id="@+id/battery_bottom"
                     android:layout_width="10dp"
                     android:layout_height="0dp"
                     android:layout_marginStart="@dimen/battery_margin_left"
-                    android:layout_marginEnd="@dimen/battery_margin_right"
-                    android:layout_weight="0.03" />
+                    android:layout_marginEnd="@dimen/battery_margin_right" />
             </LinearLayout>
             <View
                 android:layout_width="match_parent"
