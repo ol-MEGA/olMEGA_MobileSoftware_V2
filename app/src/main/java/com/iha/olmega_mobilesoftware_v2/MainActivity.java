@@ -128,7 +128,13 @@ public class MainActivity extends AppCompatActivity {
                 Date currentDate = new Date(System.currentTimeMillis());
                 SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
                 dateTimeTextView.setText(dateformat.format(currentDate.getTime()));
-                dateTimeHandler.postDelayed(this, 60 * 1000);
+                dateTimeHandler.postDelayed(this, 1000);
+                if (wifiActivated) {
+                    if (findViewById(R.id.Action_Wifi).getVisibility() == View.VISIBLE)
+                        findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
+                    else
+                        findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
+                }
             }
         }, 0);
     }
@@ -279,15 +285,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean wifiActivated = false;
     private void checkWifi() {
         runOnUiThread(new Runnable() {
             @Override
             public synchronized void run() {
                 WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
                 findViewById(R.id.Action_Wifi).setVisibility(View.GONE);
+                wifiActivated = false;
                 if (wifiManager.isWifiEnabled() && controlService != null) {
+                    wifiActivated = true;
                     if (controlService.Status().Preferences().isAdmin()) {
-                        findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                         findViewById(R.id.Action_Wifi).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {

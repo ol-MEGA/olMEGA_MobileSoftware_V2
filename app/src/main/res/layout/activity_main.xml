@@ -39,7 +39,7 @@
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
             android:layout_weight="0"
-            android:background="@android:drawable/ic_dialog_alert"
+            android:background="@drawable/wifi"
             android:backgroundTint="@color/JadeRed"
             android:visibility="gone"></View>
         <View
