@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="1800" deviation="300"></timer>
+
+        <title>
+            <text>Template</text>
+        </title>
+		
+		// One line comment
+		/* Here is a
+		slightly longer
+		comment */
+
+		//1)
+		<question id="10101" type="radio">
+		<label>
+		<text>Which record is the best?</text>
+		</label>
+		<option id="10101_01">
+		<text>Dark side of the moon</text>
+		</option>
+		<option id="10101_02">
+		<text>Grand Tour</text>
+		</option>
+		<option id="10101_03">
+		<text>Foxtrot</text>
+		</option>
+		</question>
+		
+		//2)
+		<question id="10102" type="checkbox">
+		<label>
+		<text>Please select one or more.</text>
+		</label>
+		<option id="10102_01">
+		<text>Red</text>
+		</option>
+		<option id="10102_02">
+		<text>Green</text>
+		</option>
+		<option id="10102_03">
+		<text>Blue</text>
+		</option>
+		</question>
+		
+		//3)
+		<question id="10103" type="emoji">
+		<label>
+		<text>How are you feeling?</text>
+		</label>
+		<option id="10103_01">
+                <text>emoji_happy2</text>
+            </option>
+            <option id="10103_02">
+                <text>emoji_happy1</text>
+            </option>
+            <option id="10103_03">
+                <text>emoji_neutral</text>
+            </option>
+            <option id="10103_04">
+                <text>emoji_sad1</text>
+            </option>
+            <option id="10103_05">
+                <text>emoji_sad2</text>
+            </option>
+		</question>
+
+		//4)
+		<question id="10104" type="text">
+            <label>
+                <text>Please describe the situation.</text>
+            </label>
+        </question>
+		
+		//5)
+		<question id="10105" type="sliderFix">
+            <label>
+                <text>How loud is it?</text>
+            </label>
+            <option id="10105_01">
+                <text>Very loud</text>
+            </option>
+            <option id="10105_02">
+                <text>Loud</text>
+            </option>
+            <option id="10105_03">
+                <text>Medium</text>
+            </option>
+            <option id="10105_04">
+                <text>Not loud</text>
+            </option>
+            <option id="10105_05">
+                <text>Quiet</text>
+            </option>
+        </question>
+		
+		//6)
+		<question id="10106" type="sliderFree">
+            <label>
+                <text>How loud is it?</text>
+            </label>
+            <option id="10106_01">
+                <text>Very loud</text>
+            </option>
+            <option id="10106_02">
+                <text>Loud</text>
+            </option>
+            <option id="10106_03">
+                <text>Medium</text>
+            </option>
+            <option id="10106_04">
+                <text>Not loud</text>
+            </option>
+            <option id="10106_05">
+                <text>Quiet</text>
+            </option>
+        </question>
+		
+		//7)
+		<question
+			id="10107"
+			type="website">
+			<label>
+				<text>External Source:</text>
+			</label>
+			<option id="10107_01">
+                <text>https://tgm.jade-hs.de/projekte/ihab-rl</text>
+			</option>
+		</question>
+
+        //8)
+        <question
+            id="10108"
+            type="website">
+            <label>
+                <text>External Source:</text>
+            </label>
+            <option id="10108_01">
+                <text>https://tgm.jade-hs.de/projekte/ihab-rl/index.php?ClientId=$clientID$</text>
+            </option>
+        </question>
+		
+		//9)
+		<question id="10109" type="radio" forceAnwer="true">
+		<label>
+		<text>Please choose:</text>
+		</label>
+		<option id="10109_01">
+		<text>Option 1</text>
+		</option>
+		<option id="10109_02">
+		<text>Option 2</text>
+		</option>
+		</question>
+		
+		//10)
+        <finish>
+            <text>Thank you!</text>
+        </finish>
+    </survey>
+</mobiquest>
