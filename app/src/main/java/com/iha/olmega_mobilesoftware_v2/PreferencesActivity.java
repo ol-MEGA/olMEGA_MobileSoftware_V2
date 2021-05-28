@@ -81,6 +81,7 @@ public class PreferencesActivity extends PreferenceActivity {
             DownloadManager.Query query = new DownloadManager.Query();
             query.setFilterById(b.getLong(DownloadManager.EXTRA_DOWNLOAD_ID));
             Cursor cur = dm.query(query);
+            boolean success = false;
             if (cur.moveToFirst()) {
                 int columnIndex = cur.getColumnIndex(DownloadManager.COLUMN_STATUS);
                 if (DownloadManager.STATUS_SUCCESSFUL == cur.getInt(columnIndex)) {
@@ -95,10 +96,13 @@ public class PreferencesActivity extends PreferenceActivity {
                                 finish();
                             }
                         }, 500);
+                        success = true;
                         context.unregisterReceiver(this);
                     }
                 }
             }
+            if (!success)
+                Toast.makeText(getApplicationContext(), "Download file not found. Please try again!", Toast.LENGTH_LONG).show();
         }
     };
 
