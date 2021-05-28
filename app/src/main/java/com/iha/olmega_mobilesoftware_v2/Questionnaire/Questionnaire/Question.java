@@ -43,7 +43,7 @@ public class Question extends AppCompatActivity {
         mContext = context;
 
         if (isFinish()) {
-            mQuestionId = 99999;
+            mQuestionId = 999999999;
             mQuestionText = extractQuestionTextFinish();
             mTypeAnswer = "finish";
             mNumAnswers = 1;
