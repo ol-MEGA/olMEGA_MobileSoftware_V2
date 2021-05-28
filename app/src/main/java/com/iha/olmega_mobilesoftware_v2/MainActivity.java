@@ -3,6 +3,7 @@ package com.iha.olmega_mobilesoftware_v2;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import android.Manifest;
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = this.getClass().getSimpleName();
@@ -273,15 +276,36 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        checkWifi();
         isQuestionnaireRunning = false;
         bindService(new Intent(MainActivity.this, ControlService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
-        if (controlService != null && controlService.Status().Preferences().killAppAndService()) {
-            stopService(new Intent(this, ControlService.class));
-            controlService = null;
-            Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
-            this.finish();
+        checkWifi();
+
+        if (controlService != null) {
+            if (!controlService.Status().Preferences().installNewApp().equals("")) {
+                stopService(new Intent(this, ControlService.class));
+                this.finish();
+                Intent intent;
+                File apk = new File(controlService.Status().Preferences().installNewApp());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", apk);
+                    intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(apkURI);
+                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } else {
+                    Uri apkUri = Uri.fromFile(apk);
+                    intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                startActivity(intent);
+            }
+            if (controlService.Status().Preferences().killAppAndService()) {
+                stopService(new Intent(this, ControlService.class));
+                controlService = null;
+                Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
+                this.finish();
+            }
         }
     }
 
@@ -291,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public synchronized void run() {
                 WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-                findViewById(R.id.Action_Wifi).setVisibility(View.GONE);
+                findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
                 wifiActivated = false;
                 if (wifiManager.isWifiEnabled() && controlService != null) {
                     wifiActivated = true;

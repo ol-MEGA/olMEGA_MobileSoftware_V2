@@ -41,7 +41,7 @@
             android:layout_weight="0"
             android:background="@drawable/wifi"
             android:backgroundTint="@color/JadeRed"
-            android:visibility="gone"></View>
+            android:visibility="invisible"></View>
         <View
             android:id="@+id/Action_Record"
             android:layout_width="32dp"

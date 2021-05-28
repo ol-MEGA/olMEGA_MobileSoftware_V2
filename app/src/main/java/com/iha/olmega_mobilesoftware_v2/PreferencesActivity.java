@@ -1,21 +1,41 @@
 package com.iha.olmega_mobilesoftware_v2;
 
 import android.app.AlertDialog;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.content.FileProvider;
+
 import com.github.javiersantos.appupdater.AppUpdater;
+import com.github.javiersantos.appupdater.AppUpdaterUtils;
+import com.github.javiersantos.appupdater.DisableClickListener;
+import com.github.javiersantos.appupdater.UpdateClickListener;
+import com.github.javiersantos.appupdater.enums.AppUpdaterError;
 import com.github.javiersantos.appupdater.enums.Display;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
+import com.github.javiersantos.appupdater.objects.Update;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 
 import org.w3c.dom.Document;
@@ -23,6 +43,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.net.URL;
+import java.util.List;
+import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -34,7 +57,55 @@ public class PreferencesActivity extends PreferenceActivity {
         getFragmentManager().beginTransaction().replace(android.R.id.content, new Preferences()).commit();
     }
 
+    // https://github.com/javiersantos/AppUpdater/issues/193#issuecomment-721537960
+    //You write your code here when the download finished
+
+    private void DownloadUpdate(String url) {
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+        request.setTitle("Download Update");
+        request.allowScanningByMediaScanner();
+        //request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('?')));
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        manager.enqueue(request);
+        Toast.makeText(this, "Download started. Please wait...", Toast.LENGTH_LONG).show();
+    }
+
+    BroadcastReceiver onDownloadComplete = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle b = intent.getExtras();
+            DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            DownloadManager.Query query = new DownloadManager.Query();
+            query.setFilterById(b.getLong(DownloadManager.EXTRA_DOWNLOAD_ID));
+            Cursor cur = dm.query(query);
+            if (cur.moveToFirst()) {
+                int columnIndex = cur.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                if (DownloadManager.STATUS_SUCCESSFUL == cur.getInt(columnIndex)) {
+                    String uriString = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                    File myFile = new File(uriString.replace("file://", ""));
+                    if (myFile.isFile()) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        prefs.edit().putString("installNewApp", myFile.toString()).commit();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            public void run() {
+                                finish();
+                            }
+                        }, 500);
+                        context.unregisterReceiver(this);
+                    }
+                }
+            }
+        }
+    };
+
+
+
     public static class Preferences extends PreferenceFragment {
+        private String TAG = this.getClass().getSimpleName();
 
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -81,11 +152,65 @@ public class PreferencesActivity extends PreferenceActivity {
             if (isNetworkAvailable()) {
                 if (com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.isFile())
                 {
+                    AppUpdaterUtils appUpdater = new AppUpdaterUtils(getActivity())
+                            //.setUpdateFrom(UpdateFrom.AMAZON)
+                            //.setUpdateFrom(UpdateFrom.GITHUB)
+                            //.setGitHubUserAndRepo("javiersantos", "AppUpdater")
+                            //...
+                            .withListener(new AppUpdaterUtils.UpdateListener() {
+                                @Override
+                                public void onSuccess(Update update, Boolean isUpdateAvailable) {
+                                    if (isUpdateAvailable) {
+                                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+                                        alertDialogBuilder.setTitle("New update available!");
+                                        alertDialogBuilder
+                                                .setMessage("Update " + update.getLatestVersion() + " available to download!\n" + update.getReleaseNotes())
+                                                .setCancelable(false)
+                                                .setPositiveButton("Update",new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog,int id) {
+                                                        PreferencesActivity tmp = (PreferencesActivity)getActivity();
+                                                        tmp.DownloadUpdate(update.getUrlToDownload().toString() + "?" + System.currentTimeMillis());
+                                                    }
+                                                })
+                                                .setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog,int id) {
+                                                        dialog.cancel();
+                                                    }
+                                                });
+                                        AlertDialog alertDialog = alertDialogBuilder.create();
+                                        alertDialog.show();
+                                        /*
+                                        Log.d("Latest Version", update.getLatestVersion());
+                                        Log.d("Latest Version Code", update.getLatestVersionCode().toString());
+                                        Log.d("Release notes", update.getReleaseNotes());
+                                        Log.d("URL", update.getUrlToDownload().toString());
+                                        Log.d("Is update available?", Boolean.toString(isUpdateAvailable));
+                                         */
+                                    }
+                                    else {
+                                        Toast.makeText(getActivity(), "No update available!", Toast.LENGTH_LONG).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailed(AppUpdaterError error) {
+                                    Toast.makeText(getActivity(), "AppUpdater Error: Something went wrong", Toast.LENGTH_LONG).show();
+                                    Log.d("AppUpdater Error", error.toString());
+                                }
+                            });
+                    /*
                     AppUpdater appUpdater = new AppUpdater(getActivity())
                             .showAppUpdated(true)
                             .setCancelable(false)
                             .setButtonDoNotShowAgain(null)
+                            .setButtonUpdateClickListener(new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    StartUpdate();
+                                }
+                            })
                             .setDisplay(Display.DIALOG);
+                     */
                     try {
                         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings);
                         NodeList elements = doc.getElementsByTagName("Source");
@@ -118,7 +243,6 @@ public class PreferencesActivity extends PreferenceActivity {
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
-
 
         private void includeQuestList() {
             // Scan file system for available questionnaires
@@ -168,7 +292,12 @@ public class PreferencesActivity extends PreferenceActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
                             prefs.edit().putBoolean("unsetDeviceAdmin", true).commit();
-                            getActivity().finish();
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                public void run() {
+                                    getActivity().finish();
+                                }
+                            }, 500);
                         }
                     })
                     .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
@@ -189,7 +318,12 @@ public class PreferencesActivity extends PreferenceActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
                             prefs.edit().putBoolean("killAppAndService", true).commit();
-                            getActivity().finish();
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                public void run() {
+                                    getActivity().finish();
+                                }
+                            }, 500);
                         }
                     })
                     .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {

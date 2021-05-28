@@ -19,6 +19,7 @@ public class Preferences {
     public Preferences(Context mcontext) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mcontext);
         sharedPreferences.edit().putBoolean("killAppAndService", false).commit();
+        sharedPreferences.edit().putString("installNewApp", "").commit();
         mContext = mcontext;
     }
 
@@ -34,6 +35,7 @@ public class Preferences {
     public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
     public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
     public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
+    public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
     public String clientID()  {return sharedPreferences.getString("clientID", "0000");}
     public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
     public String inputProfile() {
