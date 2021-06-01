@@ -1,11 +1,14 @@
 package com.iha.olmega_mobilesoftware_v2;
 
 import android.content.res.ColorStateList;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -29,6 +32,15 @@ public class Help extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         inflater = LayoutInflater.from(getApplicationContext());
         setContentView(generateView());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            if (getWindow().getInsetsController() != null) {
+                getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
     }
 
     public LinearLayout generateView() {

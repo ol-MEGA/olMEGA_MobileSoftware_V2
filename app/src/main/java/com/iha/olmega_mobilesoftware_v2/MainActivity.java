@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.WindowCompat;
 
 import android.Manifest;
 import android.app.admin.DevicePolicyManager;
@@ -24,13 +25,18 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.StrictMode;
 import android.os.UserManager;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
@@ -47,6 +53,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+
 public class MainActivity extends AppCompatActivity {
     private String TAG = this.getClass().getSimpleName();
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
@@ -57,7 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private ComponentName mAdminComponentName;
     private String[] neccessaryPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};
     private int neccessaryPermissionsIdx = 0;
-    private boolean isInitialized = false;
+    private boolean isLocked = false;
+    private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
+    private Vibrator vibrator;
+    private long automaticQuestTimer = Long.MIN_VALUE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                    startQuestionnaire("manual");
+                    startQuestionnaire();
                 return true;
             }
 
@@ -131,13 +141,27 @@ public class MainActivity extends AppCompatActivity {
                 Date currentDate = new Date(System.currentTimeMillis());
                 SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
                 dateTimeTextView.setText(dateformat.format(currentDate.getTime()));
-                dateTimeHandler.postDelayed(this, 1000);
                 if (wifiActivated) {
                     if (findViewById(R.id.Action_Wifi).getVisibility() == View.VISIBLE)
                         findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
                     else
                         findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                 }
+                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto) {
+                    if (automaticQuestTimer <= 0)
+                        automaticQuestTimer = 30 * 60;
+                    if (automaticQuestTimer >= 29 * 60) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    }
+                    if (findViewById(R.id.InfoTextView).getVisibility() == View.VISIBLE)
+                        findViewById(R.id.InfoTextView).setVisibility(View.INVISIBLE);
+                    else
+                        findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                    automaticQuestTimer = automaticQuestTimer - 1;
+                }
+                else
+                    findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                dateTimeHandler.postDelayed(this, 1000);
             }
         }, 0);
     }
@@ -145,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         checkPermission();
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         // create necessary files
         if (!com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists()) {
             try
@@ -241,6 +266,15 @@ public class MainActivity extends AppCompatActivity {
         if (enabled) {
             if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
                 startLockTask();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    getWindow().setDecorFitsSystemWindows(false);
+                    if (getWindow().getInsetsController() != null) {
+                        getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    }
+                } else {
+                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                }
             } else {
                 stopLockTask();
                 Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_LONG).show();
@@ -250,9 +284,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startQuestionnaire(String motivation) {
+    private void startQuestionnaire() {
         TextView InfoTextView = findViewById(R.id.InfoTextView);
-        if (InfoTextView.isEnabled()) {
+        if (controlService != null && InfoTextView.isEnabled() && isLocked == false) {
+            isLocked = true;
+            automaticQuestTimer = Long.MIN_VALUE;
+            InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
             isQuestionnaireRunning = true;
             Intent QuestionaireIntent = new Intent(controlService, QuestionnaireActivity.class);
@@ -260,8 +297,10 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("isAdmin", controlService.Status().Preferences().isAdmin());
             QuestionaireIntent.putExtra("clientID", controlService.Status().Preferences().clientID());
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
-            QuestionaireIntent.putExtra("motivation", motivation);
+            QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
             startActivity(QuestionaireIntent);
+            controlService.Status().QuestionnaireStarted();
+            questionnaireMotivation = QuestionnaireMotivation.manual;
         }
     }
 
@@ -282,6 +321,12 @@ public class MainActivity extends AppCompatActivity {
         checkWifi();
 
         if (controlService != null) {
+            /*
+            if (controlService.Status().Preferences().unsetDeviceAdmin()) { //  && controlService.Status().Preferences().isDeviceOwner
+                controlService.Status().Preferences().isDeviceOwner = false;
+                controlService.Status().Preferences().isInKioskMode = false;
+            }
+             */
             if (!controlService.Status().Preferences().installNewApp().equals("")) {
                 stopService(new Intent(this, ControlService.class));
                 this.finish();
@@ -300,13 +345,18 @@ public class MainActivity extends AppCompatActivity {
                 }
                 startActivity(intent);
             }
-            if (controlService.Status().Preferences().killAppAndService()) {
+            else if (controlService.Status().Preferences().killAppAndService()) {
+                if (controlService.Status().Preferences().isInKioskMode)
+                    stopLockTask();
                 stopService(new Intent(this, ControlService.class));
-                controlService = null;
+                controlService.stopForeground(true);
+                doUnbindService();
                 Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
                 this.finish();
+                System.exit(1);
             }
         }
+        isLocked = false;
     }
 
     private boolean wifiActivated = false;
@@ -339,6 +389,7 @@ public class MainActivity extends AppCompatActivity {
         //if (controlService != null)
         //    controlService.startForeground();
         doUnbindService();
+
     }
 
     @Override
@@ -355,15 +406,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showPreferences(boolean show) {
-        if (show) {
+        if (show && isLocked == false) {
+            isLocked = true;
             TextView InfoTextView = findViewById(R.id.InfoTextView);
+            InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
             startActivity(new Intent(controlService, PreferencesActivity.class));
         }
     }
 
     private void createHelpScreen() {
-        startActivity(new Intent(this, Help.class));
+        if (isLocked == false) {
+            isLocked = true;
+            TextView InfoTextView = findViewById(R.id.InfoTextView);
+            InfoTextView.setVisibility(View.VISIBLE);
+            InfoTextView.setText(R.string.pleaseWait);
+            startActivity(new Intent(this, Help.class));
+        }
     }
 
     // KIOSK MODE
@@ -386,17 +445,6 @@ public class MainActivity extends AppCompatActivity {
                 controlService.Status().Preferences().isInKioskMode = !controlService.Status().Preferences().isAdmin();
             } catch (Exception e) {
                 controlService.Status().Preferences().isInKioskMode = false;
-            }
-            if (controlService.Status().Preferences().unsetDeviceAdmin() && controlService.Status().Preferences().isDeviceOwner) {
-                controlService.Status().Preferences().clearUnsetDeviceAdmin();
-                try {
-                    mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
-                    controlService.Status().Preferences().isDeviceOwner = false;
-                    controlService.Status().Preferences().isInKioskMode = false;
-                    Toast.makeText(MainActivity.this, "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
-                }
             }
         }
     }
@@ -427,6 +475,9 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public synchronized void run() {
+                            if (QuestionnaireActivity.thisAppCompatActivity != null && acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection())
+                                QuestionnaireActivity.thisAppCompatActivity.finish();
+
                             findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                             TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                             InfoTextView.setText(acitivyStates.InfoText);
@@ -466,21 +517,17 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
 
-                public void startAutomaticQuestionnaire() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public synchronized void run() {
-                            startQuestionnaire("auto");
-                        }
-                    });
-                }
-
-                public void updateAutomaticQuestionnaireTimer(String Message) {
+                public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public synchronized void run() {
                             TextView NextQuestTextView = findViewById(R.id.nextQuestTextView);
-                            NextQuestTextView.setText(Message);
+                            if (TimeRemaining > 0)
+                                NextQuestTextView.setText(Message);
+                            else
+                                NextQuestTextView.setText("");
+                            if (TimeRemaining < 0 && TimeRemaining > Long.MIN_VALUE)
+                                questionnaireMotivation = QuestionnaireMotivation.auto;
                         }
                     });
                 }
@@ -491,5 +538,12 @@ public class MainActivity extends AppCompatActivity {
             controlService.Status().Refresh();
             controlService = null;
         }
+
     };
+
+    @Override
+    public void onBackPressed() {
+        if (controlService.Status().Preferences().isAdmin() || !controlService.Status().Preferences().isInKioskMode)
+            super.onBackPressed();
+    }
 }

@@ -20,3 +20,8 @@ enum StageManagerStates {
     ConfigFileNotValid,
     running;
 }
+
+enum QuestionnaireMotivation {
+    manual,
+    auto;
+}

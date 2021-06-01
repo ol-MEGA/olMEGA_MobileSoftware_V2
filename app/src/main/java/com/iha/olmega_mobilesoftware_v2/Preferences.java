@@ -23,7 +23,7 @@ public class Preferences {
         mContext = mcontext;
     }
 
-    public void clearUnsetDeviceAdmin() {sharedPreferences.edit().putBoolean("unsetDeviceAdmin", false).commit();}
+    //public void clearUnsetDeviceAdmin() {sharedPreferences.edit().putBoolean("unsetDeviceAdmin", false).commit();}
 
     public static File UdaterSettings = new File(FileIO.getFolderPath() + File.separator + "UdaterSettings.xml");
 
@@ -32,8 +32,8 @@ public class Preferences {
     public boolean autoStartActivity() {return sharedPreferences.getBoolean("autoStartActivity", true);}
     public boolean forceAnswer() {return sharedPreferences.getBoolean("forceAnswer", true);}
     //public boolean forceAnswerDialog() {return sharedPreferences.getBoolean("forceAnswerDialog", true);}
-    public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
-    public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
+    //public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
+    //public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
     public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
     public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
     public String clientID()  {return sharedPreferences.getString("clientID", "0000");}

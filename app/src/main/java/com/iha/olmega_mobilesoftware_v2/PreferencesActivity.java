@@ -1,7 +1,9 @@
 package com.iha.olmega_mobilesoftware_v2;
 
 import android.app.AlertDialog;
+import android.app.Application;
 import android.app.DownloadManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -294,14 +296,15 @@ public class PreferencesActivity extends PreferenceActivity {
                     .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-                            prefs.edit().putBoolean("unsetDeviceAdmin", true).commit();
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                public void run() {
-                                    getActivity().finish();
-                                }
-                            }, 500);
+                            try {
+                                DevicePolicyManager mDevicePolicyManager = (DevicePolicyManager) getActivity().getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+                                mDevicePolicyManager.clearDeviceOwnerApp(getActivity().getApplicationContext().getPackageName());
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+                                //prefs.edit().putBoolean("unsetDeviceAdmin", true).commit();
+                                Toast.makeText(getActivity(), "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
+                            } catch (Exception e) {
+                                Toast.makeText(getActivity(), "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
+                            }
                         }
                     })
                     .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
