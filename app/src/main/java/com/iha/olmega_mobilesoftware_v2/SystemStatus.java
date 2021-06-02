@@ -182,7 +182,7 @@ public class SystemStatus {
         thread.start();
     }
 
-    public void QuestionnaireStarted() {
+    public void ResetAutomaticQuestionaireTimer() {
         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
         Refresh();
     }
@@ -212,11 +212,15 @@ public class SystemStatus {
                     long hoursRemaining = remaining / 60 / 60;
                     long minutesRemaining = (remaining - hoursRemaining * 60 * 60) / 60;
                     long secondsRemaining = remaining - hoursRemaining * 60 * 60 - minutesRemaining * 60;
-                    acitivyStates.NextQuestText = String.format("%s%02d%s%02d%s%02d%s",
-                            mTempTextCountDownRemaining[0], hoursRemaining,
-                            mTempTextCountDownRemaining[1], minutesRemaining,
-                            mTempTextCountDownRemaining[2], secondsRemaining,
-                            mTempTextCountDownRemaining[3]);
+                    if (preferences.showQuestionnaireTimer()) {
+                        acitivyStates.NextQuestText = String.format("%s%02d%s%02d%s%02d%s",
+                                mTempTextCountDownRemaining[0], hoursRemaining,
+                                mTempTextCountDownRemaining[1], minutesRemaining,
+                                mTempTextCountDownRemaining[2], secondsRemaining,
+                                mTempTextCountDownRemaining[3]);
+                    }
+                    else
+                        acitivyStates.NextQuestText = "";
                     mySystemStatusListener.updateAutomaticQuestionnaireTimer(acitivyStates.NextQuestText, remaining);
                     if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() < 10 * 1000 && raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() > 5 * 1000)
                         mContext.startMainActivity(true);

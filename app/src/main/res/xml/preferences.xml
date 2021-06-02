@@ -13,14 +13,14 @@
             android:dialogTitle="@string/pref_whichQuest_dialogTitle"
             android:summary="%s"/>
 
-        <!--<SwitchPreference
+        <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="true"
             android:checked="true"
-            android:key="useQuestionnaireTimer"
-            android:title="@string/pref_activateTimer_title"
-            android:summary="@string/pref_activateTimer_summary" />-->
+            android:key="showQuestionnaireTimer"
+            android:title="@string/pref_show_activateTimer_title"
+            android:summary="@string/pref_show_activateTimer_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_head_General">

@@ -1,7 +1,10 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -49,6 +52,18 @@ public class QuestionnaireActivity extends AppCompatActivity {
         } else {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
+        findViewById(R.id.logo2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isAdmin)
+                    finish();
+            }
+        });
+        if (isAdmin)
+            findViewById(R.id.logo2).setBackgroundResource(R.color.BatteryGreen);
+        else
+            findViewById(R.id.logo2).setBackgroundResource(R.color.lighterGray);
+
         startQuestionnaire(getIntent().getExtras().getString("motivation"));
     }
 
@@ -110,6 +125,14 @@ public class QuestionnaireActivity extends AppCompatActivity {
                     View.SYSTEM_UI_FLAG_VISIBLE
             );
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Intent returnIntent = new Intent();
+        setResult(Activity.RESULT_OK, returnIntent);
+        finish();
     }
 
     @Override

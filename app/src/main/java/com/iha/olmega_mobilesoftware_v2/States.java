@@ -4,24 +4,29 @@ public enum States {
     undefined,
     init,
     connecting,
-    connected,
+    connected
 }
 
 enum BatteryStates {
     undefined,
     Normal,
     Warning,
-    Critical;
+    Critical
 }
 
 enum StageManagerStates {
     undefined,
     noConfigSelected,
     ConfigFileNotValid,
-    running;
+    running
 }
 
 enum QuestionnaireMotivation {
     manual,
-    auto;
+    auto
+}
+
+enum ActiviyRequestCode {
+    QuestionnaireActivity,
+    PreferencesActivity
 }

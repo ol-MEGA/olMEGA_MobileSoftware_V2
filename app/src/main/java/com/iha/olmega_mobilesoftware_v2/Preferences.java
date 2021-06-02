@@ -14,13 +14,13 @@ public class Preferences {
 
     public boolean isInKioskMode = false;
     public boolean isDeviceOwner = false;
-    private Context mContext = null;
+    //private Context mContext = null;
 
     public Preferences(Context mcontext) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mcontext);
-        sharedPreferences.edit().putBoolean("killAppAndService", false).commit();
-        sharedPreferences.edit().putString("installNewApp", "").commit();
-        mContext = mcontext;
+        //sharedPreferences.edit().putBoolean("killAppAndService", false).commit();
+        //sharedPreferences.edit().putString("installNewApp", "").commit();
+        //mContext = mcontext;
     }
 
     //public void clearUnsetDeviceAdmin() {sharedPreferences.edit().putBoolean("unsetDeviceAdmin", false).commit();}
@@ -34,8 +34,9 @@ public class Preferences {
     //public boolean forceAnswerDialog() {return sharedPreferences.getBoolean("forceAnswerDialog", true);}
     //public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
     //public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
-    public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
-    public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
+    //public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
+    //public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
+    public boolean showQuestionnaireTimer() {return sharedPreferences.getBoolean("showQuestionnaireTimer", true);}
     public String clientID()  {return sharedPreferences.getString("clientID", "0000");}
     public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
     public String inputProfile() {

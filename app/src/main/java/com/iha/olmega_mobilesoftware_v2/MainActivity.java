@@ -8,6 +8,7 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.WindowCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -59,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
     private ControlService controlService;
     private boolean mIsBound = false;
-    boolean isQuestionnaireRunning = false;
     private DevicePolicyManager mDevicePolicyManager;
     private ComponentName mAdminComponentName;
     private String[] neccessaryPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};
@@ -195,11 +195,11 @@ public class MainActivity extends AppCompatActivity {
             File updaterSettings = new File(FileIO.getFolderPath() + File.separator + "UdaterSettings.xml");
             if (!updaterSettings.isFile()) {
                 try {
-                InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
-                byte[] buffer = new byte[inputStream.available()];
-                inputStream.read(buffer);
-                OutputStream outStream = new FileOutputStream(updaterSettings);
-                outStream.write(buffer);
+                    InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
+                    byte[] buffer = new byte[inputStream.available()];
+                    inputStream.read(buffer);
+                    OutputStream outStream = new FileOutputStream(updaterSettings);
+                    outStream.write(buffer);
                 } catch (IOException e) {
                 }
             }
@@ -291,15 +291,13 @@ public class MainActivity extends AppCompatActivity {
             automaticQuestTimer = Long.MIN_VALUE;
             InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
-            isQuestionnaireRunning = true;
             Intent QuestionaireIntent = new Intent(controlService, QuestionnaireActivity.class);
             QuestionaireIntent.putExtra("forceAnswer", controlService.Status().Preferences().forceAnswer());
             QuestionaireIntent.putExtra("isAdmin", controlService.Status().Preferences().isAdmin());
             QuestionaireIntent.putExtra("clientID", controlService.Status().Preferences().clientID());
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
-            startActivity(QuestionaireIntent);
-            controlService.Status().QuestionnaireStarted();
+            startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
             questionnaireMotivation = QuestionnaireMotivation.manual;
         }
     }
@@ -315,47 +313,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        isQuestionnaireRunning = false;
         bindService(new Intent(MainActivity.this, ControlService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
         checkWifi();
-
-        if (controlService != null) {
-            /*
-            if (controlService.Status().Preferences().unsetDeviceAdmin()) { //  && controlService.Status().Preferences().isDeviceOwner
-                controlService.Status().Preferences().isDeviceOwner = false;
-                controlService.Status().Preferences().isInKioskMode = false;
-            }
-             */
-            if (!controlService.Status().Preferences().installNewApp().equals("")) {
-                stopService(new Intent(this, ControlService.class));
-                this.finish();
-                Intent intent;
-                File apk = new File(controlService.Status().Preferences().installNewApp());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", apk);
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(apkURI);
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                } else {
-                    Uri apkUri = Uri.fromFile(apk);
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                }
-                startActivity(intent);
-            }
-            else if (controlService.Status().Preferences().killAppAndService()) {
-                if (controlService.Status().Preferences().isInKioskMode)
-                    stopLockTask();
-                stopService(new Intent(this, ControlService.class));
-                controlService.stopForeground(true);
-                doUnbindService();
-                Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
-                this.finish();
-                System.exit(1);
-            }
-        }
         isLocked = false;
     }
 
@@ -411,7 +371,9 @@ public class MainActivity extends AppCompatActivity {
             TextView InfoTextView = findViewById(R.id.InfoTextView);
             InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
-            startActivity(new Intent(controlService, PreferencesActivity.class));
+            Intent intent = new Intent(controlService, PreferencesActivity.class);
+            intent.putExtra("isDeviceOwner", controlService.Status().Preferences().isDeviceOwner);
+            startActivityForResult(intent, ActiviyRequestCode.PreferencesActivity.ordinal());
         }
     }
 
@@ -540,6 +502,54 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (controlService != null) {
+            if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+                controlService.Status().ResetAutomaticQuestionaireTimer();
+            } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+                if (data.getBooleanExtra("unsetDeviceAdmin", false)) {
+                    try {
+                        mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                        mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
+                        Toast.makeText(this, "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
+                    }
+                }
+                if (data.getBooleanExtra("killAppAndService", false)) {
+                    if (controlService.Status().Preferences().isInKioskMode)
+                        stopLockTask();
+                    stopService(new Intent(this, ControlService.class));
+                    controlService.stopForeground(true);
+                    doUnbindService();
+                    Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
+                    this.finish();
+                    System.exit(1);
+                }
+                if (data.getStringExtra("installNewApp") != null) {
+                    stopService(new Intent(this, ControlService.class));
+                    this.finish();
+                    Intent intent;
+                    File apk = new File(data.getStringExtra("installNewApp"));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", apk);
+                        intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(apkURI);
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } else {
+                        Uri apkUri = Uri.fromFile(apk);
+                        intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
+                    startActivity(intent);
+                }
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {

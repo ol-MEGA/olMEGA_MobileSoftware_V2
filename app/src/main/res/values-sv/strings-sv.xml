@@ -56,8 +56,8 @@
     <string name="pref_unsetAdmin_summary">For uninstall only</string>
     <string name="pref_button_scan_title">Connect</string>
     <string name="pref_button_scan_summary">Scan Devices</string>
-    <string name="pref_activateTimer_title">Activate timer</string>
-    <string name="pref_activateTimer_summary">Start questionnaire at defined intervals</string>
+    <string name="pref_show_activateTimer_title">Activate timer</string>
+    <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
     <string name="pref_clientID">ClientID</string>

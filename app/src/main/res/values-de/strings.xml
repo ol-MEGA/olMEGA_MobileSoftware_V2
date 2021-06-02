@@ -58,8 +58,8 @@
     <string name="pref_unsetAdmin_summary">Nur zur Deinstallation</string>
     <string name="pref_button_scan_title">Verbinden</string>
     <string name="pref_button_scan_summary">Scanne Geräte</string>
-    <string name="pref_activateTimer_title">Timer benutzen</string>
-    <string name="pref_activateTimer_summary">Starte Fragebogen zu bestimmter Zeit</string>
+    <string name="pref_show_activateTimer_title">Timer anzeigen</string>
+    <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>
