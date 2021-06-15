@@ -2,41 +2,27 @@ package com.iha.olmega_mobilesoftware_v2;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Application;
 import android.app.DownloadManager;
-import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.core.content.FileProvider;
-
-import com.github.javiersantos.appupdater.AppUpdater;
 import com.github.javiersantos.appupdater.AppUpdaterUtils;
-import com.github.javiersantos.appupdater.DisableClickListener;
-import com.github.javiersantos.appupdater.UpdateClickListener;
 import com.github.javiersantos.appupdater.enums.AppUpdaterError;
-import com.github.javiersantos.appupdater.enums.Display;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
 import com.github.javiersantos.appupdater.objects.Update;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
@@ -46,9 +32,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.net.URL;
-import java.util.List;
-import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -139,6 +122,15 @@ public class PreferencesActivity extends PreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference arg0) {
                     confirmKillAppAndService();
+                    return true;
+                }
+            });
+            Preference LinkDevicePref = (Preference) findPreference("LinkDevice");
+            LinkDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference arg0) {
+                    Intent intent = new Intent(getActivity(), LinkDeviceHelper.class);
+                    startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
                     return true;
                 }
             });

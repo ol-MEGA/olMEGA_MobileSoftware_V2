@@ -27,6 +27,16 @@ enum QuestionnaireMotivation {
 }
 
 enum ActiviyRequestCode {
+    MainActivity,
+    HelpActiviy,
     QuestionnaireActivity,
-    PreferencesActivity
+    PreferencesActivity,
+    LinkDeviceHelper
+}
+
+enum LinkHelperBluetoothStates {
+    connecting,
+    connected,
+    disconnecting,
+    disconnected,
 }

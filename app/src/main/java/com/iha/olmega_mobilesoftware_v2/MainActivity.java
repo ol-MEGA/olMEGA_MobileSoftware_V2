@@ -1,4 +1,4 @@
-package com.iha.olmega_mobilesoftware_v2;
+    package com.iha.olmega_mobilesoftware_v2;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -40,6 +40,7 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
 
 import java.io.File;
@@ -47,6 +48,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +82,15 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+                StringWriter sw = new StringWriter();
+                paramThrowable.printStackTrace(new PrintWriter(sw));
+                LogIHAB.log(sw.toString());
+                System.exit(2);
+            }
+        });
         setContentView(R.layout.activity_main);
         MainActivity.this.doBindService();
 
@@ -288,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
         TextView InfoTextView = findViewById(R.id.InfoTextView);
         if (controlService != null && InfoTextView.isEnabled() && isLocked == false) {
             isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.QuestionnaireActivity);
             automaticQuestTimer = Long.MIN_VALUE;
             InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
@@ -317,6 +330,8 @@ public class MainActivity extends AppCompatActivity {
         mIsBound = true;
         checkWifi();
         isLocked = false;
+        if (controlService != null)
+            controlService.Status().setActiveActivity(ActiviyRequestCode.MainActivity);
     }
 
     private boolean wifiActivated = false;
@@ -368,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
     private void showPreferences(boolean show) {
         if (show && isLocked == false) {
             isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.PreferencesActivity);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
             InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
@@ -380,6 +396,7 @@ public class MainActivity extends AppCompatActivity {
     private void createHelpScreen() {
         if (isLocked == false) {
             isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.HelpActiviy);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
             InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);

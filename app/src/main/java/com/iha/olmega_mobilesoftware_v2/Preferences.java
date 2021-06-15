@@ -37,6 +37,7 @@ public class Preferences {
     //public boolean killAppAndService() {return sharedPreferences.getBoolean("killAppAndService", false);}
     //public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
     public boolean showQuestionnaireTimer() {return sharedPreferences.getBoolean("showQuestionnaireTimer", true);}
+    public boolean useQuestionnaire() {return sharedPreferences.getBoolean("useQuestionnaire", false);}
     public String clientID()  {return sharedPreferences.getString("clientID", "0000");}
     public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
     public String inputProfile() {

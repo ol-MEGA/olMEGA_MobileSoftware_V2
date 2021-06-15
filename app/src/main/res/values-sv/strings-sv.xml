@@ -7,11 +7,15 @@
     <string name="infoError">Fel</string>
     <string name="infoCharging">Laddar</string>
     <string name="infoConnecting">Ansluter</string>
+    <string name="infoConnected">Connected</string>
     <string name="hintTextAnswer">Skriv text här.</string>
     <string name="pleaseWait">Please wait...</string>
     <string name="buttonTextOkay">OK</string>
+    <string name="buttonTextClose">Close</string>
+    <string name="buttonLink">Link Transmitter</string>
     <string name="timeRemaining">Nästa enkät startar om %t %m %s</string>
     <string name="menuText">Besvara enkät</string>
+    <string name="LinkingText">Please power-on OlMega Bluetooth Transmitter and press "Link Transmitter"-Button!</string>
     <string name="noQuestionnaires">Start av enkät misslyckades.</string>
     <string name="noBluetooth">Anslutning till enheten misslyckades.</string>
     <string name="batteryWarning">Smartphonen behöver laddas.</string>
@@ -45,6 +49,7 @@
 
     <string name="pref_head_Questionnaire">Questionnaire</string>
     <string name="pref_head_General">General</string>
+    <string name="pref_head_Bluetooth">Bluetooth</string>
     <string name="pref_head_Recording">Recording</string>
     <string name="pref_head_Processing">Processing</string>
     <string name="pref_head_Administration">Administration</string>
@@ -52,11 +57,13 @@
     <string name="pref_isAdmin_title">Administrator</string>
     <string name="pref_enableKioskMode_summary">For experimenters only</string>
     <string name="pref_unsetAdmin_title">Unset Device Administrator</string>
+    <string name="pref_linkDevice_title">Link Device</string>
     <string name="pref_killAppAndService">Kill App and Service</string>
     <string name="pref_unsetAdmin_summary">For uninstall only</string>
     <string name="pref_button_scan_title">Connect</string>
     <string name="pref_button_scan_summary">Scan Devices</string>
     <string name="pref_show_activateTimer_title">Activate timer</string>
+    <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
