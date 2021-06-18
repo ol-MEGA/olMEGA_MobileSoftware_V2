@@ -12,9 +12,12 @@ import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageManager;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 class AcitivyStates {
     public boolean isCharging = false;
@@ -37,13 +40,13 @@ public class SystemStatus {
     private StageManager stageManager;
     private StageManagerStates stageMangerState = StageManagerStates.undefined;
     private SystemStatusListener mySystemStatusListener;
-    private CountDownTimer AutomaticQuestionnaireTimer = null;
-    private long raiseAutomaticQuestionaire_TimerEventAt = -1;
+    private long raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
     private BroadcastReceiver mStageStateReceiver;
     private Preferences preferences;
     private int BatteryManagerStatus = -1;
     private boolean lockUntilStageManagerIsRunning = false;
     private Handler taskHandler = new Handler(Looper.myLooper());
+    private ActiviyRequestCode curentActivity = ActiviyRequestCode.MainActivity;
 
     private AcitivyStates acitivyStates = new AcitivyStates();
 
@@ -73,8 +76,10 @@ public class SystemStatus {
                 Log.d(TAG, "receiveBroadcast: " + action);
                 switch (action) {
                     case "StageState":
-                        acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
-                        Refresh();
+                        if (stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity) {
+                            acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
+                            Refresh();
+                        }
                         break;
                 }
             }
@@ -102,9 +107,12 @@ public class SystemStatus {
                     acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
                     acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
                     // Charging State
-                    if ((!preferences.isAdmin() && !Preferences().isInKioskMode) || (acitivyStates.isCharging && Preferences().usbCutsConnection())){
-                        raiseAutomaticQuestionaire_TimerEventAt = -1;
-                        acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
+                    if ((!preferences.isAdmin() && !Preferences().isInKioskMode) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)){
+                        raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+                        if (curentActivity == ActiviyRequestCode.PreferencesActivity)
+                            acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
+                        else
+                            acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
                         if (acitivyStates.isCharging && Preferences().usbCutsConnection())
                             acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
                         stageMangerState = StageManagerStates.undefined;
@@ -113,12 +121,11 @@ public class SystemStatus {
                         if (stageManager != null && stageManager.isRunning)
                             stageManager.stop();
                     }
-                    else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest())) {
-                        raiseAutomaticQuestionaire_TimerEventAt = -1;
+                    else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
+                        raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
                         acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
-                        raiseAutomaticQuestionaire_TimerEventAt = -1;
                     }
-                    else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile())) {
+                    else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
                         acitivyStates.InputProfile = "";
                         acitivyStates.profileState = States.undefined;
                         if (getStageMangerConfigFile().exists() && getStageMangerConfigFile().isFile()) {
@@ -128,6 +135,9 @@ public class SystemStatus {
                                 stageMangerState = StageManagerStates.running;
                                 startStageManager();
                             } catch (Exception e) {
+                                StringWriter sw = new StringWriter();
+                                e.printStackTrace(new PrintWriter(sw));
+                                LogIHAB.log(sw.toString());
                                 stageMangerState = StageManagerStates.ConfigFileNotValid;
                                 e.printStackTrace();
                             }
@@ -158,13 +168,15 @@ public class SystemStatus {
                                 acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnecting);
                                 break;
                             case connected:
-                                acitivyStates.questionaireEnabled = true;
-                                acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
-                                if (Preferences().useQuestionnaireTimer() && raiseAutomaticQuestionaire_TimerEventAt < 0) {
-                                    XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
-                                    if (mXmlReader.getQuestionnaireHasTimer()) {
-                                        raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
-                                        //startAutomaticQuestionnaireTimer(raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis());
+                                acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
+                                if (preferences.useQuestionnaire()) {
+                                    acitivyStates.questionaireEnabled = true;
+                                    acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
+                                    if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
+                                        XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
+                                        if (mXmlReader.getQuestionnaireHasTimer()) {
+                                            raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
+                                        }
                                     }
                                 }
                                 break;
@@ -176,11 +188,7 @@ public class SystemStatus {
                     else if (acitivyStates.BatteryState == BatteryStates.Warning)
                         acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryWarning);
                 }
-                acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt >= 0 && acitivyStates.profileState == States.connected) ;
-                if (!acitivyStates.isAutomaticQuestionaireActive && AutomaticQuestionnaireTimer != null) {
-                    AutomaticQuestionnaireTimer.cancel();
-                    AutomaticQuestionnaireTimer = null;
-                }
+                acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && acitivyStates.profileState == States.connected) ;
                 if (mySystemStatusListener != null)
                     mySystemStatusListener.setAcitivyStates(acitivyStates);
             }
@@ -189,6 +197,10 @@ public class SystemStatus {
         thread.start();
     }
 
+    public void ResetAutomaticQuestionaireTimer() {
+        raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+        Refresh();
+    }
     private void startStageManager() {
         lockUntilStageManagerIsRunning = true;
         if (stageManager != null && stageManager.isRunning)
@@ -205,6 +217,11 @@ public class SystemStatus {
         }
     }
 
+    public void setActiveActivity(ActiviyRequestCode activity) {
+        curentActivity = activity;
+        this.Refresh();
+    }
+
     private Runnable AutomaticQuestionnaireRunnable = new Runnable() {
         public void run() {
             if (mySystemStatusListener != null) {
@@ -215,21 +232,24 @@ public class SystemStatus {
                     long hoursRemaining = remaining / 60 / 60;
                     long minutesRemaining = (remaining - hoursRemaining * 60 * 60) / 60;
                     long secondsRemaining = remaining - hoursRemaining * 60 * 60 - minutesRemaining * 60;
-                    acitivyStates.NextQuestText = String.format("%s%02d%s%02d%s%02d%s",
-                            mTempTextCountDownRemaining[0], hoursRemaining,
-                            mTempTextCountDownRemaining[1], minutesRemaining,
-                            mTempTextCountDownRemaining[2], secondsRemaining,
-                            mTempTextCountDownRemaining[3]);
-                    mySystemStatusListener.updateAutomaticQuestionnaireTimer(acitivyStates.NextQuestText);
+                    if (preferences.showQuestionnaireTimer()) {
+                        acitivyStates.NextQuestText = String.format("%s%02d%s%02d%s%02d%s",
+                                mTempTextCountDownRemaining[0], hoursRemaining,
+                                mTempTextCountDownRemaining[1], minutesRemaining,
+                                mTempTextCountDownRemaining[2], secondsRemaining,
+                                mTempTextCountDownRemaining[3]);
+                    }
+                    else
+                        acitivyStates.NextQuestText = "";
+                    mySystemStatusListener.updateAutomaticQuestionnaireTimer(acitivyStates.NextQuestText, remaining);
                     if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() < 10 * 1000 && raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() > 5 * 1000)
                         mContext.startMainActivity(true);
                     else if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() <= 0) {
-                        raiseAutomaticQuestionaire_TimerEventAt = -1;
                         mySystemStatusListener.startAutomaticQuestionnaire();
                     }
                 }
                 else
-                    mySystemStatusListener.updateAutomaticQuestionnaireTimer("");
+                    mySystemStatusListener.updateAutomaticQuestionnaireTimer("", Long.MIN_VALUE);
             }
             taskHandler.postDelayed(this, 1000);
         }
@@ -282,7 +302,7 @@ public class SystemStatus {
     public abstract static class SystemStatusListener {
         public void setAcitivyStates(AcitivyStates acitivyStates) { }
         public void startAutomaticQuestionnaire() { }
-        public void updateAutomaticQuestionnaireTimer(String Message) { }
+        public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) { }
     }
 
 }

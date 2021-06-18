@@ -1,12 +1,14 @@
-package com.iha.olmega_mobilesoftware_v2;
+    package com.iha.olmega_mobilesoftware_v2;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.WindowCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,15 +26,21 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.StrictMode;
 import android.os.UserManager;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
 
 import java.io.File;
@@ -40,6 +48,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,17 +57,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+
 public class MainActivity extends AppCompatActivity {
     private String TAG = this.getClass().getSimpleName();
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
     private ControlService controlService;
     private boolean mIsBound = false;
-    boolean isQuestionnaireRunning = false;
     private DevicePolicyManager mDevicePolicyManager;
     private ComponentName mAdminComponentName;
     private String[] neccessaryPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};
     private int neccessaryPermissionsIdx = 0;
-    private boolean isInitialized = false;
+    private boolean isLocked = false;
+    private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
+    private Vibrator vibrator;
+    private long automaticQuestTimer = Long.MIN_VALUE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +82,15 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+                StringWriter sw = new StringWriter();
+                paramThrowable.printStackTrace(new PrintWriter(sw));
+                LogIHAB.log(sw.toString());
+                System.exit(2);
+            }
+        });
         setContentView(R.layout.activity_main);
         MainActivity.this.doBindService();
 
@@ -117,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                    startQuestionnaire("manual");
+                    startQuestionnaire();
                 return true;
             }
 
@@ -131,13 +153,27 @@ public class MainActivity extends AppCompatActivity {
                 Date currentDate = new Date(System.currentTimeMillis());
                 SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
                 dateTimeTextView.setText(dateformat.format(currentDate.getTime()));
-                dateTimeHandler.postDelayed(this, 1000);
                 if (wifiActivated) {
                     if (findViewById(R.id.Action_Wifi).getVisibility() == View.VISIBLE)
                         findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
                     else
                         findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                 }
+                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto) {
+                    if (automaticQuestTimer <= 0)
+                        automaticQuestTimer = 30 * 60;
+                    if (automaticQuestTimer >= 29 * 60) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    }
+                    if (findViewById(R.id.InfoTextView).getVisibility() == View.VISIBLE)
+                        findViewById(R.id.InfoTextView).setVisibility(View.INVISIBLE);
+                    else
+                        findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                    automaticQuestTimer = automaticQuestTimer - 1;
+                }
+                else
+                    findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                dateTimeHandler.postDelayed(this, 1000);
             }
         }, 0);
     }
@@ -145,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         checkPermission();
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         // create necessary files
         if (!com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists()) {
             try
@@ -170,11 +207,11 @@ public class MainActivity extends AppCompatActivity {
             File updaterSettings = new File(FileIO.getFolderPath() + File.separator + "UdaterSettings.xml");
             if (!updaterSettings.isFile()) {
                 try {
-                InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
-                byte[] buffer = new byte[inputStream.available()];
-                inputStream.read(buffer);
-                OutputStream outStream = new FileOutputStream(updaterSettings);
-                outStream.write(buffer);
+                    InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
+                    byte[] buffer = new byte[inputStream.available()];
+                    inputStream.read(buffer);
+                    OutputStream outStream = new FileOutputStream(updaterSettings);
+                    outStream.write(buffer);
                 } catch (IOException e) {
                 }
             }
@@ -241,6 +278,15 @@ public class MainActivity extends AppCompatActivity {
         if (enabled) {
             if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
                 startLockTask();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    getWindow().setDecorFitsSystemWindows(false);
+                    if (getWindow().getInsetsController() != null) {
+                        getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    }
+                } else {
+                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                }
             } else {
                 stopLockTask();
                 Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_LONG).show();
@@ -250,18 +296,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startQuestionnaire(String motivation) {
+    private void startQuestionnaire() {
         TextView InfoTextView = findViewById(R.id.InfoTextView);
-        if (InfoTextView.isEnabled()) {
+        if (controlService != null && InfoTextView.isEnabled() && isLocked == false) {
+            isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.QuestionnaireActivity);
+            automaticQuestTimer = Long.MIN_VALUE;
+            InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
-            isQuestionnaireRunning = true;
             Intent QuestionaireIntent = new Intent(controlService, QuestionnaireActivity.class);
             QuestionaireIntent.putExtra("forceAnswer", controlService.Status().Preferences().forceAnswer());
             QuestionaireIntent.putExtra("isAdmin", controlService.Status().Preferences().isAdmin());
             QuestionaireIntent.putExtra("clientID", controlService.Status().Preferences().clientID());
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
-            QuestionaireIntent.putExtra("motivation", motivation);
-            startActivity(QuestionaireIntent);
+            QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
+            startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
+            questionnaireMotivation = QuestionnaireMotivation.manual;
         }
     }
 
@@ -276,37 +326,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        isQuestionnaireRunning = false;
         bindService(new Intent(MainActivity.this, ControlService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
         checkWifi();
-
-        if (controlService != null) {
-            if (!controlService.Status().Preferences().installNewApp().equals("")) {
-                stopService(new Intent(this, ControlService.class));
-                this.finish();
-                Intent intent;
-                File apk = new File(controlService.Status().Preferences().installNewApp());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", apk);
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(apkURI);
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                } else {
-                    Uri apkUri = Uri.fromFile(apk);
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                }
-                startActivity(intent);
-            }
-            if (controlService.Status().Preferences().killAppAndService()) {
-                stopService(new Intent(this, ControlService.class));
-                controlService = null;
-                Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
-                this.finish();
-            }
-        }
+        isLocked = false;
+        if (controlService != null)
+            controlService.Status().setActiveActivity(ActiviyRequestCode.MainActivity);
     }
 
     private boolean wifiActivated = false;
@@ -339,6 +364,7 @@ public class MainActivity extends AppCompatActivity {
         //if (controlService != null)
         //    controlService.startForeground();
         doUnbindService();
+
     }
 
     @Override
@@ -355,15 +381,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showPreferences(boolean show) {
-        if (show) {
+        if (show && isLocked == false) {
+            isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.PreferencesActivity);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
+            InfoTextView.setVisibility(View.VISIBLE);
             InfoTextView.setText(R.string.pleaseWait);
-            startActivity(new Intent(controlService, PreferencesActivity.class));
+            Intent intent = new Intent(controlService, PreferencesActivity.class);
+            intent.putExtra("isDeviceOwner", controlService.Status().Preferences().isDeviceOwner);
+            startActivityForResult(intent, ActiviyRequestCode.PreferencesActivity.ordinal());
         }
     }
 
     private void createHelpScreen() {
-        startActivity(new Intent(this, Help.class));
+        if (isLocked == false) {
+            isLocked = true;
+            controlService.Status().setActiveActivity(ActiviyRequestCode.HelpActiviy);
+            TextView InfoTextView = findViewById(R.id.InfoTextView);
+            InfoTextView.setVisibility(View.VISIBLE);
+            InfoTextView.setText(R.string.pleaseWait);
+            startActivity(new Intent(this, Help.class));
+        }
     }
 
     // KIOSK MODE
@@ -386,17 +424,6 @@ public class MainActivity extends AppCompatActivity {
                 controlService.Status().Preferences().isInKioskMode = !controlService.Status().Preferences().isAdmin();
             } catch (Exception e) {
                 controlService.Status().Preferences().isInKioskMode = false;
-            }
-            if (controlService.Status().Preferences().unsetDeviceAdmin() && controlService.Status().Preferences().isDeviceOwner) {
-                controlService.Status().Preferences().clearUnsetDeviceAdmin();
-                try {
-                    mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
-                    controlService.Status().Preferences().isDeviceOwner = false;
-                    controlService.Status().Preferences().isInKioskMode = false;
-                    Toast.makeText(MainActivity.this, "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
-                }
             }
         }
     }
@@ -427,6 +454,9 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public synchronized void run() {
+                            if (QuestionnaireActivity.thisAppCompatActivity != null && acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection())
+                                QuestionnaireActivity.thisAppCompatActivity.finish();
+
                             findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                             TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                             InfoTextView.setText(acitivyStates.InfoText);
@@ -466,21 +496,17 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
 
-                public void startAutomaticQuestionnaire() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public synchronized void run() {
-                            startQuestionnaire("auto");
-                        }
-                    });
-                }
-
-                public void updateAutomaticQuestionnaireTimer(String Message) {
+                public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public synchronized void run() {
                             TextView NextQuestTextView = findViewById(R.id.nextQuestTextView);
-                            NextQuestTextView.setText(Message);
+                            if (TimeRemaining > 0)
+                                NextQuestTextView.setText(Message);
+                            else
+                                NextQuestTextView.setText("");
+                            if (TimeRemaining < 0 && TimeRemaining > Long.MIN_VALUE)
+                                questionnaireMotivation = QuestionnaireMotivation.auto;
                         }
                     });
                 }
@@ -491,5 +517,60 @@ public class MainActivity extends AppCompatActivity {
             controlService.Status().Refresh();
             controlService = null;
         }
+
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (controlService != null) {
+            if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+                controlService.Status().ResetAutomaticQuestionaireTimer();
+            } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+                if (data.getBooleanExtra("unsetDeviceAdmin", false)) {
+                    try {
+                        mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                        mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
+                        Toast.makeText(this, "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
+                    }
+                }
+                if (data.getBooleanExtra("killAppAndService", false)) {
+                    if (controlService.Status().Preferences().isInKioskMode)
+                        stopLockTask();
+                    stopService(new Intent(this, ControlService.class));
+                    controlService.stopForeground(true);
+                    doUnbindService();
+                    Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
+                    this.finish();
+                    System.exit(1);
+                }
+                if (data.getStringExtra("installNewApp") != null) {
+                    stopService(new Intent(this, ControlService.class));
+                    this.finish();
+                    Intent intent;
+                    File apk = new File(data.getStringExtra("installNewApp"));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", apk);
+                        intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(apkURI);
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } else {
+                        Uri apkUri = Uri.fromFile(apk);
+                        intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
+                    startActivity(intent);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (controlService.Status().Preferences().isAdmin() || !controlService.Status().Preferences().isInKioskMode)
+            super.onBackPressed();
+    }
 }

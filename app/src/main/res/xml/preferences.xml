@@ -3,26 +3,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
-    <PreferenceCategory android:title="@string/pref_head_Questionnaire">
-
-        <ListPreference
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:key="selectedQuest"
-            android:title="@string/pref_whichQuest_title"
-            android:dialogTitle="@string/pref_whichQuest_dialogTitle"
-            android:summary="%s"/>
-
-        <SwitchPreference
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:defaultValue="true"
-            android:checked="true"
-            android:key="useQuestionnaireTimer"
-            android:title="@string/pref_activateTimer_title"
-            android:summary="@string/pref_activateTimer_summary" />
-    </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_head_General">
         <EditTextPreference
             android:layout_width="wrap_content"
@@ -55,6 +35,45 @@
             android:key="usbCutsConnection"
             android:title="@string/pref_usbCutsConnection"
             android:summary="@string/pref_usbCutsConnection_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_head_Questionnaire">
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:checked="false"
+            android:key="useQuestionnaire"
+            android:title="@string/pref_use_questionnaire_title"
+            />
+
+        <ListPreference
+            android:dependency="useQuestionnaire"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="selectedQuest"
+            android:title="@string/pref_whichQuest_title"
+            android:dialogTitle="@string/pref_whichQuest_dialogTitle"
+            android:summary="%s"/>
+
+        <SwitchPreference
+            android:dependency="useQuestionnaire"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:checked="true"
+            android:key="showQuestionnaireTimer"
+            android:title="@string/pref_show_activateTimer_title"
+            android:summary="@string/pref_show_activateTimer_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_head_Bluetooth">
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="LinkDevice"
+            android:title="@string/pref_linkDevice_title" />
     </PreferenceCategory>
 
     <!--<PreferenceCategory android:title="@string/pref_head_Processing"

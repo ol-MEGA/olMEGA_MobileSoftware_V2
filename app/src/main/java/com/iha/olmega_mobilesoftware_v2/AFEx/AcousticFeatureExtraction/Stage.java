@@ -31,7 +31,7 @@ abstract class Stage extends TreeSet {
 
     boolean hasInput = true; // default mode, use false to bypass receive() & rebuffer()
 
-    private Thread thread;
+    protected Thread thread;
     private LinkedBlockingQueue<float[][]> inQueue;
     private Set<LinkedBlockingQueue> outQueue = new HashSet<>();
 
@@ -42,31 +42,31 @@ abstract class Stage extends TreeSet {
     int id, blockSize, hopSize, blockSizeOut, hopSizeOut;
 
     public Stage(HashMap parameter) {
+        if (!parameter.isEmpty()) {
+            id = Integer.parseInt((String) parameter.get("id"));
 
-        id = Integer.parseInt((String) parameter.get("id"));
+            Log.d("Stage", " Constructing stage ID " + id + ".");
 
-        Log.d("Stage", " Constructing stage ID " + id + ".");
+            if (parameter.get("blocksize") == null)
+                blockSize = 400;
+            else
+                blockSize = Integer.parseInt((String) parameter.get("blocksize"));
 
-        if (parameter.get("blocksize") == null)
-            blockSize = 400;
-        else
-            blockSize = Integer.parseInt((String) parameter.get("blocksize"));
+            if (parameter.get("hopsize") == null)
+                hopSize = blockSize;
+            else
+                hopSize = Integer.parseInt((String) parameter.get("hopsize"));
 
-        if (parameter.get("hopsize") == null)
-            hopSize = blockSize;
-        else
-            hopSize = Integer.parseInt((String) parameter.get("hopsize"));
+            if (parameter.get("blockout") == null)
+                blockSizeOut = blockSize;
+            else
+                blockSizeOut = Integer.parseInt((String) parameter.get("blockout"));
 
-        if (parameter.get("blockout") == null)
-            blockSizeOut = blockSize;
-        else
-            blockSizeOut = Integer.parseInt((String) parameter.get("blockout"));
-
-        if (parameter.get("hopout") == null)
-            hopSizeOut = hopSize;
-        else
-            hopSizeOut = Integer.parseInt((String) parameter.get("hopout"));
-
+            if (parameter.get("hopout") == null)
+                hopSizeOut = hopSize;
+            else
+                hopSizeOut = Integer.parseInt((String) parameter.get("hopout"));
+        }
     }
 
 

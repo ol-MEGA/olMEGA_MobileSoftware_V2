@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/lighterGray"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="@dimen/toolBarPadding"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <View
+            android:id="@+id/logo"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="0"
+            android:foreground="@drawable/logo" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/lighterGray"
+            android:gravity="center"
+            android:orientation="horizontal"></LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/InfoText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:autoSizeMaxTextSize="34sp"
+            android:autoSizeTextType="uniform"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="@string/LinkingText"
+            android:textSize="34sp" />
+
+        <Button
+            android:id="@+id/button_Link"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:text="@string/buttonLink"
+            android:textSize="30sp"
+            android:visibility="visible" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5" />
+
+        <Button
+            android:id="@+id/buttonClose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:text="@string/buttonTextClose"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+    <!--
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="top"
+        android:layout_weight="1">
+
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/page0">
+        </ScrollView>
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/page1">
+        <TextView style="?android:textAppearanceMedium"
+                android:padding="16dp"
+                android:lineSpacingMultiplier="1.2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wait For Configuration Mode" />
+        </ScrollView>
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/page2">
+        <TextView style="?android:textAppearanceMedium"
+                android:padding="16dp"
+                android:lineSpacingMultiplier="1.2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Succsess" />
+        </ScrollView>
+    </androidx.viewpager.widget.ViewPager>
+    -->
+</LinearLayout>

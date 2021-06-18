@@ -1,7 +1,13 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,8 +20,10 @@ import com.iha.olmega_mobilesoftware_v2.R;
 
 import java.util.ArrayList;
 
+
 public class QuestionnaireActivity extends AppCompatActivity {
     private String TAG = this.getClass().getSimpleName();
+    public static AppCompatActivity thisAppCompatActivity;
     public ViewPager mViewPager;
     private QuestionnairePagerAdapter mAdapter;
     private boolean forceAnswer, isAdmin;
@@ -23,6 +31,7 @@ public class QuestionnaireActivity extends AppCompatActivity {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
+        thisAppCompatActivity = this;
         setContentView(R.layout.activity_main_questionaire);
         forceAnswer = getIntent().getExtras().getBoolean("forceAnswer");
         isAdmin = getIntent().getExtras().getBoolean("isAdmin");
@@ -34,6 +43,27 @@ public class QuestionnaireActivity extends AppCompatActivity {
         mAdapter = new QuestionnairePagerAdapter(this, mViewPager, !isAdmin);
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            if (getWindow().getInsetsController() != null) {
+                getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
+        findViewById(R.id.logo2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isAdmin)
+                    finish();
+            }
+        });
+        if (isAdmin)
+            findViewById(R.id.logo2).setBackgroundResource(R.color.BatteryGreen);
+        else
+            findViewById(R.id.logo2).setBackgroundResource(R.color.lighterGray);
+
         startQuestionnaire(getIntent().getExtras().getString("motivation"));
     }
 
@@ -95,5 +125,17 @@ public class QuestionnaireActivity extends AppCompatActivity {
                     View.SYSTEM_UI_FLAG_VISIBLE
             );
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Intent returnIntent = new Intent();
+        setResult(Activity.RESULT_OK, returnIntent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
     }
 }

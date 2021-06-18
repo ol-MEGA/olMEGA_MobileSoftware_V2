@@ -4,19 +4,39 @@ public enum States {
     undefined,
     init,
     connecting,
-    connected,
+    connected
 }
 
 enum BatteryStates {
     undefined,
     Normal,
     Warning,
-    Critical;
+    Critical
 }
 
 enum StageManagerStates {
     undefined,
     noConfigSelected,
     ConfigFileNotValid,
-    running;
+    running
+}
+
+enum QuestionnaireMotivation {
+    manual,
+    auto
+}
+
+enum ActiviyRequestCode {
+    MainActivity,
+    HelpActiviy,
+    QuestionnaireActivity,
+    PreferencesActivity,
+    LinkDeviceHelper
+}
+
+enum LinkHelperBluetoothStates {
+    connecting,
+    connected,
+    disconnecting,
+    disconnected,
 }

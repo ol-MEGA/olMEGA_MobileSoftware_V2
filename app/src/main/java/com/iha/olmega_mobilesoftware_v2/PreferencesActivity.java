@@ -1,5 +1,6 @@
 package com.iha.olmega_mobilesoftware_v2;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -7,33 +8,21 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.core.content.FileProvider;
-
-import com.github.javiersantos.appupdater.AppUpdater;
 import com.github.javiersantos.appupdater.AppUpdaterUtils;
-import com.github.javiersantos.appupdater.DisableClickListener;
-import com.github.javiersantos.appupdater.UpdateClickListener;
 import com.github.javiersantos.appupdater.enums.AppUpdaterError;
-import com.github.javiersantos.appupdater.enums.Display;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
 import com.github.javiersantos.appupdater.objects.Update;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
@@ -43,17 +32,16 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.net.URL;
-import java.util.List;
-import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class PreferencesActivity extends PreferenceActivity {
     private String TAG = this.getClass().getSimpleName();
+    public boolean isDeviceOwner = false;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
+        isDeviceOwner = getIntent().getBooleanExtra("isDeviceOwner", false);
         getFragmentManager().beginTransaction().replace(android.R.id.content, new Preferences()).commit();
     }
 
@@ -88,14 +76,11 @@ public class PreferencesActivity extends PreferenceActivity {
                     String uriString = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                     File myFile = new File(uriString.replace("file://", ""));
                     if (myFile.isFile()) {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        prefs.edit().putString("installNewApp", myFile.toString()).commit();
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            public void run() {
-                                finish();
-                            }
-                        }, 500);
+
+                        Intent returnIntent = new Intent();
+                        returnIntent.putExtra("installNewApp", myFile.toString());
+                        PreferencesActivity.this.setResult(Activity.RESULT_OK, returnIntent);
+                        PreferencesActivity.this.finish();
                         success = true;
                         context.unregisterReceiver(this);
                     }
@@ -114,6 +99,8 @@ public class PreferencesActivity extends PreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
+            PreferencesActivity tmp = (PreferencesActivity)getActivity();
+            findPreference("unsetDeviceAdmin").setEnabled(tmp.isDeviceOwner);
             findPreference("checkForUpdate").setEnabled(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists());
             if (findPreference("checkForUpdate").isEnabled() == false)
                 findPreference("checkForUpdate").setSummary(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.getAbsolutePath() + " is missing!");
@@ -135,6 +122,15 @@ public class PreferencesActivity extends PreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference arg0) {
                     confirmKillAppAndService();
+                    return true;
+                }
+            });
+            Preference LinkDevicePref = (Preference) findPreference("LinkDevice");
+            LinkDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference arg0) {
+                    Intent intent = new Intent(getActivity(), LinkDeviceHelper.class);
+                    startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
                     return true;
                 }
             });
@@ -294,14 +290,11 @@ public class PreferencesActivity extends PreferenceActivity {
                     .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-                            prefs.edit().putBoolean("unsetDeviceAdmin", true).commit();
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                public void run() {
-                                    getActivity().finish();
-                                }
-                            }, 500);
+                            Intent returnIntent = new Intent();
+                            returnIntent.putExtra("killAppAndService", true);
+                            returnIntent.putExtra("unsetDeviceAdmin", true);
+                            getActivity().setResult(Activity.RESULT_OK, returnIntent);
+                            getActivity().finish();
                         }
                     })
                     .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
@@ -320,14 +313,10 @@ public class PreferencesActivity extends PreferenceActivity {
                     .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-                            prefs.edit().putBoolean("killAppAndService", true).commit();
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                public void run() {
-                                    getActivity().finish();
-                                }
-                            }, 500);
+                            Intent returnIntent = new Intent();
+                            returnIntent.putExtra("killAppAndService", true);
+                            getActivity().setResult(Activity.RESULT_OK, returnIntent);
+                            getActivity().finish();
                         }
                     })
                     .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
