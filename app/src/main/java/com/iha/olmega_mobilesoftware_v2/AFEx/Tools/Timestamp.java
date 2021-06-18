@@ -24,6 +24,9 @@ public class Timestamp {
             case 3:
                 timestamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.US);
                 break;
+            case 4:
+                timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS", Locale.US);
+                break;
         }
 
         return timestamp.format(new Date());

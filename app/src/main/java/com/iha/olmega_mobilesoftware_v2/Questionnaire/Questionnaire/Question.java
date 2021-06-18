@@ -89,7 +89,11 @@ public class Question extends AppCompatActivity {
 
     private String extractQuestionText() {
         // Obtain Question Text from Questionnaire
-        return (mQuestionBlueprint.split("<label>|</label>")[1].split("<text>|</text>")[1]);
+        try {
+            return (mQuestionBlueprint.split("<label>|</label>")[1].split("<text>|</text>")[1]);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private String extractQuestionTextFinish() {

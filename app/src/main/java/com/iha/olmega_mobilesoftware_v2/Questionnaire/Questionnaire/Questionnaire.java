@@ -94,6 +94,8 @@ public class Questionnaire {
         boolean isFinish = false;
         boolean isPhotograph = false;
         boolean isInfo = false;
+        boolean isInfoScreen = false;
+        boolean isTime = false;
 
         LinearLayout answerContainer = new LinearLayout(mQuestionnaireActivity);
         answerContainer.setId(question.getQuestionId());
@@ -150,6 +152,12 @@ public class Questionnaire {
 
         final AnswerTypeInfo answerTypeInfo = new AnswerTypeInfo(
                 mQuestionnaireActivity, this, answerLayout);
+
+        final AnswerTypeInfoScreen answerTypeInfoScreen = new AnswerTypeInfoScreen(
+                mQuestionnaireActivity, this, answerLayout);
+
+        final AnswerTypeTime answerTypeTime = new AnswerTypeTime(
+                mQuestionnaireActivity, this, question.getQuestionId());
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -224,6 +232,16 @@ public class Questionnaire {
                         answerTypeInfo.addAnswer();
                         break;
                     }
+                    case "infoscreen": {
+                        isInfoScreen = true;
+                        answerTypeInfoScreen.addAnswer(sAnswer);
+                        break;
+                    }
+                    case "time": {
+                        isTime = true;
+                        answerTypeTime.addAnswer(nAnswerId, sAnswer);
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         break;
@@ -278,6 +296,14 @@ public class Questionnaire {
 
         if (isInfo) {
             answerTypeInfo.addClickListener();
+        }
+
+        if (isInfoScreen) {
+            //answerTypeInfo.addClickListener();
+        }
+
+        if (isTime) {
+            //answerTypeTime.buildView();
         }
 
         return answerContainer;
@@ -374,6 +400,9 @@ public class Questionnaire {
                         wasChanged = true;
                     }
                 }
+                if (qI.getQuestion().getTypeAnswer().equals("time")) {
+                    removeViewOnly(iPos);
+                }
             }
         }
 
@@ -419,7 +448,7 @@ public class Questionnaire {
     }
 
     // Removes the question from the displayed list and all given answer ids from memory
-    private boolean removeQuestion(int iPos) {
+    public boolean removeQuestion(int iPos) {
 
         mQuestionInfo.get(iPos).setInactive();
         mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
@@ -430,6 +459,12 @@ public class Questionnaire {
         mContextQPA.setQuestionnaireProgressBar();
 
         return true;
+    }
+
+    public void removeViewOnly(int iPos) {
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getId());
+        mContextQPA.notifyDataSetChanged();
+        mContextQPA.setQuestionnaireProgressBar();
     }
 
     // Returns answers given by user for specific question
