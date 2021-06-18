@@ -73,6 +73,7 @@
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="LinkDevice"
+            android:summary="Current State: Experimental!"
             android:title="@string/pref_linkDevice_title" />
     </PreferenceCategory>
 

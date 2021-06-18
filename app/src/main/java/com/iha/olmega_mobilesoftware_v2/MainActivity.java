@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
             startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
-            questionnaireMotivation = QuestionnaireMotivation.manual;
+            //questionnaireMotivation = QuestionnaireMotivation.manual;
         }
     }
 
@@ -505,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
                                 NextQuestTextView.setText(Message);
                             else
                                 NextQuestTextView.setText("");
-                            if (TimeRemaining < 0 && TimeRemaining > Long.MIN_VALUE)
+                            if (TimeRemaining > Long.MIN_VALUE && TimeRemaining < 0)
                                 questionnaireMotivation = QuestionnaireMotivation.auto;
                         }
                     });
@@ -525,6 +525,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (controlService != null) {
             if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+                questionnaireMotivation = QuestionnaireMotivation.manual;
                 controlService.Status().ResetAutomaticQuestionaireTimer();
             } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
                 if (data.getBooleanExtra("unsetDeviceAdmin", false)) {

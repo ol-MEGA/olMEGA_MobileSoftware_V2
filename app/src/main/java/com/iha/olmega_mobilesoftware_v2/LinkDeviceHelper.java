@@ -62,12 +62,12 @@ public class LinkDeviceHelper extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        bt.getBluetoothService().stop();
+        bt.disconnect();
         bt.stopService();
-        bt = null;
     }
 
     private void linkPossibleDevices() {
+        bt.disconnect();
         bt.stopService();
         bt.setupService();
         bt.startService(BluetoothState.DEVICE_OTHER);
@@ -104,8 +104,9 @@ public class LinkDeviceHelper extends AppCompatActivity {
                         break;
                 }
                 if (System.currentTimeMillis() > maxConnectionTrialTimeout || pairedDevices.isEmpty()){
-                    //if (BluetoothIsConnected)
-                    //    bt.disconnect();
+                    bt.getBluetoothService().stop();
+                    bt.disconnect();
+                    bt.stopService();
                     Handler handler = new Handler();
                     handler.postDelayed(() -> checkForStableConnection(), 1000);
                 }
@@ -116,12 +117,11 @@ public class LinkDeviceHelper extends AppCompatActivity {
     }
 
     private void checkForStableConnection() {
-        bt.stopService();
+        BluetoothHasData = false;
+        BluetoothIsConnected = false;
         bt.setupService();
         bt.startService(BluetoothState.DEVICE_OTHER);
         findViewById(R.id.button_Link).setEnabled(false);
-        BluetoothHasData = false;
-        BluetoothIsConnected = false;
         maxConnectionTrialTimeout = System.currentTimeMillis() + timeOut * 1000;
         final Handler waitForConnectionHandler = new Handler();
         waitForConnectionHandler.postDelayed(new Runnable() {
@@ -129,6 +129,9 @@ public class LinkDeviceHelper extends AppCompatActivity {
             public void run() {
                 bt.send("GC", false);
                 if (BluetoothHasData) {
+                    bt.getBluetoothService().stop();
+                    bt.disconnect();
+                    bt.stopService();
                     new AlertDialog.Builder(LinkDeviceHelper.this, R.style.SwipeDialogTheme)
                             .setTitle(R.string.app_name)
                             .setMessage("Linking was successfull!")
@@ -136,9 +139,12 @@ public class LinkDeviceHelper extends AppCompatActivity {
                             .setCancelable(false)
                             .show();
                 } else if (System.currentTimeMillis() > maxConnectionTrialTimeout)  {
+                    bt.getBluetoothService().stop();
+                    bt.disconnect();
+                    bt.stopService();
                     new AlertDialog.Builder(LinkDeviceHelper.this, R.style.SwipeDialogTheme)
                             .setTitle(R.string.app_name)
-                            .setMessage("Linking was not successfull! Please retry!")
+                            .setMessage("Linking was not successfull! Please make sure the device has been paired and retry!")
                             .setPositiveButton(R.string.buttonTextOkay, (dialog, which) -> findViewById(R.id.button_Link).setEnabled(true))
                             .setCancelable(false)
                             .show();

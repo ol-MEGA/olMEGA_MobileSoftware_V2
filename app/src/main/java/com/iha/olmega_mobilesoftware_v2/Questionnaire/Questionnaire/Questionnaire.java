@@ -1,5 +1,7 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -438,6 +440,8 @@ public class Questionnaire {
     }
 
     private void returnToMenu() {
+        Intent returnIntent = new Intent();
+        mQuestionnaireActivity.setResult(Activity.RESULT_OK, returnIntent);
         mQuestionnaireActivity.finish();
     }
 }
