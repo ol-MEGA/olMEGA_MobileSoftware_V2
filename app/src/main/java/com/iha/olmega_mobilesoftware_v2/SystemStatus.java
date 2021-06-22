@@ -100,19 +100,20 @@ public class SystemStatus {
             @Override
             public synchronized void run() {
                 if (lockUntilStageManagerIsRunning == false) {
-                    acitivyStates.InfoText = "";
+                    acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
                     acitivyStates.NextQuestText = "";
                     acitivyStates.questionaireEnabled = false;
+                    preferences.configHasErrors = false;
 
                     acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
                     acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
                     // Charging State
-                    if ((!preferences.isAdmin() && !Preferences().isInKioskMode) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)){
+                    if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)){
                         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                        if (curentActivity == ActiviyRequestCode.PreferencesActivity)
-                            acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
-                        else
+                        if (curentActivity != ActiviyRequestCode.PreferencesActivity) {
                             acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
+                            preferences.configHasErrors = true;
+                        }
                         if (acitivyStates.isCharging && Preferences().usbCutsConnection())
                             acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
                         stageMangerState = StageManagerStates.undefined;
@@ -124,6 +125,7 @@ public class SystemStatus {
                     else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
                         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
                         acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
+                        preferences.configHasErrors = true;
                     }
                     else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
                         acitivyStates.InputProfile = "";
@@ -150,16 +152,18 @@ public class SystemStatus {
                         case ConfigFileNotValid:
                             acitivyStates.profileState = States.undefined;
                             acitivyStates.InfoText = "Stage Manager Config-File '" + getStageMangerConfigFile().getAbsoluteFile() + "' not valid!";
+                            preferences.configHasErrors = true;
                             break;
                         case noConfigSelected:
                             acitivyStates.profileState = States.undefined;
                             acitivyStates.InfoText = "No Input Profile Config selected!";
+                            preferences.configHasErrors = true;
                             break;
                         case running:
                             break;
                     }
 
-                    if (stageManager != null && stageManager.isRunning && acitivyStates.profileState != States.undefined) {
+                    if (curentActivity == ActiviyRequestCode.MainActivity && stageManager != null && stageManager.isRunning && acitivyStates.profileState != States.undefined) {
                         switch (acitivyStates.profileState) {
                             case init:
                                 acitivyStates.InfoText = "Initializing";
@@ -179,6 +183,7 @@ public class SystemStatus {
                                         }
                                     }
                                 }
+                                //acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
                                 break;
                         }
                     }

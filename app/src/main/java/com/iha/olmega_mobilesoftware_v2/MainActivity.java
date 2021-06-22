@@ -5,7 +5,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.view.WindowCompat;
 
 import android.Manifest;
 import android.app.Activity;
@@ -24,7 +23,6 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.StrictMode;
 import android.os.UserManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -37,7 +35,6 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
@@ -55,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -97,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.logo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showPreferences(controlService.Status().Preferences().isAdmin() || !controlService.Status().Preferences().isInKioskMode);
+                showPreferences(controlService.Status().Preferences().isAdmin() || controlService.Status().Preferences().configHasErrors);
             }
         });
         findViewById(R.id.Action_Logo).setOnClickListener(new View.OnClickListener() {
@@ -219,19 +215,16 @@ public class MainActivity extends AppCompatActivity {
                 SystemStatus.AFExConfigFolder.mkdirs();
             if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
-                    File example_mic_in_speaker_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_mic_in_speaker_out.xml");
-                    InputStream inputStream = getResources().openRawResource(R.raw.example_mic_in_speaker_out);
-                    byte[] buffer = new byte[inputStream.available()];
-                    inputStream.read(buffer);
-                    OutputStream outStream = new FileOutputStream(example_mic_in_speaker_out);
-                    outStream.write(buffer);
-
-                    File example_rfcomm_in_audio_out = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + "example_rfcomm_in_audio_out.xml");
-                    inputStream = getResources().openRawResource(R.raw.example_rfcomm_in_audio_out);
-                    buffer = new byte[inputStream.available()];
-                    inputStream.read(buffer);
-                    outStream = new FileOutputStream(example_rfcomm_in_audio_out);
-                    outStream.write(buffer);
+                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out,  R.raw.example_standalone};
+                    String[] fileListOut = {"mic_in_speaker_out.xml", "rfcomm_in_audio_out.xml", "standalone.xml"};
+                    for (int idx = 0; idx < fileListIn.length; idx++) {
+                        File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
+                        InputStream inputStream = getResources().openRawResource(fileListIn[idx]);
+                        byte[] buffer = new byte[inputStream.available()];
+                        inputStream.read(buffer);
+                        OutputStream outStream = new FileOutputStream(file);
+                        outStream.write(buffer);
+                    }
                 } catch (IOException e) {
                 }
             }
@@ -261,9 +254,6 @@ public class MainActivity extends AppCompatActivity {
         setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, false);
         setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
         Log.i(TAG, "KIOSK MODE: " + active);
-        // disable keyguard and status bar - needs API 23 (Damnit!)
-        //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
-        //mDevicePolicyManager.setStatusBarDisab(controlService.Status().Settings().isInKioskMode || controlService.Status().Settings().isAdmin()led(mAdminComponentName, active);
     }
 
     private void setUserRestriction(String restriction, boolean disallow) {
@@ -461,8 +451,10 @@ public class MainActivity extends AppCompatActivity {
                             TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                             InfoTextView.setText(acitivyStates.InfoText);
                             InfoTextView.setEnabled(acitivyStates.questionaireEnabled);
-                            if (controlService.Status().Preferences().isAdmin() || !controlService.Status().Preferences().isInKioskMode)
+                            if (controlService.Status().Preferences().isAdmin())
                                 findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
+                            else if (controlService.Status().Preferences().configHasErrors)
+                                findViewById(R.id.logo).setBackgroundResource(R.color.design_default_color_error);
                             else
                                 findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
                             View battery_bottom = findViewById(R.id.battery_bottom);

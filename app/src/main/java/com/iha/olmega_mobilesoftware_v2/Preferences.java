@@ -14,6 +14,7 @@ public class Preferences {
 
     public boolean isInKioskMode = false;
     public boolean isDeviceOwner = false;
+    public boolean configHasErrors = false;
     //private Context mContext = null;
 
     public Preferences(Context mcontext) {
@@ -31,6 +32,7 @@ public class Preferences {
     public boolean usbCutsConnection() {return sharedPreferences.getBoolean("usbCutsConnection", true);}
     public boolean autoStartActivity() {return sharedPreferences.getBoolean("autoStartActivity", true);}
     public boolean forceAnswer() {return sharedPreferences.getBoolean("forceAnswer", true);}
+    public boolean isKioskModeNecessary() {return sharedPreferences.getBoolean("isKioskModeNecessary", true);}
     //public boolean forceAnswerDialog() {return sharedPreferences.getBoolean("forceAnswerDialog", true);}
     //public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
     //public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}

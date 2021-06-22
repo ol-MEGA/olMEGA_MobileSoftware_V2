@@ -68,6 +68,7 @@
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
+    <string name="pref_isKioskModeNecessary">Kiosk-Mode erforderlich?</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_whichQuest_title">Auswahl Fragebogen</string>

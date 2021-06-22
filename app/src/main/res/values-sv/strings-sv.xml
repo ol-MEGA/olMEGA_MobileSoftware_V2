@@ -66,6 +66,7 @@
     <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
+    <string name="pref_isKioskModeNecessary">Kiosk-Mode necessary?</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_whichQuest_title">Select questionnaire</string>

@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<stage feature="StageAudioCapture" id="00">
-    <stage feature="StageAudioOutput" id="10"/>
-</stage>
