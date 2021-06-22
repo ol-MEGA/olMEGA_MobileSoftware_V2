@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
             if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
                     int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out,  R.raw.example_standalone};
-                    String[] fileListOut = {"mic_in_speaker_out.xml", "rfcomm_in_audio_out.xml", "standalone.xml"};
+                    String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml"};
                     for (int idx = 0; idx < fileListIn.length; idx++) {
                         File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
                         InputStream inputStream = getResources().openRawResource(fileListIn[idx]);
