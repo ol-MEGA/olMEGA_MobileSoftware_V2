@@ -24,6 +24,7 @@ public class LogIHAB {
         File file = new File(FileIO.getFolderPath() + File.separator + mFileName);
         FileWriter fw = null;
         String formattedString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(new Date()) + " " + string;
+
         try
         {
             fw = new FileWriter(file, true);
@@ -38,4 +39,5 @@ public class LogIHAB {
                 try { fw.close(); } catch ( IOException e ) { e.printStackTrace(); }
         }
     }
+
 }
