@@ -21,6 +21,7 @@ import com.iha.olmega_mobilesoftware_v2.R;
  * Created by ulrikkowalk on 17.02.17.
  */
 
+
 public class AnswerTypeWebsite extends AnswerType {
 
     private static String LOG_STRING = "AnswerTypeWebsite";
@@ -55,9 +56,14 @@ public class AnswerTypeWebsite extends AnswerType {
         if (isNetworkAvailable()) {
 
             WebView webView = new WebView(mContext);
+            //webView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 70));
             webView.setWebViewClient(new WebViewClient());
             webView.getSettings().setJavaScriptEnabled(true);
+            webView.getSettings().setUseWideViewPort(true);
+            webView.getSettings().setLoadWithOverviewMode(true);
+
             webView.loadUrl(this.url);
+            //webView.setInitialScale(70);
 
             Log.e(LOG, "URL: " + this.url);
 
@@ -75,7 +81,7 @@ public class AnswerTypeWebsite extends AnswerType {
 
             LinearLayout.LayoutParams webViewParams = new LinearLayout.LayoutParams(
                     Units.getScreenWidth(),
-                    Units.getScreenHeight() - buttonParams.bottomMargin - buttonParams.topMargin - 650
+                    Units.getScreenHeight() - buttonParams.bottomMargin - buttonParams.topMargin - 500
             );
 
             mParent.layoutAnswer.setBackgroundColor(ContextCompat.getColor(mContext, R.color.WebGray));
@@ -83,6 +89,9 @@ public class AnswerTypeWebsite extends AnswerType {
 
             mParent.layoutAnswer.addView(webView, webViewParams);
             mParent.layoutAnswer.addView(button, buttonParams);
+
+
+
 
         } else {
 
@@ -114,7 +123,8 @@ public class AnswerTypeWebsite extends AnswerType {
             this.button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                   // ((MainActivity) context).nextQuestion();
+                    mQuestionnaire.moveForward();
+                    //((MainActivity) context).nextQuestion();
                 }
             });
         }

@@ -479,4 +479,8 @@ public class Questionnaire {
         mQuestionnaireActivity.setResult(Activity.RESULT_OK, returnIntent);
         mQuestionnaireActivity.finish();
     }
+
+    public void moveForward() {
+        mContextQPA.moveForward();
+    }
 }

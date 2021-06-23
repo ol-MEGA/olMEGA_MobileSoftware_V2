@@ -309,4 +309,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return "";
     }
 
+    public void moveForward() {
+        if ((mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1)) {
+            mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+        }
+    }
+
 }
