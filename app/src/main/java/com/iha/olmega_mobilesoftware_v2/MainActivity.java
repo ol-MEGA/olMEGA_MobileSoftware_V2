@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -131,15 +132,10 @@ public class MainActivity extends AppCompatActivity {
             };
         });
 
-        findViewById(R.id.InfoTextView).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                    startQuestionnaire();
-                return true;
-            }
-
-            ;
+        findViewById(R.id.InfoTextView).setOnTouchListener((view, motionEvent) -> {
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP)
+                startQuestionnaire();
+            return true;
         });
 
         final Handler dateTimeHandler = new Handler(Looper.myLooper());
@@ -161,14 +157,15 @@ public class MainActivity extends AppCompatActivity {
                     if (automaticQuestTimer >= 29 * 60) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                     }
-                    if (findViewById(R.id.InfoTextView).getVisibility() == View.VISIBLE)
-                        findViewById(R.id.InfoTextView).setVisibility(View.INVISIBLE);
+                    TextView tempView = findViewById(R.id.InfoTextView);
+                    if (tempView.getCurrentTextColor() == ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
+                        setInfoTextView(true);
                     else
-                        findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                        setInfoTextView(false);
                     automaticQuestTimer = automaticQuestTimer - 1;
                 }
                 else
-                    findViewById(R.id.InfoTextView).setVisibility(View.VISIBLE);
+                    setInfoTextView(false);
                 dateTimeHandler.postDelayed(this, 1000);
             }
         }, 0);
@@ -292,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             isLocked = true;
             controlService.Status().setActiveActivity(ActiviyRequestCode.QuestionnaireActivity);
             automaticQuestTimer = Long.MIN_VALUE;
-            InfoTextView.setVisibility(View.VISIBLE);
+            setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
             Intent QuestionaireIntent = new Intent(controlService, QuestionnaireActivity.class);
             QuestionaireIntent.putExtra("forceAnswer", controlService.Status().Preferences().forceAnswer());
@@ -375,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
             isLocked = true;
             controlService.Status().setActiveActivity(ActiviyRequestCode.PreferencesActivity);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
-            InfoTextView.setVisibility(View.VISIBLE);
+            setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
             Intent intent = new Intent(controlService, PreferencesActivity.class);
             intent.putExtra("isDeviceOwner", controlService.Status().Preferences().isDeviceOwner);
@@ -388,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
             isLocked = true;
             controlService.Status().setActiveActivity(ActiviyRequestCode.HelpActiviy);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
-            InfoTextView.setVisibility(View.VISIBLE);
+            setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
             startActivity(new Intent(this, Help.class));
         }
@@ -559,6 +556,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void setInfoTextView(boolean highlight) {
+        TextView tempView = findViewById(R.id.InfoTextView);
+        if (highlight) {
+            tempView.setBackgroundResource(R.color.JadeRed);
+            tempView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BackgroundColor));
+        }
+        else {
+            tempView.setBackgroundColor(Color.TRANSPARENT);
+            tempView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary));
+        }
+        tempView.invalidate();
     }
 
     @Override
