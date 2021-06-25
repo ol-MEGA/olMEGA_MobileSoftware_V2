@@ -110,7 +110,7 @@ public class SystemStatus {
                     // Charging State
                     if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)){
                         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                        if (curentActivity != ActiviyRequestCode.PreferencesActivity) {
+                        if (curentActivity != ActiviyRequestCode.PreferencesActivity && Preferences().isKioskModeNecessary()) {
                             acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
                             preferences.configHasErrors = true;
                         }
