@@ -55,8 +55,11 @@ public class QuestionnaireActivity extends AppCompatActivity {
         findViewById(R.id.logo2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isAdmin)
-                    finish();
+                if (isAdmin) {
+                    Intent returnIntent = new Intent();
+                    QuestionnaireActivity.this.setResult(Activity.RESULT_OK, returnIntent);
+                    QuestionnaireActivity.this.finish();
+                }
             }
         });
         if (isAdmin)

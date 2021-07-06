@@ -84,13 +84,12 @@ public class MainActivity extends AppCompatActivity {
             public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
                 StringWriter sw = new StringWriter();
                 paramThrowable.printStackTrace(new PrintWriter(sw));
-                LogIHAB.log(sw.toString());
+                LogIHAB.log("StateError\n" + sw.toString());
                 System.exit(2);
             }
         });
         setContentView(R.layout.activity_main);
-        MainActivity.this.doBindService();
-
+        //MainActivity.this.doBindService();
         findViewById(R.id.logo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
                         automaticQuestTimer = 30 * 60;
                     if (automaticQuestTimer >= 29 * 60) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                        LogIHAB.log("Vibration: 500");
                     }
                     TextView tempView = findViewById(R.id.InfoTextView);
                     if (tempView.getCurrentTextColor() == ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             new FileIO().scanQuestOptions();
+            MainActivity.this.doBindService();
         }
     }
 
@@ -421,11 +422,23 @@ public class MainActivity extends AppCompatActivity {
         Log.e(TAG, "EVENT: " + event.getKeyCode());
         if (blockedKeys.contains(event.getKeyCode()) && !controlService.Status().Preferences().isAdmin()) {
             return true;
-        } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && !controlService.Status().Preferences().isAdmin()) {
+        } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER)) { // && !controlService.Status().Preferences().isAdmin() && !controlService.Status().Preferences().isInKioskMode) {
             Log.e(TAG, "POWER BUTTON WAS PRESSED");
             return super.dispatchKeyEvent(event);
         } else {
             return super.dispatchKeyEvent(event);
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        // Little hack since the Power button seems to be inaccessible at this point
+        super.onWindowFocusChanged(hasFocus);
+        if (!hasFocus && controlService != null && controlService.Status() != null && !controlService.Status().Preferences().isAdmin()) {
+            Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+            sendBroadcast(closeDialog);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            setKioskMode(true);
         }
     }
 

@@ -50,7 +50,7 @@ public class StageRFCOMM extends Stage {
     }
 
     private void initBluetooth() {
-        LogIHAB.log("BLUETOOTH STATE: Setting up StageRFCOMM");
+        LogIHAB.log("Bluetooth: Setting up StageRFCOMM");
         bt = new BluetoothSPP(context);
         if(!bt.isBluetoothEnabled()) {
             bt.enable();
@@ -72,7 +72,7 @@ public class StageRFCOMM extends Stage {
             public void onDeviceDisconnected() {
                 initializeState = initState.UNINITIALIZED;
                 sendBroadcast(States.connecting);
-                LogIHAB.log("BLUETOOTH STATE: DISCONNECTED");
+                LogIHAB.log("Bluetooth: disconnected");
             }
             public void onDeviceConnectionFailed() {
             }
@@ -81,7 +81,6 @@ public class StageRFCOMM extends Stage {
             if(state == BluetoothState.STATE_LISTEN || state == BluetoothState.STATE_NONE) {
                 initializeState = initState.UNINITIALIZED;
                 sendBroadcast(States.connecting);
-                //LogIHAB.log("BLUETOOTH STATE: CONNECTING");
             }
         });
         bt.setOnDataReceivedListener((data, message) -> DataReceived(data));
@@ -111,7 +110,7 @@ public class StageRFCOMM extends Stage {
                     }
                     if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
                     {
-                        LogIHAB.log("Transmission Timeout");
+                        LogIHAB.log("Bluetooth: Transmission Timeout");
                         initializeState = initState.UNINITIALIZED;
                         sendBroadcast(States.connecting);
                         bt.getBluetoothService().connectionLost();
@@ -131,6 +130,17 @@ public class StageRFCOMM extends Stage {
     }
 
     private void sendBroadcast(States state) {
+        switch (state) {
+            case init:
+                LogIHAB.log("Bluetooth: initializing");
+                break;
+            case connecting:
+                LogIHAB.log("Bluetooth: connecting");
+                break;
+            case connected:
+                LogIHAB.log("Bluetooth: connected");
+                break;
+        }
         Intent  intent = new Intent("StageState");    //action: "msg"
         intent.setPackage(context.getPackageName());
         intent.putExtra("currentState", state.ordinal());
@@ -210,7 +220,6 @@ public class StageRFCOMM extends Stage {
                             if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
                                 currBlockNumber = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
                                 lastBlockNumber = currBlockNumber;
-                                LogIHAB.log("BLUETOOTH STATE: CONNECTED");
                                 initializeState = initState.INITIALIZED;
                                 sendBroadcast(States.connected);
                                 restartStages = true;

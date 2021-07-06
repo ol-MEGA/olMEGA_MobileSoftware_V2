@@ -6,9 +6,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Binder;
 import android.os.Handler;
@@ -16,6 +18,8 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 
 import java.util.List;
 
@@ -28,12 +32,35 @@ public class ControlService extends Service {
     private Handler mTaskHandler = new Handler();
     private int mActivityCheckTime = 5000;
 
+    private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case "android.intent.action.SCREEN_ON":
+                        LogIHAB.log("Display: on");
+                        break;
+                    case "android.intent.action.SCREEN_OFF":
+                        LogIHAB.log("Display: off");
+                        break;
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
         systemStatus = new SystemStatus(this);
         Log.d(TAG, "Service onCreate");
         mTaskHandler.post(mActivityCheckRunnable);
+
+        // Register receiver for display activity
+        IntentFilter displayFilter = new IntentFilter();
+        displayFilter.addAction(Intent.ACTION_SCREEN_ON);
+        displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mDisplayReceiver, displayFilter);
     }
 
     public void startForeground(){
@@ -79,6 +106,7 @@ public class ControlService extends Service {
         Log.d(TAG, "Service destroyed");
         Status().onDestroy();
         super.onDestroy();
+        unregisterReceiver(mDisplayReceiver);
     }
 
     public class LocalBinder extends Binder {
