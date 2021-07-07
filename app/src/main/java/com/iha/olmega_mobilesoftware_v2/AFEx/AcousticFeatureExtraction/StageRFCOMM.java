@@ -69,10 +69,9 @@ public class StageRFCOMM extends Stage {
         int delay = 2000;
         if(!bt.isBluetoothEnabled()) {
             bt.enable();
-            delay = 10000;
+            delay = 5000;
         }
         loop = true;
-
         Handler showInitLoopHandler = new Handler(Looper.getMainLooper());
         showInitLoopHandler.postDelayed(new Runnable() {
             public synchronized void run() {
@@ -84,7 +83,6 @@ public class StageRFCOMM extends Stage {
                     sendBroadcast(States.connecting);
             }
         }, 0);
-
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             StageRFCOMM.this.loop = false;
             if (bt != null) {
@@ -140,7 +138,6 @@ public class StageRFCOMM extends Stage {
                                 bt.stopService();
                                 ReconnectTrials += 1;
                                 if (ReconnectTrials > 5) {
-                                    Log.d(LOG, "TIMER IST 5");
                                     mBluetoothAdapter.disable();
                                     ReconnectTrials = 0;
                                 }
@@ -212,6 +209,10 @@ public class StageRFCOMM extends Stage {
         if (bt != null)
             bt.stopService();
         bt = null;
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.disable();
+        }
     }
 
     private void setState(initState state) {

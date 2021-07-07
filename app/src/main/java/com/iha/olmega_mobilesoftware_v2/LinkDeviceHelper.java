@@ -45,7 +45,7 @@ public class LinkDeviceHelper extends AppCompatActivity {
         int delay = 2000;
         if(!bt.isBluetoothEnabled()) {
             bt.enable();
-            delay = 10000;
+            delay = 5000;
         }
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             bt.cancelDiscovery();

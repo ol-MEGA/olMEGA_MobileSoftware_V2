@@ -1,4 +1,4 @@
-    package com.iha.olmega_mobilesoftware_v2;
+package com.iha.olmega_mobilesoftware_v2;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
                 StringWriter sw = new StringWriter();
                 paramThrowable.printStackTrace(new PrintWriter(sw));
-                Log.d(TAG, sw.toString());
+                Log.e(TAG, sw.toString());
                 LogIHAB.log("StateError\n" + sw.toString());
                 System.exit(2);
             }
@@ -164,8 +164,7 @@ public class MainActivity extends AppCompatActivity {
                     else
                         setInfoTextView(false);
                     automaticQuestTimer = automaticQuestTimer - 1;
-                }
-                else
+                } else
                     setInfoTextView(false);
                 dateTimeHandler.postDelayed(this, 1000);
             }
@@ -178,14 +177,14 @@ public class MainActivity extends AppCompatActivity {
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         // create necessary files
         if (!com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists()) {
-            try
-            {
+            try {
                 InputStream inputStream = getResources().openRawResource(R.raw.udatersettings);
                 byte[] buffer = new byte[inputStream.available()];
                 inputStream.read(buffer);
                 OutputStream outStream = new FileOutputStream(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings);
                 outStream.write(buffer);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -213,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                 SystemStatus.AFExConfigFolder.mkdirs();
             if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
-                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out,  R.raw.example_standalone};
+                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone};
                     String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml"};
                     for (int idx = 0; idx < fileListIn.length; idx++) {
                         File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
@@ -324,27 +323,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean wifiActivated = false;
+
     private void checkWifi() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public synchronized void run() {
-                WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-                findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
-                wifiActivated = false;
-                if (wifiManager.isWifiEnabled() && controlService != null) {
-                    wifiActivated = true;
-                    if (controlService.Status().Preferences().isAdmin()) {
-                        findViewById(R.id.Action_Wifi).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Toast.makeText(MainActivity.this, "Warning: Wifi should be disabled for optimal data transmission!", Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    } else
-                        wifiManager.setWifiEnabled(false);
-                }
-            }
-        });
+        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        findViewById(R.id.Action_Wifi).setVisibility(View.INVISIBLE);
+        wifiActivated = false;
+        if (wifiManager.isWifiEnabled() && controlService != null) {
+            wifiActivated = true;
+            if (controlService.Status().Preferences().isAdmin()) {
+                findViewById(R.id.Action_Wifi).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, "Warning: Wifi should be disabled for optimal data transmission!", Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else
+                wifiManager.setWifiEnabled(false);
+        }
     }
 
     @Override
@@ -452,66 +447,56 @@ public class MainActivity extends AppCompatActivity {
             checkWifi();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public synchronized void run() {
-                            if (QuestionnaireActivity.thisAppCompatActivity != null && acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection())
-                                QuestionnaireActivity.thisAppCompatActivity.finish();
+                    if (QuestionnaireActivity.thisAppCompatActivity != null && acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection())
+                        QuestionnaireActivity.thisAppCompatActivity.finish();
 
-                            findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
-                            TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
-                            InfoTextView.setText(acitivyStates.InfoText);
-                            InfoTextView.setEnabled(acitivyStates.questionaireEnabled);
-                            if (controlService.Status().Preferences().isAdmin())
-                                findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
-                            else if (controlService.Status().Preferences().configHasErrors)
-                                findViewById(R.id.logo).setBackgroundResource(R.color.design_default_color_error);
-                            else
-                                findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
-                            View battery_bottom = findViewById(R.id.battery_bottom);
-                            switch (acitivyStates.BatteryState) {
-                                case Normal:
-                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
-                                    break;
-                                case Warning:
-                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
-                                    break;
-                                case Critical:
-                                    battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
-                                    break;
-                            }
-                            // Batterie Level
-                            ViewGroup.LayoutParams params = battery_bottom.getLayoutParams();
-                            params = findViewById(R.id.battery_bottom).getLayoutParams();
-                            params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
-                            battery_bottom.setLayoutParams(params);
+                    findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
+                    TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
+                    InfoTextView.setText(acitivyStates.InfoText);
+                    InfoTextView.setEnabled(acitivyStates.questionaireEnabled);
+                    if (controlService.Status().Preferences().isAdmin())
+                        findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
+                    else if (controlService.Status().Preferences().configHasErrors)
+                        findViewById(R.id.logo).setBackgroundResource(R.color.design_default_color_error);
+                    else
+                        findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
+                    View battery_bottom = findViewById(R.id.battery_bottom);
+                    switch (acitivyStates.BatteryState) {
+                        case Normal:
+                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
+                            break;
+                        case Warning:
+                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
+                            break;
+                        case Critical:
+                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
+                            break;
+                    }
+                    // Batterie Level
+                    ViewGroup.LayoutParams params = battery_bottom.getLayoutParams();
+                    params = findViewById(R.id.battery_bottom).getLayoutParams();
+                    params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
+                    battery_bottom.setLayoutParams(params);
 
-                            View battery_top = findViewById(R.id.battery_top);
-                            params = battery_top.getLayoutParams();
-                            params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
-                            battery_top.setLayoutParams(params);
+                    View battery_top = findViewById(R.id.battery_top);
+                    params = battery_top.getLayoutParams();
+                    params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
+                    battery_top.setLayoutParams(params);
 
-                            if (acitivyStates.profileState == States.connected)
-                                findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
-                            else
-                                findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
-                        }
-                    });
+                    if (acitivyStates.profileState == States.connected)
+                        findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
+                    else
+                        findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
                 }
 
                 public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public synchronized void run() {
-                            TextView NextQuestTextView = findViewById(R.id.nextQuestTextView);
-                            if (TimeRemaining > 0)
-                                NextQuestTextView.setText(Message);
-                            else
-                                NextQuestTextView.setText("");
-                            if (TimeRemaining > Long.MIN_VALUE && TimeRemaining < 0)
-                                questionnaireMotivation = QuestionnaireMotivation.auto;
-                        }
-                    });
+                    TextView NextQuestTextView = findViewById(R.id.nextQuestTextView);
+                    if (TimeRemaining > 0)
+                        NextQuestTextView.setText(Message);
+                    else
+                        NextQuestTextView.setText("");
+                    if (TimeRemaining > Long.MIN_VALUE && TimeRemaining < 0)
+                        questionnaireMotivation = QuestionnaireMotivation.auto;
                 }
             });
         }
@@ -577,8 +562,7 @@ public class MainActivity extends AppCompatActivity {
         if (highlight) {
             tempView.setBackgroundResource(R.color.JadeRed);
             tempView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BackgroundColor));
-        }
-        else {
+        } else {
             tempView.setBackgroundColor(Color.TRANSPARENT);
             tempView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary));
         }

@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageManager;
+import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageRFCOMM;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
@@ -48,7 +49,7 @@ public class SystemStatus {
     private Handler taskHandler = new Handler(Looper.myLooper());
     private ActiviyRequestCode curentActivity = ActiviyRequestCode.MainActivity;
     private float lastBatteryLevel = 0;
-    private boolean lastIsChargingState = false, AutomaticQuestionaireIsTriggered = false;
+    private boolean AutomaticQuestionaireIsTriggered = false;
 
     private AcitivyStates acitivyStates = new AcitivyStates();
 
@@ -74,15 +75,9 @@ public class SystemStatus {
         mStageStateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                //Log.d(TAG, "receiveBroadcast: " + action);
-                switch (action) {
-                    case "StageState":
-                        if (stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity) {
-                            acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
-                            Refresh();
-                        }
-                        break;
+                if (intent.getAction().equals("StageState") && stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity && acitivyStates.profileState != States.values()[intent.getIntExtra("currentState", States.connected.ordinal())]) {
+                    acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
+                    Refresh();
                 }
             }
         };
@@ -98,123 +93,121 @@ public class SystemStatus {
     }
 
     public void Refresh() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public synchronized void run() {
-                if (lockUntilStageManagerIsRunning == false) {
-                    acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
-                    acitivyStates.NextQuestText = "";
-                    acitivyStates.questionaireEnabled = false;
-                    preferences.configHasErrors = false;
+        if (lockUntilStageManagerIsRunning == false) {
+            acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
+            acitivyStates.NextQuestText = "";
+            acitivyStates.questionaireEnabled = false;
+            preferences.configHasErrors = false;
 
-                    acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
-                    if (acitivyStates.isCharging != lastIsChargingState) {
-                        if (acitivyStates.isCharging)
-                            LogIHAB.log("StateCharging");
-                        lastIsChargingState = acitivyStates.isCharging;
-                    }
-                    acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
-                    // Charging State
-                    if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)){
-                        raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                        if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {
-                            acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
-                            preferences.configHasErrors = true;
-                        }
-                        if (acitivyStates.isCharging && Preferences().usbCutsConnection())
-                            acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
-                        stageMangerState = StageManagerStates.undefined;
-                        acitivyStates.profileState = States.undefined;
-                        acitivyStates.InputProfile = "";
-                        if (stageManager != null && stageManager.isRunning)
-                            stageManager.stop();
-                    }
-                    else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
-                        raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                        acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
-                        preferences.configHasErrors = true;
-                    }
-                    else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
-                        acitivyStates.InputProfile = "";
-                        acitivyStates.profileState = States.undefined;
-                        if (getStageMangerConfigFile().exists() && getStageMangerConfigFile().isFile()) {
-                            try {
-                                acitivyStates.InputProfile = preferences.inputProfile();
-                                acitivyStates.profileState = States.connected;
-                                stageMangerState = StageManagerStates.running;
-                                startStageManager();
-                            } catch (Exception e) {
-                                StringWriter sw = new StringWriter();
-                                e.printStackTrace(new PrintWriter(sw));
-                                LogIHAB.log(sw.toString());
-                                stageMangerState = StageManagerStates.ConfigFileNotValid;
-                                e.printStackTrace();
-                            }
-                        } else
-                            stageMangerState = StageManagerStates.noConfigSelected;
-                    }
-                    switch (stageMangerState) {
-                        case undefined:
-                            break;
-                        case ConfigFileNotValid:
-                            acitivyStates.profileState = States.undefined;
-                            acitivyStates.InfoText = "Stage Manager Config-File '" + getStageMangerConfigFile().getAbsoluteFile() + "' not valid!";
-                            preferences.configHasErrors = true;
-                            break;
-                        case noConfigSelected:
-                            acitivyStates.profileState = States.undefined;
-                            acitivyStates.InfoText = "No Input Profile Config selected!";
-                            preferences.configHasErrors = true;
-                            break;
-                        case running:
-                            break;
-                    }
-
-                    if (curentActivity == ActiviyRequestCode.MainActivity && stageManager != null && stageManager.isRunning && acitivyStates.profileState != States.undefined) {
-                        switch (acitivyStates.profileState) {
-                            case init:
-                                acitivyStates.InfoText = "Initializing";
-                                break;
-                            case connecting:
-                                LogIHAB.log("StateConnecting");
-                                acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnecting);
-                                break;
-                            case connected:
-                                LogIHAB.log("StateRunning");
-                                acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
-                                if (preferences.useQuestionnaire()) {
-                                    acitivyStates.questionaireEnabled = true;
-                                    acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
-                                    if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
-                                        XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
-                                        if (mXmlReader.getQuestionnaireHasTimer()) {
-                                            raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
-                                        }
-                                    }
-                                }
-                                //acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
-                                break;
-                        }
-                    }
-                    // Battery State
-                    if (acitivyStates.BatteryState == BatteryStates.Critical)
-                        acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryCritical);
-                    else if (acitivyStates.BatteryState == BatteryStates.Warning)
-                        acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryWarning);
+            acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
+            if (acitivyStates.isCharging)
+                LogIHAB.log("StateCharging");
+            acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
+            // Charging State
+            if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
+                raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+                if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {
+                    acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
+                    preferences.configHasErrors = true;
                 }
-                acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && acitivyStates.profileState == States.connected) ;
-                if (mySystemStatusListener != null)
-                    mySystemStatusListener.setAcitivyStates(acitivyStates);
+                if (acitivyStates.isCharging && Preferences().usbCutsConnection())
+                    acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
+                stageMangerState = StageManagerStates.undefined;
+                acitivyStates.profileState = States.undefined;
+                acitivyStates.InputProfile = "";
+                if (stageManager != null && stageManager.isRunning)
+                    stageManager.stop();
+            } else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
+                raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+                acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
+                preferences.configHasErrors = true;
+            } else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
+                acitivyStates.InputProfile = "";
+                acitivyStates.profileState = States.undefined;
+                if (getStageMangerConfigFile().exists() && getStageMangerConfigFile().isFile()) {
+                    try {
+                        acitivyStates.InputProfile = preferences.inputProfile();
+                        acitivyStates.profileState = States.connected;
+                        stageMangerState = StageManagerStates.running;
+                        startStageManager();
+                    } catch (Exception e) {
+                        StringWriter sw = new StringWriter();
+                        e.printStackTrace(new PrintWriter(sw));
+                        LogIHAB.log(sw.toString());
+                        stageMangerState = StageManagerStates.ConfigFileNotValid;
+                        e.printStackTrace();
+                    }
+                } else
+                    stageMangerState = StageManagerStates.noConfigSelected;
             }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
+            switch (stageMangerState) {
+                case undefined:
+                    break;
+                case ConfigFileNotValid:
+                    acitivyStates.profileState = States.undefined;
+                    acitivyStates.InfoText = "Stage Manager Config-File '" + getStageMangerConfigFile().getAbsoluteFile() + "' not valid!";
+                    preferences.configHasErrors = true;
+                    break;
+                case noConfigSelected:
+                    acitivyStates.profileState = States.undefined;
+                    acitivyStates.InfoText = "No Input Profile Config selected!";
+                    preferences.configHasErrors = true;
+                    break;
+                case running:
+                    break;
+            }
+            if (curentActivity == ActiviyRequestCode.MainActivity && stageManager != null && stageManager.isRunning && acitivyStates.profileState != States.undefined) {
+                switch (acitivyStates.profileState) {
+                    case init:
+                        acitivyStates.InfoText = "Initializing";
+                        break;
+                    case connecting:
+                        LogIHAB.log("StateConnecting");
+                        acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnecting);
+                        break;
+                    case connected:
+                        LogIHAB.log("StateRunning");
+                        acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
+                        if (preferences.useQuestionnaire()) {
+                            acitivyStates.questionaireEnabled = true;
+                            acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
+                            if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
+                                XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
+                                if (mXmlReader.getQuestionnaireHasTimer()) {
+                                    raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+            // Battery State
+            if (acitivyStates.BatteryState == BatteryStates.Critical)
+                acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryCritical);
+            else if (acitivyStates.BatteryState == BatteryStates.Warning)
+                acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryWarning);
+            acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && acitivyStates.profileState == States.connected);
+            if (mySystemStatusListener != null)
+                mySystemStatusListener.setAcitivyStates(acitivyStates);
+            lockUntilStageManagerIsRunning = false;
+        } else {
+            Handler refreshHandler = new Handler(Looper.getMainLooper());
+            refreshHandler.postDelayed(new Runnable() {
+                public synchronized void run() {
+                    if (lockUntilStageManagerIsRunning)
+                        refreshHandler.postDelayed(this, 100);
+                    else
+                        Refresh();
+                }
+            }, 100);
+        }
     }
 
     public void ResetAutomaticQuestionaireTimer() {
         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
         Refresh();
     }
+
     private void startStageManager() {
         lockUntilStageManagerIsRunning = true;
         if (stageManager != null && stageManager.isRunning)
@@ -226,8 +219,6 @@ public class SystemStatus {
             if (stageManager != null && stageManager.isRunning)
                 stageManager.stop();
             throw e;
-        } finally {
-            lockUntilStageManagerIsRunning = false;
         }
     }
 
@@ -254,8 +245,7 @@ public class SystemStatus {
                                 mTempTextCountDownRemaining[1], minutesRemaining,
                                 mTempTextCountDownRemaining[2], secondsRemaining,
                                 mTempTextCountDownRemaining[3]);
-                    }
-                    else
+                    } else
                         acitivyStates.NextQuestText = "";
                     mySystemStatusListener.updateAutomaticQuestionnaireTimer(acitivyStates.NextQuestText, remaining);
                     if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() < 10 * 1000 && raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() > 5 * 1000)
@@ -264,11 +254,9 @@ public class SystemStatus {
                         if (AutomaticQuestionaireIsTriggered == false)
                             LogIHAB.log("StateProposing");
                         AutomaticQuestionaireIsTriggered = true;
-                    }
-                    else
+                    } else
                         AutomaticQuestionaireIsTriggered = false;
-                }
-                else
+                } else
                     mySystemStatusListener.updateAutomaticQuestionnaireTimer("", Long.MIN_VALUE);
             }
             taskHandler.postDelayed(this, 1000);
@@ -324,8 +312,11 @@ public class SystemStatus {
     }
 
     public abstract static class SystemStatusListener {
-        public void setAcitivyStates(AcitivyStates acitivyStates) { }
-        public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) { }
+        public void setAcitivyStates(AcitivyStates acitivyStates) {
+        }
+
+        public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
+        }
     }
 
 }
