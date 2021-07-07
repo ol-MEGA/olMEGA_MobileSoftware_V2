@@ -87,99 +87,102 @@ public class StageRFCOMM extends Stage {
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             StageRFCOMM.this.loop = false;
-            bt.cancelDiscovery();
-            bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
-                public void onDeviceConnected(String name, String address) {
-                    setState(initState.UNINITIALIZED);
-                    sendBroadcast(States.connecting);
-                    lastBlockNumber = 0;
-                    currBlockNumber = 0;
-                    additionalBytesCount = 0;
-                    lostBlockCount = 0;
-                    checksum = 0;
-                    lastEmptyPackageTimer =  System.currentTimeMillis();
-                    lastStreamTimer = System.currentTimeMillis();
-                    lastBluetoothPingTimer = System.currentTimeMillis();
-                }
-                public void onDeviceDisconnected() {
-                    setState(initState.UNINITIALIZED);
-                    sendBroadcast(States.connecting);
-                    LogIHAB.log("Bluetooth: disconnected");
-                }
-                public void onDeviceConnectionFailed() {
-                }
-            });
-            bt.setBluetoothStateListener(state -> {
-                if(state == BluetoothState.STATE_LISTEN || state == BluetoothState.STATE_NONE) {
-                    setState(initState.UNINITIALIZED);
-                    sendBroadcast(States.connecting);
-                }
-            });
-            bt.setOnDataReceivedListener((data, message) -> DataReceived(data));
-            bt.setupService();
-            Handler TimeHandler = new Handler(Looper.getMainLooper());
-            TimeHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (initializeState == initState.WAITING_FOR_CALIBRATION_VALUES) {
-                        if (System.currentTimeMillis() - lastStreamTimer > 1000) {
-                            bt.send("GC", false);
-                            lastStreamTimer = System.currentTimeMillis();
-                        }
-                    }
-                    if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 && initializeState == initState.UNINITIALIZED) ||
-                            (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
-                            (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
-                        lastStateChange = System.currentTimeMillis();
+            if (bt != null) {
+                bt.cancelDiscovery();
+                bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
+                    public void onDeviceConnected(String name, String address) {
                         setState(initState.UNINITIALIZED);
-                        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                        if (mBluetoothAdapter.isEnabled()) {
-                            bt.stopService();
-                            ReconnectTrials += 1;
-                            if (ReconnectTrials > 5) {
-                                Log.d(LOG, "TIMER IST 5");
-                                mBluetoothAdapter.disable();
-                                ReconnectTrials = 0;
-                            }
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    initBluetooth();
-                            }, 1000);
-                        }
+                        sendBroadcast(States.connecting);
+                        lastBlockNumber = 0;
+                        currBlockNumber = 0;
+                        additionalBytesCount = 0;
+                        lostBlockCount = 0;
+                        checksum = 0;
+                        lastEmptyPackageTimer = System.currentTimeMillis();
+                        lastStreamTimer = System.currentTimeMillis();
+                        lastBluetoothPingTimer = System.currentTimeMillis();
                     }
-                    else if (initializeState == initState.INITIALIZED) {
-                        if (System.currentTimeMillis() - lastEmptyPackageTimer > 100) {
-                            for (long count = 0; count < 100 / millisPerBlock; count++) {
-                                lostBlockCount++;
-                                lastBlockNumber++;
-                                writeData(emptyAudioBlock);
+
+                    public void onDeviceDisconnected() {
+                        setState(initState.UNINITIALIZED);
+                        sendBroadcast(States.connecting);
+                        LogIHAB.log("Bluetooth: disconnected");
+                    }
+
+                    public void onDeviceConnectionFailed() {
+                    }
+                });
+                bt.setBluetoothStateListener(state -> {
+                    if (state == BluetoothState.STATE_LISTEN || state == BluetoothState.STATE_NONE) {
+                        setState(initState.UNINITIALIZED);
+                        sendBroadcast(States.connecting);
+                    }
+                });
+                bt.setOnDataReceivedListener((data, message) -> DataReceived(data));
+                bt.setupService();
+                Handler TimeHandler = new Handler(Looper.getMainLooper());
+                TimeHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (initializeState == initState.WAITING_FOR_CALIBRATION_VALUES) {
+                            if (System.currentTimeMillis() - lastStreamTimer > 1000) {
+                                bt.send("GC", false);
+                                lastStreamTimer = System.currentTimeMillis();
                             }
-                            lastEmptyPackageTimer = System.currentTimeMillis();
                         }
-                        if (System.currentTimeMillis() - lastBluetoothPingTimer > alivePingTimeout) {
-                            bt.send(" ", false);
-                            lastBluetoothPingTimer = System.currentTimeMillis();
-                        }
-                        if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
-                        {
-                            LogIHAB.log("Bluetooth: Transmission Timeout");
+                        if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 && initializeState == initState.UNINITIALIZED) ||
+                                (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
+                                (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
+                            lastStateChange = System.currentTimeMillis();
                             setState(initState.UNINITIALIZED);
-                            sendBroadcast(States.connecting);
-                            bt.getBluetoothService().connectionLost();
-                            bt.getBluetoothService().start(false);
-                        }
-                        for (Stage consumer : consumerSet) {
-                            if (consumer.thread == null || !consumer.thread.isAlive() || consumer.thread.isInterrupted()) {
-                                restartStages = true;
+                            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (mBluetoothAdapter.isEnabled()) {
+                                bt.stopService();
+                                ReconnectTrials += 1;
+                                if (ReconnectTrials > 5) {
+                                    Log.d(LOG, "TIMER IST 5");
+                                    mBluetoothAdapter.disable();
+                                    ReconnectTrials = 0;
+                                }
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    initBluetooth();
+                                }, 1000);
+                            }
+                        } else if (initializeState == initState.INITIALIZED) {
+                            if (System.currentTimeMillis() - lastEmptyPackageTimer > 100) {
+                                for (long count = 0; count < 100 / millisPerBlock; count++) {
+                                    lostBlockCount++;
+                                    lastBlockNumber++;
+                                    writeData(emptyAudioBlock);
+                                }
+                                lastEmptyPackageTimer = System.currentTimeMillis();
+                            }
+                            if (System.currentTimeMillis() - lastBluetoothPingTimer > alivePingTimeout) {
+                                bt.send(" ", false);
+                                lastBluetoothPingTimer = System.currentTimeMillis();
+                            }
+                            if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
+                            {
+                                LogIHAB.log("Bluetooth: Transmission Timeout");
+                                setState(initState.UNINITIALIZED);
+                                sendBroadcast(States.connecting);
+                                bt.getBluetoothService().connectionLost();
+                                bt.getBluetoothService().start(false);
+                            }
+                            for (Stage consumer : consumerSet) {
+                                if (consumer.thread == null || !consumer.thread.isAlive() || consumer.thread.isInterrupted()) {
+                                    restartStages = true;
+                                }
                             }
                         }
+                        if (bt != null)
+                            TimeHandler.postDelayed(this, 100);
                     }
-                    if (bt != null)
-                        TimeHandler.postDelayed(this, 100);
-                }
-            }, 100);
-            bt.startService(BluetoothState.DEVICE_OTHER);
-            if(bt.isBluetoothEnabled())
-                sendBroadcast(States.connecting);
+                }, 100);
+                bt.startService(BluetoothState.DEVICE_OTHER);
+                if (bt.isBluetoothEnabled())
+                    sendBroadcast(States.connecting);
+            }
         }, delay);
     }
 
