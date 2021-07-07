@@ -123,7 +123,7 @@ public class StageRFCOMM extends Stage {
                     @Override
                     public void run() {
                         if (initializeState == initState.WAITING_FOR_CALIBRATION_VALUES) {
-                            if (System.currentTimeMillis() - lastStreamTimer > 1000) {
+                            if (System.currentTimeMillis() - lastStreamTimer > 1000 && bt != null) {
                                 bt.send("GC", false);
                                 lastStreamTimer = System.currentTimeMillis();
                             }
@@ -134,7 +134,7 @@ public class StageRFCOMM extends Stage {
                             lastStateChange = System.currentTimeMillis();
                             setState(initState.UNINITIALIZED);
                             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                            if (mBluetoothAdapter.isEnabled()) {
+                            if (mBluetoothAdapter.isEnabled() && bt != null) {
                                 bt.stopService();
                                 ReconnectTrials += 1;
                                 if (ReconnectTrials > 5) {
@@ -155,7 +155,8 @@ public class StageRFCOMM extends Stage {
                                 lastEmptyPackageTimer = System.currentTimeMillis();
                             }
                             if (System.currentTimeMillis() - lastBluetoothPingTimer > alivePingTimeout) {
-                                bt.send(" ", false);
+                                if (bt != null)
+                                    bt.send(" ", false);
                                 lastBluetoothPingTimer = System.currentTimeMillis();
                             }
                             if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
@@ -163,8 +164,10 @@ public class StageRFCOMM extends Stage {
                                 LogIHAB.log("Bluetooth: Transmission Timeout");
                                 setState(initState.UNINITIALIZED);
                                 sendBroadcast(States.connecting);
-                                bt.getBluetoothService().connectionLost();
-                                bt.getBluetoothService().start(false);
+                                if (bt != null) {
+                                    bt.getBluetoothService().connectionLost();
+                                    bt.getBluetoothService().start(false);
+                                }
                             }
                             for (Stage consumer : consumerSet) {
                                 if (consumer.thread == null || !consumer.thread.isAlive() || consumer.thread.isInterrupted()) {

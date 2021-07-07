@@ -50,7 +50,7 @@
             android:autoSizeMaxTextSize="34sp"
             android:autoSizeTextType="uniform"
             android:gravity="center_vertical|center_horizontal"
-            android:text="@string/LinkingText"
+            android:text="@string/pleaseWait"
             android:textSize="34sp" />
 
         <Button
