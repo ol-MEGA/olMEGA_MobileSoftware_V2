@@ -5,7 +5,7 @@
     <string name="infoTextSave">Data was saved</string>
     <string name="infoError">Error</string>
     <string name="infoCharging">Charging</string>
-    <string name="infoConnecting">Connecting</string>
+    <string name="infoConnecting">Waiting for Connection</string>
     <string name="infoConnected">Connected</string>
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="pleaseWait">Please wait...</string>

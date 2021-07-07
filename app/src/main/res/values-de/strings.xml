@@ -5,7 +5,7 @@
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="infoError">Fehler</string>
     <string name="infoCharging">Gerät wird geladen</string>
-    <string name="infoConnecting">Verbindungsaufbau</string>
+    <string name="infoConnecting">Warte auf Verbindung</string>
     <string name="infoConnected">Verbunden</string>
     <string name="hintTextAnswer">Bitte hier klicken.</string>
     <string name="pleaseWait">Bitte warten...</string>

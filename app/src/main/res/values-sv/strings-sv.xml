@@ -6,7 +6,7 @@
     <string name="infoTextSave">Data sparad</string>
     <string name="infoError">Fel</string>
     <string name="infoCharging">Laddar</string>
-    <string name="infoConnecting">Ansluter</string>
+    <string name="infoConnecting">Waiting for Connection</string>
     <string name="infoConnected">Connected</string>
     <string name="hintTextAnswer">Skriv text här.</string>
     <string name="pleaseWait">Please wait...</string>

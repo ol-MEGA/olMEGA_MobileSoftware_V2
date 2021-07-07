@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+
 import com.iha.olmega_mobilesoftware_v2.Bluetooth.BluetoothSPP;
 import com.iha.olmega_mobilesoftware_v2.Bluetooth.BluetoothState;
 
@@ -33,26 +35,33 @@ public class LinkDeviceHelper extends AppCompatActivity {
     }
 
     private void initBluetooth() {
+        findViewById(R.id.button_Link).setEnabled(false);
         pairedDevices = new ArrayList<>();
         for (BluetoothDevice device : BluetoothAdapter.getDefaultAdapter().getBondedDevices()) {
             pairedDevices.add(device);
         }
-        bt = new BluetoothSPP(getApplicationContext());
+        if (bt == null)
+            bt = new BluetoothSPP(getApplicationContext());
+        int delay = 2000;
         if(!bt.isBluetoothEnabled()) {
             bt.enable();
+            delay = 10000;
         }
-        bt.cancelDiscovery();
-        bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
-            public void onDeviceConnected(String name, String address) { BluetoothIsConnected = true; }
-            public void onDeviceDisconnected() {
-                BluetoothIsConnected = false;
-            }
-            public void onDeviceConnectionFailed() {
-                BluetoothIsConnected = false;
-            }
-        });
-        //bt.setBluetoothStateListener(state -> { });
-        bt.setOnDataReceivedListener((data, message) -> BluetoothHasData = true);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            bt.cancelDiscovery();
+            bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
+                public void onDeviceConnected(String name, String address) { BluetoothIsConnected = true; }
+                public void onDeviceDisconnected() {
+                    BluetoothIsConnected = false;
+                }
+                public void onDeviceConnectionFailed() {
+                    BluetoothIsConnected = false;
+                }
+            });
+            //bt.setBluetoothStateListener(state -> { });
+            bt.setOnDataReceivedListener((data, message) -> BluetoothHasData = true);
+            findViewById(R.id.button_Link).setEnabled(true);
+        }, delay);
     }
 
     public void onStart() {
@@ -69,51 +78,53 @@ public class LinkDeviceHelper extends AppCompatActivity {
     private void linkPossibleDevices() {
         bt.disconnect();
         bt.stopService();
-        bt.setupService();
-        bt.startService(BluetoothState.DEVICE_OTHER);
-        currentDeviceId = 0;
-        findViewById(R.id.button_Link).setEnabled(false);
-        linkHelperBluetoothState = LinkHelperBluetoothStates.disconnected;
-        maxConnectionTrialTimeout = System.currentTimeMillis() + timeOut * 1000;
-        currentConnectionTryTimeout = System.currentTimeMillis() + 4 * 1000;
-        final Handler connectionHandler = new Handler();
-        connectionHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                long newTimer = 200;
-                switch (linkHelperBluetoothState) {
-                    case disconnected:
-                        bt.connect(pairedDevices.get(currentDeviceId).getAddress());
-                        linkHelperBluetoothState = LinkHelperBluetoothStates.connecting;
-                        break;
-                    case connecting:
-                        if (System.currentTimeMillis() > currentConnectionTryTimeout) {
-                            linkHelperBluetoothState = LinkHelperBluetoothStates.disconnecting;
-                        } else if (BluetoothIsConnected) {
-                            bt.send("STOREMAC", false);
-                            bt.send("STOREMAC", false);
-                            linkHelperBluetoothState = LinkHelperBluetoothStates.disconnecting;
-                        }
-                        break;
-                    case disconnecting:
-                        if (BluetoothIsConnected)
-                            bt.send("STOREMAC", false);
-                        //bt.disconnect();
-                        linkHelperBluetoothState = LinkHelperBluetoothStates.disconnected;
-                        currentDeviceId = (currentDeviceId + 1) % pairedDevices.size();
-                        break;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            bt.setupService();
+            bt.startService(BluetoothState.DEVICE_OTHER);
+            currentDeviceId = 0;
+            findViewById(R.id.button_Link).setEnabled(false);
+            linkHelperBluetoothState = LinkHelperBluetoothStates.disconnected;
+            maxConnectionTrialTimeout = System.currentTimeMillis() + timeOut * 1000;
+            currentConnectionTryTimeout = System.currentTimeMillis() + 4 * 1000;
+            final Handler connectionHandler = new Handler();
+            connectionHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    long newTimer = 200;
+                    switch (linkHelperBluetoothState) {
+                        case disconnected:
+                            bt.connect(pairedDevices.get(currentDeviceId).getAddress());
+                            linkHelperBluetoothState = LinkHelperBluetoothStates.connecting;
+                            break;
+                        case connecting:
+                            if (System.currentTimeMillis() > currentConnectionTryTimeout) {
+                                linkHelperBluetoothState = LinkHelperBluetoothStates.disconnecting;
+                            } else if (BluetoothIsConnected) {
+                                bt.send("STOREMAC", false);
+                                bt.send("STOREMAC", false);
+                                linkHelperBluetoothState = LinkHelperBluetoothStates.disconnecting;
+                            }
+                            break;
+                        case disconnecting:
+                            if (BluetoothIsConnected)
+                                bt.send("STOREMAC", false);
+                            //bt.disconnect();
+                            linkHelperBluetoothState = LinkHelperBluetoothStates.disconnected;
+                            currentDeviceId = (currentDeviceId + 1) % pairedDevices.size();
+                            break;
+                    }
+                    if (System.currentTimeMillis() > maxConnectionTrialTimeout || pairedDevices.isEmpty()){
+                        bt.getBluetoothService().stop();
+                        bt.disconnect();
+                        bt.stopService();
+                        Handler handler = new Handler();
+                        handler.postDelayed(() -> checkForStableConnection(), 1000);
+                    }
+                    else
+                        connectionHandler.postDelayed(this, newTimer);
                 }
-                if (System.currentTimeMillis() > maxConnectionTrialTimeout || pairedDevices.isEmpty()){
-                    bt.getBluetoothService().stop();
-                    bt.disconnect();
-                    bt.stopService();
-                    Handler handler = new Handler();
-                    handler.postDelayed(() -> checkForStableConnection(), 1000);
-                }
-                else
-                    connectionHandler.postDelayed(this, newTimer);
-            }
-        }, 100);
+            }, 100);
+        }, 1000);
     }
 
     private void checkForStableConnection() {

@@ -75,7 +75,7 @@ public class SystemStatus {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                Log.d(TAG, "receiveBroadcast: " + action);
+                //Log.d(TAG, "receiveBroadcast: " + action);
                 switch (action) {
                     case "StageState":
                         if (stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity) {

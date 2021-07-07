@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
             public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
                 StringWriter sw = new StringWriter();
                 paramThrowable.printStackTrace(new PrintWriter(sw));
+                Log.d(TAG, sw.toString());
                 LogIHAB.log("StateError\n" + sw.toString());
                 System.exit(2);
             }
