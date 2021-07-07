@@ -18,25 +18,29 @@ public class LogIHAB {
 
     private static String mFileName = "log.txt";
     private static String LOG = "LogIHAB";
+    private static String lastMessage = "";
 
     // Write input string to log file
     public static void log(String string) {
-        File file = new File(FileIO.getFolderPath() + File.separator + mFileName);
-        FileWriter fw = null;
-        String formattedString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(new Date()) + " " + string;
+        if (!string.equals(lastMessage)) {
+            lastMessage = string;
+            File file = new File(FileIO.getFolderPath() + File.separator + mFileName);
+            FileWriter fw = null;
+            String formattedString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(new Date()) + " " + string;
 
-        try
-        {
-            fw = new FileWriter(file, true);
-            fw.append(formattedString);
-            fw.append(System.getProperty("line.separator") );
-        }
-        catch ( IOException e ) {
-            Log.e(LOG,  "Error writing file." );
-        }
-        finally {
-            if ( fw != null )
-                try { fw.close(); } catch ( IOException e ) { e.printStackTrace(); }
+            try
+            {
+                fw = new FileWriter(file, true);
+                fw.append(formattedString);
+                fw.append(System.getProperty("line.separator") );
+            }
+            catch ( IOException e ) {
+                Log.e(LOG,  "Error writing file." );
+            }
+            finally {
+                if ( fw != null )
+                    try { fw.close(); } catch ( IOException e ) { e.printStackTrace(); }
+            }
         }
     }
 
