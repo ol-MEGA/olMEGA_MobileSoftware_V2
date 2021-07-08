@@ -41,7 +41,7 @@ public class FileIO {
     // Create / Find main Folder
     public static String getFolderPath() {
         final File baseDirectory;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q)
             baseDirectory = new File(MainActivity.getAppContext().getExternalFilesDir(null) + File.separator + ".");
         else
             baseDirectory = new File(Environment.getExternalStorageDirectory() + File.separator + FOLDER_MAIN);
