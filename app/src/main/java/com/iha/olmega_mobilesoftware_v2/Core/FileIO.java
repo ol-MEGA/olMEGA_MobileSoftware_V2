@@ -1,10 +1,12 @@
 package com.iha.olmega_mobilesoftware_v2.Core;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.BuildConfig;
+import com.iha.olmega_mobilesoftware_v2.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,8 +40,11 @@ public class FileIO {
 
     // Create / Find main Folder
     public static String getFolderPath() {
-        final File baseDirectory = new File(Environment.getExternalStorageDirectory() +
-                File.separator + FOLDER_MAIN);
+        final File baseDirectory;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            baseDirectory = new File(MainActivity.getAppContext().getExternalFilesDir(null) + File.separator + ".");
+        else
+            baseDirectory = new File(Environment.getExternalStorageDirectory() + File.separator + FOLDER_MAIN);
         if (!baseDirectory.exists()) {
             baseDirectory.mkdirs();
         }

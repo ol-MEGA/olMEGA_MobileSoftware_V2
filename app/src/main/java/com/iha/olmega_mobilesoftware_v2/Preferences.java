@@ -1,5 +1,6 @@
 package com.iha.olmega_mobilesoftware_v2;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;

@@ -3,6 +3,8 @@ package com.iha.olmega_mobilesoftware_v2.Core;
 import android.content.Context;
 import android.util.Log;
 
+import com.iha.olmega_mobilesoftware_v2.MainActivity;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;

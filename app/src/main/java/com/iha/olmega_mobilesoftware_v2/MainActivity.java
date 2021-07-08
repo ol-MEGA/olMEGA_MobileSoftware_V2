@@ -69,6 +69,11 @@ public class MainActivity extends AppCompatActivity {
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
 
+    private static Context context;
+
+    public static Context getAppContext() {
+        return MainActivity.context;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         /*
@@ -79,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
+        MainActivity.context = getApplicationContext();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread paramThread, Throwable paramThrowable) {

@@ -50,6 +50,7 @@ public class SystemStatus {
     private ActiviyRequestCode curentActivity = ActiviyRequestCode.MainActivity;
     private float lastBatteryLevel = 0;
     private boolean AutomaticQuestionaireIsTriggered = false;
+    private boolean refreshHandlerIsActive = false;
 
     private AcitivyStates acitivyStates = new AcitivyStates();
 
@@ -92,7 +93,7 @@ public class SystemStatus {
         Refresh();
     }
 
-    public void Refresh() {
+    synchronized public void Refresh() {
         if (lockUntilStageManagerIsRunning == false) {
             acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
             acitivyStates.NextQuestText = "";
@@ -190,14 +191,17 @@ public class SystemStatus {
             if (mySystemStatusListener != null)
                 mySystemStatusListener.setAcitivyStates(acitivyStates);
             lockUntilStageManagerIsRunning = false;
-        } else {
+        } else if (refreshHandlerIsActive == false) {
+            refreshHandlerIsActive = true;
             Handler refreshHandler = new Handler(Looper.getMainLooper());
             refreshHandler.postDelayed(new Runnable() {
                 public synchronized void run() {
                     if (lockUntilStageManagerIsRunning)
                         refreshHandler.postDelayed(this, 100);
-                    else
+                    else {
+                        refreshHandlerIsActive = false;
                         Refresh();
+                    }
                 }
             }, 100);
         }

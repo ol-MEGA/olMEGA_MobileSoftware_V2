@@ -1,7 +1,10 @@
 package com.iha.olmega_mobilesoftware_v2.Core;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+
+import com.iha.olmega_mobilesoftware_v2.MainActivity;
 
 import java.io.File;
 import java.io.FileWriter;
