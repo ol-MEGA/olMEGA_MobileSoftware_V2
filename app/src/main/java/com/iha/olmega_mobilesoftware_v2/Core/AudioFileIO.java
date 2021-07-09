@@ -38,7 +38,7 @@ public class AudioFileIO {
 
     // create main folder
     public String getFolderPath(){
-        File baseDirectory = Environment.getExternalStoragePublicDirectory(CACHE_FOLDER);
+        File baseDirectory = new File(CACHE_FOLDER);
         if( !baseDirectory.exists() ){
             baseDirectory.mkdir();
         }

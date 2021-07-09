@@ -19,7 +19,7 @@ public class AudioFileIO {
 
     protected static final String LOG = "IOClass";
 
-    public static final String MAIN_FOLDER = FileIO.FOLDER_MAIN;
+    public static final String MAIN_FOLDER = FileIO.getFolderPath();
     public static final String CACHE_FOLDER = MAIN_FOLDER + File.separator + "cache";
     public static final String FEATURE_FOLDER = MAIN_FOLDER + File.separator + "features";
     public static final String CACHE_WAVE = "wav";
@@ -42,7 +42,7 @@ public class AudioFileIO {
 
     // main folder
     public static String getMainPath() {
-        File directory = Environment.getExternalStoragePublicDirectory(MAIN_FOLDER);
+        File directory = new File(MAIN_FOLDER);
         if (!directory.exists()) {
             directory.mkdir();
         }
@@ -51,7 +51,7 @@ public class AudioFileIO {
 
     // cache folder
     public String getCachePath() {
-        File baseDirectory = Environment.getExternalStoragePublicDirectory(CACHE_FOLDER);
+        File baseDirectory = new File(CACHE_FOLDER);
         if (!baseDirectory.exists()) {
             baseDirectory.mkdir();
         }

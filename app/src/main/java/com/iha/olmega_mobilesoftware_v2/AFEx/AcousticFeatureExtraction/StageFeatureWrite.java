@@ -131,7 +131,7 @@ public class StageFeatureWrite extends Stage {
 
     private void openFeatureFile() {
 
-        File directory = Environment.getExternalStoragePublicDirectory(AudioFileIO.FEATURE_FOLDER);
+        File directory = new File(AudioFileIO.FEATURE_FOLDER);
         if (!directory.exists()) {
             directory.mkdir();
         }
