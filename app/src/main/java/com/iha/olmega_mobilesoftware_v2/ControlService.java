@@ -52,6 +52,7 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        LogIHAB.log("AppStarted");
         systemStatus = new SystemStatus(this);
         Log.d(TAG, "Service onCreate");
         mTaskHandler.post(mActivityCheckRunnable);
@@ -103,7 +104,8 @@ public class ControlService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Service destroyed");
+        LogIHAB.log("AppClosed");
+        //Log.d(TAG, "Service destroyed");
         Status().onDestroy();
         super.onDestroy();
         unregisterReceiver(mDisplayReceiver);

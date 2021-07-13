@@ -42,7 +42,8 @@
     <string name="swipeMessage">Du behöver besvara frågan först.</string>
     <string name="swipeOkay">OK</string>
 
-    <string name="deviceOwnerMessage">Avaktivera enhetsägare?</string>
+    <string name="deviceOwnerMessageDisable">Avaktivera enhetsägare?</string>
+    <string name="deviceOwnerMessageEnable">Set Device Owner?</string>
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Ja</string>
     <string name="deviceOwnerNo">Nej</string>
@@ -56,6 +57,7 @@
 
     <string name="pref_isAdmin_title">Administrator</string>
     <string name="pref_enableKioskMode_summary">For experimenters only</string>
+    <string name="pref_setAdmin_title">Set Device Administrator</string>
     <string name="pref_unsetAdmin_title">Unset Device Administrator</string>
     <string name="pref_linkDevice_title">Link Device</string>
     <string name="pref_killAppAndService">Kill App and Service</string>

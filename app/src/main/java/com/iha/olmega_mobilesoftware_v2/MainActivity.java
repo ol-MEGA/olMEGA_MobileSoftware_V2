@@ -37,6 +37,7 @@ import android.view.WindowInsetsController;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageRFCOMM;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
+    private boolean wifiActivated = false;
 
     private static Context context;
 
@@ -318,17 +320,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
+    protected synchronized void onResume() {
         super.onResume();
+        isLocked = true;
         bindService(new Intent(MainActivity.this, ControlService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
         checkWifi();
-        isLocked = false;
-        if (controlService != null)
-            controlService.Status().setActiveActivity(ActiviyRequestCode.MainActivity);
+        Handler lockUntilResumeComplete = new Handler(Looper.getMainLooper());
+        lockUntilResumeComplete.postDelayed(new Runnable() {
+            public synchronized void run() {
+                if (controlService != null) {
+                    controlService.Status().setActiveActivity(ActiviyRequestCode.MainActivity);
+                    isLocked = false;
+                }
+                else
+                    lockUntilResumeComplete.postDelayed(this, 10);
+            }
+        }, 10);
     }
-
-    private boolean wifiActivated = false;
 
     private void checkWifi() {
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -453,9 +462,12 @@ public class MainActivity extends AppCompatActivity {
             checkWifi();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
-                    if (QuestionnaireActivity.thisAppCompatActivity != null && acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection())
-                        QuestionnaireActivity.thisAppCompatActivity.finish();
-
+                    if (acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection()) {
+                        if (QuestionnaireActivity.thisAppCompatActivity != null)
+                            QuestionnaireActivity.thisAppCompatActivity.finish();
+                        if (questionnaireMotivation != QuestionnaireMotivation.manual)
+                            questionnaireMotivation = QuestionnaireMotivation.manual;
+                    }
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                     InfoTextView.setText(acitivyStates.InfoText);
@@ -479,15 +491,14 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
                     // Batterie Level
-                    ViewGroup.LayoutParams params = battery_bottom.getLayoutParams();
-                    params = findViewById(R.id.battery_bottom).getLayoutParams();
-                    params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
-                    battery_bottom.setLayoutParams(params);
+                    ViewGroup.LayoutParams battery_bottomParams = findViewById(R.id.battery_bottom).getLayoutParams();
+                    battery_bottomParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
+                    battery_bottom.setLayoutParams(battery_bottomParams);
 
                     View battery_top = findViewById(R.id.battery_top);
-                    params = battery_top.getLayoutParams();
-                    params.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
-                    battery_top.setLayoutParams(params);
+                    ViewGroup.LayoutParams battery_topParams = battery_top.getLayoutParams();
+                    battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
+                    battery_top.setLayoutParams(battery_topParams);
 
                     if (acitivyStates.profileState == States.connected)
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
@@ -518,11 +529,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (controlService != null) {
-            if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+            if (requestCode == ActiviyRequestCode.DEVICE_ADMIN.ordinal()) {
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(MainActivity.this, "You have enabled the Admin Device features", Toast.LENGTH_SHORT).show();
+                    if (!controlService.Status().Preferences().isAdmin())
+                        setKioskMode();
+                } else {
+                    Toast.makeText(MainActivity.this, "Problem to enable the Admin Device features", Toast.LENGTH_SHORT).show();
+                }
+            }
+            else if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
                 questionnaireMotivation = QuestionnaireMotivation.manual;
                 controlService.Status().ResetAutomaticQuestionaireTimer();
             } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
-                if (data.getBooleanExtra("unsetDeviceAdmin", false)) {
+                if (data.getBooleanExtra("disableDeviceAdmin", false)) {
                     try {
                         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
                         mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
@@ -530,6 +550,21 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Toast.makeText(this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
                     }
+                }
+                if (data.getBooleanExtra("disableDeviceAdmin", false)) {
+                    try {
+                        mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                        mDevicePolicyManager.clearDeviceOwnerApp(getPackageName());
+                        Toast.makeText(this, "Removing DeviceAdmin successful!", Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Removing DeviceAdmin not successful!", Toast.LENGTH_LONG).show();
+                    }
+                }
+                if (data.getBooleanExtra("enableDeviceAdmin", false)) {
+                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, new ComponentName(this, AdminReceiver.class));
+                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Device Admin for Kiosk Mode");
+                    startActivityForResult(intent, ActiviyRequestCode.DEVICE_ADMIN.ordinal());
                 }
                 if (data.getBooleanExtra("killAppAndService", false)) {
                     if (controlService.Status().Preferences().isInKioskMode)

@@ -31,7 +31,8 @@ enum ActiviyRequestCode {
     HelpActiviy,
     QuestionnaireActivity,
     PreferencesActivity,
-    LinkDeviceHelper
+    LinkDeviceHelper,
+    DEVICE_ADMIN
 }
 
 enum LinkHelperBluetoothStates {

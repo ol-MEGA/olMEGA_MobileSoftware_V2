@@ -86,6 +86,9 @@ public class SystemStatus {
         IntentFilter filter = new IntentFilter("StageState");
         filter.setPriority(999);
         mContext.registerReceiver(mStageStateReceiver, filter);
+
+        BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+        acitivyStates.batteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
     }
 
     public void setSystemStatusListener(SystemStatusListener listener) {
@@ -105,8 +108,9 @@ public class SystemStatus {
                 LogIHAB.log("StateCharging");
             acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
             // Charging State
-            if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
+            if (curentActivity != ActiviyRequestCode.MainActivity)
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+            if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
                 if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {
                     acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
                     preferences.configHasErrors = true;
@@ -174,9 +178,10 @@ public class SystemStatus {
                             acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
                             if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
                                 XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
-                                if (mXmlReader.getQuestionnaireHasTimer()) {
+                                if (mXmlReader.getQuestionnaireHasTimer())
                                     raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
-                                }
+                                //else
+                                //    raiseAutomaticQuestionaire_TimerEventAt = Long.MAX_VALUE;
                             }
                         }
                         break;
@@ -187,7 +192,7 @@ public class SystemStatus {
                 acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryCritical);
             else if (acitivyStates.BatteryState == BatteryStates.Warning)
                 acitivyStates.InfoText += "\n\n" + mContext.getResources().getString(R.string.batteryWarning);
-            acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && acitivyStates.profileState == States.connected);
+            acitivyStates.isAutomaticQuestionaireActive = (raiseAutomaticQuestionaire_TimerEventAt != Long.MAX_VALUE && raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && acitivyStates.profileState == States.connected && curentActivity == ActiviyRequestCode.MainActivity);
             if (mySystemStatusListener != null)
                 mySystemStatusListener.setAcitivyStates(acitivyStates);
             lockUntilStageManagerIsRunning = false;
@@ -209,6 +214,7 @@ public class SystemStatus {
 
     public void ResetAutomaticQuestionaireTimer() {
         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+        acitivyStates.isAutomaticQuestionaireActive = false;
         Refresh();
     }
 
@@ -234,9 +240,9 @@ public class SystemStatus {
     }
 
     private Runnable AutomaticQuestionnaireRunnable = new Runnable() {
-        public void run() {
+        public synchronized void run() {
             if (mySystemStatusListener != null) {
-                if (acitivyStates.isAutomaticQuestionaireActive) {
+                if (acitivyStates.isAutomaticQuestionaireActive && raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && raiseAutomaticQuestionaire_TimerEventAt != Long.MAX_VALUE) {
                     String mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
                     String[] mTempTextCountDownRemaining = mCountDownString.split("%");
                     long remaining = (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis()) / 1000;
@@ -308,7 +314,7 @@ public class SystemStatus {
             BatteryManagerStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             acitivyStates.batteryLevel = intent.getIntExtra("level", 0);
             if (lastBatteryLevel != acitivyStates.batteryLevel) {
-                LogIHAB.log("battery level: " + acitivyStates.batteryLevel);
+                LogIHAB.log("battery level: " + acitivyStates.batteryLevel / 100);
                 lastBatteryLevel = acitivyStates.batteryLevel;
             }
             Refresh();

@@ -1,6 +1,8 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,9 +30,12 @@ public class QuestionnaireActivity extends AppCompatActivity {
     private QuestionnairePagerAdapter mAdapter;
     private boolean forceAnswer, isAdmin;
     String clientID, selectedQuest;
+    private int falseSwipes = 0;
+    private static boolean bRecordSwipes = true;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
+        this.setResult(Activity.RESULT_OK, new Intent());
         thisAppCompatActivity = this;
         setContentView(R.layout.activity_main_questionaire);
         forceAnswer = getIntent().getExtras().getBoolean("forceAnswer");
@@ -78,9 +83,18 @@ public class QuestionnaireActivity extends AppCompatActivity {
                 public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
                 @Override
                 public void onPageSelected(int position) {
-                    if (!mAdapter.getHasQuestionBeenAnswered() && mAdapter.getHasQuestionForcedAnswer() && forceAnswer) {
+                    // In case of forced answers, no forward swiping is allowed on unanswered questions
+                    if (!mAdapter.getHasQuestionBeenAnswered() && mAdapter.getHasQuestionForcedAnswer()) {
                         mAdapter.setQuestionnaireProgressBar(position - 1);
                         mAdapter.setArrows(position - 1);
+                        mViewPager.setCurrentItem(position - 1, true);
+                        if (bRecordSwipes) {
+                            falseSwipes += 1;
+                        }
+                        Log.e(TAG, "False Swipes: " + falseSwipes);
+                        if (bRecordSwipes && falseSwipes > 2) {
+                            messageFalseSwipes();
+                        }
                     } else {
                         mAdapter.setQuestionnaireProgressBar(position);
                         mAdapter.setArrows(position);
@@ -88,6 +102,22 @@ public class QuestionnaireActivity extends AppCompatActivity {
                     }
                 }
             };
+
+    private void messageFalseSwipes() {
+        bRecordSwipes = false;
+        falseSwipes = 0;
+        new AlertDialog.Builder(this, R.style.SwipeDialogTheme)
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.swipeMessage)
+                .setPositiveButton(R.string.swipeOkay, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        bRecordSwipes = true;;
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
 
     // Starts a new questionnaire, motivation can be {"auto", "manual"}
     private void startQuestionnaire(String motivation) {
@@ -138,4 +168,5 @@ public class QuestionnaireActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
     }
+
 }

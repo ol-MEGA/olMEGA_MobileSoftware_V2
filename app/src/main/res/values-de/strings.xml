@@ -29,7 +29,8 @@
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>
 
-    <string name="deviceOwnerMessage">Wirklich den Device Owner abschalten?</string>
+    <string name="deviceOwnerMessageDisable">Wirklich den Device Owner abschalten?</string>
+    <string name="deviceOwnerMessageEnable">Wirklich den Device Owner aktivieren?</string>
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Ja</string>
     <string name="deviceOwnerNo">Nein</string>
@@ -58,6 +59,7 @@
 
     <string name="pref_isAdmin_title">Administrator</string>
     <string name="pref_enableKioskMode_summary">Nur für Personal</string>
+    <string name="pref_setAdmin_title">Device Administrator setzen</string>
     <string name="pref_unsetAdmin_title">Device Administrator löschen</string>
     <string name="pref_linkDevice_title">Link Device</string>
     <string name="pref_killAppAndService">Kill App and Service</string>

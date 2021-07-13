@@ -145,11 +145,19 @@
             android:key="killAppAndService"
             android:title="@string/pref_killAppAndService" />
 
+        <!--
         <Preference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
-            android:key="unsetDeviceAdmin"
+            android:key="enableDeviceAdmin"
+            android:title="@string/pref_setAdmin_title" />
+        -->
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="disableDeviceAdmin"
             android:summary="@string/pref_unsetAdmin_summary"
             android:title="@string/pref_unsetAdmin_title" />
 

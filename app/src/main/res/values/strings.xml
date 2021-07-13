@@ -41,7 +41,8 @@
     <string name="swipeMessage">Please answer the question first.</string>
     <string name="swipeOkay">Okay</string>
 
-    <string name="deviceOwnerMessage">Really unset Device Owner?</string>
+    <string name="deviceOwnerMessageDisable">Really unset Device Owner?</string>
+    <string name="deviceOwnerMessageEnable">Set Device Owner?</string>
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Yes</string>
     <string name="deviceOwnerNo">No</string>
@@ -55,6 +56,7 @@
 
     <string name="pref_isAdmin_title">Administrator</string>
     <string name="pref_enableKioskMode_summary">For experimenters only</string>
+    <string name="pref_setAdmin_title">Set Device Administrator</string>
     <string name="pref_unsetAdmin_title">Unset Device Administrator</string>
     <string name="pref_linkDevice_title">Link Device</string>
     <string name="pref_killAppAndService">Kill App and Service</string>
