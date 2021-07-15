@@ -55,6 +55,7 @@ public class BluetoothService {
     private ConnectedThread mConnectedThread;
     private int mState;
     private boolean isAndroid = BluetoothState.DEVICE_ANDROID;
+    public String BluetoothDevice_MAC = "";
 
     // Constructor. Prepares a new BluetoothChat session
     // context : The UI Activity Context
@@ -103,6 +104,7 @@ public class BluetoothService {
     // device : The BluetoothDevice to connect
     // secure : Socket Security type - Secure (true) , Insecure (false)
     public synchronized void connect(BluetoothDevice device) {
+        BluetoothDevice_MAC = device.getAddress();
         // Cancel any thread attempting to make a connection
         if (mState == BluetoothState.STATE_CONNECTING) {
             if (mConnectThread != null) {mConnectThread.cancel(); mConnectThread = null;}
@@ -124,6 +126,7 @@ public class BluetoothService {
      */
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice
             device, final String socketType) {
+        BluetoothDevice_MAC = device.getAddress();
         // Cancel the thread that completed the connection
         if (mConnectThread != null) {mConnectThread.cancel(); mConnectThread = null;}
 
@@ -280,6 +283,7 @@ public class BluetoothService {
 
         public ConnectThread(BluetoothDevice device) {
             mmDevice = device;
+            BluetoothDevice_MAC = device.getAddress();
             BluetoothSocket tmp = null;
 
             // Get a BluetoothSocket for a connection with the

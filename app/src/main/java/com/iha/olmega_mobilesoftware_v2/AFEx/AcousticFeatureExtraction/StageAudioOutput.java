@@ -44,10 +44,10 @@ public class StageAudioOutput extends Stage {
     protected void process(float[][] buffer) {
         byte[] dataOut = new byte[buffer.length * buffer[0].length * 2];
         for (int i = 0; i < buffer[0].length; i++) {
-            short tmp = (short) buffer[0][i];
+            short tmp = (short) (buffer[0][i] * Short.MAX_VALUE);
             dataOut[i * 4] = (byte) (tmp & 0xff);
             dataOut[i * 4 + 1] = (byte) ((tmp >> 8) & 0xff);
-            tmp = (short) buffer[1][i];
+            tmp = (short) (buffer[1][i] * Short.MAX_VALUE);
             dataOut[i * 4 + 2] = (byte) (tmp & 0xff);
             dataOut[i * 4 + 3] = (byte) ((tmp >> 8) & 0xff);
         }

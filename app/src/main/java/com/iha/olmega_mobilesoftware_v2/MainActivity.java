@@ -69,13 +69,14 @@ public class MainActivity extends AppCompatActivity {
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
-    private boolean wifiActivated = false;
+    private boolean wifiActivated = false, AppClosed = true;
 
     private static Context context;
 
     public static Context getAppContext() {
         return MainActivity.context;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         /*
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                     else
                         findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                 }
-                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto) {
+                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
                     if (automaticQuestTimer >= 29 * 60) {
@@ -179,8 +180,13 @@ public class MainActivity extends AppCompatActivity {
         }, 0);
     }
 
+    @Override
     protected void onStart() {
         super.onStart();
+        if (AppClosed == true) {
+            LogIHAB.log("AppStarted");
+            AppClosed = false;
+        }
         checkPermission();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         // create necessary files
@@ -193,6 +199,15 @@ public class MainActivity extends AppCompatActivity {
                 outStream.write(buffer);
             } catch (IOException e) {
             }
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (controlService != null && controlService.Status() != null && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
+            LogIHAB.log("AppClosed");
+            AppClosed = true;
         }
     }
 
@@ -306,9 +321,11 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("clientID", controlService.Status().Preferences().clientID());
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
+            questionnaireMotivation = QuestionnaireMotivation.manual;
             startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
-            //questionnaireMotivation = QuestionnaireMotivation.manual;
         }
+        else if (controlService == null)
+            LogIHAB.log("startQuestionnaire()");
     }
 
     void doBindService() {
@@ -465,8 +482,6 @@ public class MainActivity extends AppCompatActivity {
                     if (acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection()) {
                         if (QuestionnaireActivity.thisAppCompatActivity != null)
                             QuestionnaireActivity.thisAppCompatActivity.finish();
-                        if (questionnaireMotivation != QuestionnaireMotivation.manual)
-                            questionnaireMotivation = QuestionnaireMotivation.manual;
                     }
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
@@ -512,8 +527,10 @@ public class MainActivity extends AppCompatActivity {
                         NextQuestTextView.setText(Message);
                     else
                         NextQuestTextView.setText("");
-                    if (TimeRemaining > Long.MIN_VALUE && TimeRemaining < 0)
+                    if (TimeRemaining > Long.MIN_VALUE && TimeRemaining <= 0)
                         questionnaireMotivation = QuestionnaireMotivation.auto;
+                    else
+                        questionnaireMotivation = QuestionnaireMotivation.manual;
                 }
             });
         }
@@ -538,7 +555,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Problem to enable the Admin Device features", Toast.LENGTH_SHORT).show();
                 }
             }
-            else if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+            else if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal()) { // && resultCode == Activity.RESULT_OK) {
                 questionnaireMotivation = QuestionnaireMotivation.manual;
                 controlService.Status().ResetAutomaticQuestionaireTimer();
             } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
@@ -596,6 +613,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        else
+            LogIHAB.log("controlService = NULL (onActivityResult(...), requestCode: " + requestCode + ")");
     }
 
     private void setInfoTextView(boolean highlight) {

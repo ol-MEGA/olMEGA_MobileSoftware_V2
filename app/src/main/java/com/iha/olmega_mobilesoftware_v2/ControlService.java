@@ -52,9 +52,8 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        LogIHAB.log("AppStarted");
         systemStatus = new SystemStatus(this);
-        Log.d(TAG, "Service onCreate");
+        //Log.d(TAG, "Service onCreate");
         mTaskHandler.post(mActivityCheckRunnable);
 
         // Register receiver for display activity
@@ -104,11 +103,10 @@ public class ControlService extends Service {
 
     @Override
     public void onDestroy() {
-        LogIHAB.log("AppClosed");
         //Log.d(TAG, "Service destroyed");
         Status().onDestroy();
-        super.onDestroy();
         unregisterReceiver(mDisplayReceiver);
+        super.onDestroy();
     }
 
     public class LocalBinder extends Binder {

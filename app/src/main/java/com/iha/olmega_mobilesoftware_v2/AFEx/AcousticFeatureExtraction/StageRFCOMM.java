@@ -196,6 +196,8 @@ public class StageRFCOMM extends Stage {
                 break;
             case connected:
                 LogIHAB.log("Bluetooth: connected");
+                if (bt != null && bt.getBluetoothService() != null)
+                    LogIHAB.log("Bluetooth: Device '" + bt.getBluetoothService().BluetoothDevice_MAC + "'");
                 break;
         }
         Intent  intent = new Intent("StageState");    //action: "msg"
@@ -338,8 +340,8 @@ public class StageRFCOMM extends Stage {
         short[] buffer = new short[data.length/2];
         ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buffer);
         for (int k = 0; k < buffer.length / 2; k++) {
-            dataOut[0][BufferIdx] = buffer[k * 2];
-            dataOut[1][BufferIdx] = buffer[k * 2 + 1];
+            dataOut[0][BufferIdx] = (float)buffer[k * 2] / Short.MAX_VALUE;
+            dataOut[1][BufferIdx] = (float)buffer[k * 2 + 1] / Short.MAX_VALUE;
             BufferIdx++;
             if (BufferIdx == frames) {
                 send(dataOut);
