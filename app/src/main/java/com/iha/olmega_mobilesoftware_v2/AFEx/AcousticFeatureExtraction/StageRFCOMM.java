@@ -30,12 +30,13 @@ public class StageRFCOMM extends Stage {
     final static String LOG = "StageRFCOMM";
 
     byte checksum = 0;
-    private boolean useCalib = true, restartStages = false;
+    private boolean restartStages = false;
     private BluetoothSPP bt;
     private static final int block_size = 64;
     private int alivePingTimeout = 100, BufferIdx = 0, frames, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0, lostBlockCount, AudioBufferSize = block_size * 4, millisPerBlock = block_size * 1000 / 16000;
     private long lastEmptyPackageTimer, lastStreamTimer, lastBluetoothPingTimer;
-    private double[] calibValues = new double[]{Double.NaN, Double.NaN}, calibValuesInDB = new double[]{Double.NaN, Double.NaN};
+    public float[] calibValues = new float[]{Float.NaN, Float.NaN};
+    public float[] calibValuesInDB = new float[]{Float.NaN, Float.NaN};
     private RingBuffer ringBuffer;
     private initState initializeState;
     byte[] emptyAudioBlock;
@@ -237,19 +238,19 @@ public class StageRFCOMM extends Stage {
                         int protocollVersion = (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF));
                         switch (protocollVersion) { // Check Protocol-Version
                             case 1:
-                                calibValuesInDB[0] = 0.0;
-                                calibValuesInDB[1] = 0.0;
-                                calibValues[0] = 1.0;
-                                calibValues[1] = 1.0;
+                                calibValuesInDB[0] = (float)0.0;
+                                calibValuesInDB[1] = (float)0.0;
+                                calibValues[0] = (float)1.0;
+                                calibValues[1] = (float)1.0;
                                 additionalBytesCount = 12;
                                 setState(initState.WAITING_FOR_AUDIOTRANSMISSION);
                                 sendBroadcast(States.connecting);
                                 break;
                             case 2:
-                                calibValuesInDB[0] = Double.NaN;
-                                calibValuesInDB[1] = Double.NaN;
-                                calibValues[0] = Double.NaN;
-                                calibValues[1] = Double.NaN;
+                                calibValuesInDB[0] = Float.NaN;
+                                calibValuesInDB[1] = Float.NaN;
+                                calibValues[0] = Float.NaN;
+                                calibValues[1] = Float.NaN;
                                 additionalBytesCount = 12;
                                 bt.send("GC", false);
                                 setState(initState.WAITING_FOR_CALIBRATION_VALUES);
@@ -267,10 +268,13 @@ public class StageRFCOMM extends Stage {
                             }
                             if (ValuesChecksum == ringBuffer.getByte(-4)) {
                                 if (ringBuffer.getByte(-13) == 'L')
-                                    calibValuesInDB[0] = ByteBuffer.wrap(values).getDouble();
+                                    calibValuesInDB[0] = (float)ByteBuffer.wrap(values).getDouble();
                                 else if (ringBuffer.getByte(-13) == 'R')
-                                    calibValuesInDB[1] = ByteBuffer.wrap(values).getDouble();
-                                if (!Double.isNaN(calibValuesInDB[0]) && !Double.isNaN(calibValuesInDB[1])) {
+                                    calibValuesInDB[1] = (float)ByteBuffer.wrap(values).getDouble();
+                                if (!Float.isNaN(calibValuesInDB[0]) && !Float.isNaN(calibValuesInDB[1])) {
+                                    calibValues[0] = (float)Math.pow(10, calibValuesInDB[0] / 20.0);
+                                    calibValues[1] = (float)Math.pow(10, calibValuesInDB[1] / 20.0);
+                                    /*
                                     if (calibValuesInDB[0] <= calibValuesInDB[1]) {
                                         calibValues[0] = Math.pow(10, (calibValuesInDB[0] - calibValuesInDB[1]) / 20.0);
                                         calibValues[1] = 1;
@@ -278,6 +282,7 @@ public class StageRFCOMM extends Stage {
                                         calibValues[0] = 1;
                                         calibValues[1] = Math.pow(10, (calibValuesInDB[1] - calibValuesInDB[0]) / 20.0);
                                     }
+                                     */
                                     setState(initState.WAITING_FOR_AUDIOTRANSMISSION);
                                     sendBroadcast(States.connecting);
                                 }
@@ -317,12 +322,14 @@ public class StageRFCOMM extends Stage {
                                         lastBlockNumber++;
                                     }
                                     lastBlockNumber = currBlockNumber % 65536;
+                                    /*
                                     for (int idx = 0; idx < AudioBufferSize / 2; idx++) {
                                         if (useCalib)
                                             ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2) * calibValues[idx % 2]), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
                                         else
                                             ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2)), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
                                     }
+                                     */
                                     writeData(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize));
                                     lastStreamTimer = System.currentTimeMillis();
                                     lastEmptyPackageTimer = System.currentTimeMillis();
@@ -340,8 +347,8 @@ public class StageRFCOMM extends Stage {
         short[] buffer = new short[data.length/2];
         ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buffer);
         for (int k = 0; k < buffer.length / 2; k++) {
-            dataOut[0][BufferIdx] = (float)buffer[k * 2] / Short.MAX_VALUE;
-            dataOut[1][BufferIdx] = (float)buffer[k * 2 + 1] / Short.MAX_VALUE;
+            dataOut[0][BufferIdx] = ((float)buffer[k * 2] * calibValues[0]) / (float)Short.MAX_VALUE;
+            dataOut[1][BufferIdx] = ((float)buffer[k * 2 + 1] * calibValues[1]) / (float)Short.MAX_VALUE;
             BufferIdx++;
             if (BufferIdx == frames) {
                 send(dataOut);

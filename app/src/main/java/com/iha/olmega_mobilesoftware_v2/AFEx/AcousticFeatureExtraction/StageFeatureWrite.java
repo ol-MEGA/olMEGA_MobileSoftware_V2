@@ -151,6 +151,7 @@ public class StageFeatureWrite extends Stage {
             featureRAF = new RandomAccessFile(featureFile, "rw");
 
             // write header
+            featureRAF.writeInt(2);               // Feature File Version
             featureRAF.writeInt(0);               // block count, written on close
             featureRAF.writeInt(0);               // feature dimensions, written on close
             featureRAF.writeInt(inStage.blockSizeOut);  // [samples]
@@ -158,7 +159,10 @@ public class StageFeatureWrite extends Stage {
 
             featureRAF.writeInt(samplingrate);
 
-            featureRAF.writeBytes(timestamp.substring(9));  // HHMMssSSS, 9 bytes (absolute timestamp)
+            featureRAF.writeBytes(timestamp.substring(2));  // HHMMssSSS, 9 bytes (absolute timestamp)
+
+            featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
+            featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
 
             blockCount = 0;
             relTimestamp[0] = 0;
@@ -226,10 +230,22 @@ public class StageFeatureWrite extends Stage {
 
     private void closeFeatureFile() {
         try {
-
-            featureRAF.seek(0);
+            float[] calibValuesInDB = new float[]{0, 0};
+            Stage tempStage = this;
+            while (tempStage != null) {
+                tempStage = tempStage.inStage;
+                if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[1])) {
+                    calibValuesInDB = ((StageRFCOMM)tempStage).calibValuesInDB.clone();
+                    Log.d(LOG, "calibValues: " + calibValuesInDB[0] + ", " + calibValuesInDB[1]);
+                    break;
+                }
+            }
+            featureRAF.seek(4);
             featureRAF.writeInt(blockCount); // block count for this feature file
             featureRAF.writeInt(nFeatures);  // features + timestamps per block
+            featureRAF.seek(40);
+            featureRAF.writeFloat(calibValuesInDB[0]);
+            featureRAF.writeFloat(calibValuesInDB[1]);
             featureRAF.close();
             if (blockCount == 0 && nFeatures == 0)
                 featureFile.delete();
