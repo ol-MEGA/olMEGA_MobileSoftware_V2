@@ -69,6 +69,7 @@ public class StageRFCOMM extends Stage {
             bt = new BluetoothSPP(context);
         int delay = 2000;
         if(!bt.isBluetoothEnabled()) {
+            LogIHAB.log("Bluetooth: Enable Bluetooth Adapter");
             bt.enable();
             delay = 5000;
         }
@@ -139,6 +140,7 @@ public class StageRFCOMM extends Stage {
                                 bt.stopService();
                                 ReconnectTrials += 1;
                                 if (ReconnectTrials > 5) {
+                                    LogIHAB.log("Bluetooth: Disable Bluetooth Adapter");
                                     mBluetoothAdapter.disable();
                                     ReconnectTrials = 0;
                                 }
