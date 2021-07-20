@@ -4,13 +4,6 @@
     android:layout_height="wrap_content" >
 
     <PreferenceCategory android:title="@string/pref_head_General">
-        <EditTextPreference
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:key="clientID"
-            android:title="@string/pref_clientID"
-            />
-
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -18,14 +11,6 @@
             android:key="autoStartActivity"
             android:title="@string/pref_autostart_title"
             android:summary="@string/pref_autostart_summary" />
-
-        <ListPreference
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:key="inputProfile"
-            android:title="@string/pref_operationMode_title"
-            android:dialogTitle="@string/pref_operationMode_title"
-            android:summary="%s" />
 
         <SwitchPreference
             android:layout_width="wrap_content"
@@ -43,6 +28,14 @@
             android:checked="true"
             android:key="isKioskModeNecessary"
             android:title="@string/pref_isKioskModeNecessary" />
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="inputProfile"
+            android:title="@string/pref_operationMode_title"
+            android:dialogTitle="@string/pref_operationMode_title"
+            android:summary="%s" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_head_Questionnaire">
@@ -73,6 +66,15 @@
             android:key="showQuestionnaireTimer"
             android:title="@string/pref_show_activateTimer_title"
             android:summary="@string/pref_show_activateTimer_summary" />
+
+        <EditTextPreference
+            android:dependency="useQuestionnaire"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="clientID"
+            android:title="@string/pref_clientID"
+            android:summary="@string/pref_clientID_summary" />
+            />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_head_Bluetooth">

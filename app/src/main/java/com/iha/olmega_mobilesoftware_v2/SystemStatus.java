@@ -20,17 +20,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-class AcitivyStates {
-    public boolean isCharging = false;
-    public boolean questionaireEnabled = false;
-    public boolean isAutomaticQuestionaireActive = false;
-    public String InfoText = "";
-    public String NextQuestText = "";
-    public BatteryStates BatteryState = BatteryStates.undefined;
-    public float batteryLevel = -1.0f;
-    public States profileState = States.undefined;
-    public String InputProfile = "";
-}
+
 
 public class SystemStatus {
 
@@ -117,7 +107,7 @@ public class SystemStatus {
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
             if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
                 if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {
-                    acitivyStates.InfoText = "Unable to start Kiosk-Mode...\n\nPlease check DeviceOwner Settings! ";
+                    acitivyStates.InfoText = mContext.getResources().getString(R.string.UnableToStartKioskMode);
                     preferences.configHasErrors = true;
                 }
                 if (acitivyStates.isCharging && Preferences().usbCutsConnection())
