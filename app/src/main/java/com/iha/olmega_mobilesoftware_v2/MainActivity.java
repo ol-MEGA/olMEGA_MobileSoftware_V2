@@ -185,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         if (AppClosed == true) {
             LogIHAB.log("AppStarted");
+            LogIHAB.log("Version: " + BuildConfig.VERSION_NAME);
             AppClosed = false;
         }
         checkPermission();

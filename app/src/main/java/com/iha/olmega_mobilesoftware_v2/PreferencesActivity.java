@@ -26,6 +26,7 @@ import com.github.javiersantos.appupdater.enums.AppUpdaterError;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
 import com.github.javiersantos.appupdater.objects.Update;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -76,7 +77,7 @@ public class PreferencesActivity extends PreferenceActivity {
                     String uriString = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                     File myFile = new File(uriString.replace("file://", ""));
                     if (myFile.isFile()) {
-
+                        LogIHAB.log("Installing Update '" + myFile.getName() + "'");
                         Intent returnIntent = new Intent();
                         returnIntent.putExtra("installNewApp", myFile.toString());
                         PreferencesActivity.this.setResult(Activity.RESULT_OK, returnIntent);
