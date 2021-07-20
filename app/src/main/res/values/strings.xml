@@ -46,7 +46,7 @@
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Yes</string>
     <string name="deviceOwnerNo">No</string>
-    <string name="UnableToStartKioskMode">Unable to start Kiosk-Mode</string>
+    <string name="UnableToStartKioskMode">Unable to start Kiosk Mode</string>
 
     <string name="pref_head_Questionnaire">Questionnaire</string>
     <string name="pref_head_General">General</string>
@@ -68,7 +68,7 @@
     <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
-    <string name="pref_isKioskModeNecessary">Kiosk-Mode</string>
+    <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_clientID_summary">Only needed for embedded online questionnaires</string>

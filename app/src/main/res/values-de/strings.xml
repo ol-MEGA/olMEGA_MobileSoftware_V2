@@ -34,7 +34,7 @@
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Ja</string>
     <string name="deviceOwnerNo">Nein</string>
-    <string name="UnableToStartKioskMode">Unable to start Kiosk-Mode</string>
+    <string name="UnableToStartKioskMode">Unable to start Kiosk Mode</string>
 
     <string name="pref_head_Questionnaire">Fragebogen</string>
     <string name="pref_head_General">Allgemein</string>
@@ -71,7 +71,7 @@
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
-    <string name="pref_isKioskModeNecessary">Kiosk-Mode</string>
+    <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_clientID_summary">Nur für eingebette Online-Fragebögen notwendig</string>
