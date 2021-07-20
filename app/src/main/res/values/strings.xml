@@ -64,11 +64,11 @@
     <string name="pref_unsetAdmin_summary">For uninstall only</string>
     <string name="pref_button_scan_title">Connect</string>
     <string name="pref_button_scan_summary">Scan Devices</string>
-    <string name="pref_show_activateTimer_title">Activate timer</string>
+    <string name="pref_show_activateTimer_title">Show Countdown</string>
     <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
-    <string name="pref_isKioskModeNecessary">Kiosk-Mode necessary?</string>
+    <string name="pref_isKioskModeNecessary">Kiosk-Mode</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_clientID_summary">Only needed for embedded online questionnaires</string>
