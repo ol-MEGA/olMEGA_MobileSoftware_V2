@@ -23,7 +23,7 @@ abstract class Stage extends TreeSet {
 
     static Context context;
 
-    final int timeout = 1000; // in ms, wait this long to receive data before stopping a stage.
+    final int timeout = 2000; // in ms, wait this long to receive data before stopping a stage.
 
     static Instant startTime;
     static int samplingrate;
@@ -33,6 +33,7 @@ abstract class Stage extends TreeSet {
 
     protected Thread thread;
     private LinkedBlockingQueue<float[][]> inQueue;
+    protected boolean hasInQueue() {return (inQueue != null);}
     private Set<LinkedBlockingQueue> outQueue = new HashSet<>();
 
     Stage inStage;
@@ -84,7 +85,7 @@ abstract class Stage extends TreeSet {
             }
         };
 
-        thread = new Thread(runnable);
+        thread = new Thread(runnable, "Stage ID " + id);
         thread.start();
 
         // call start() of attached consumer
@@ -96,7 +97,8 @@ abstract class Stage extends TreeSet {
 
 
     void stop() {
-        thread.interrupt();
+        if (thread != null)
+            thread.interrupt();
         cleanup();
     }
 
@@ -163,7 +165,7 @@ abstract class Stage extends TreeSet {
 
         try {
 
-            //Log.d("Stage", "ID: " + id + " | receive()");
+            //Log.d("Stage", "ID: " + id + " | receive()");inQueue
             return inQueue.poll(timeout, TimeUnit.MILLISECONDS);
 
             // rebuffer and call processing here?

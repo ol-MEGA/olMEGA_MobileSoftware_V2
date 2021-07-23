@@ -53,9 +53,12 @@ public class StageFeatureWrite extends Stage {
     private int nFeatures;
     private int blockCount;
     private int bufferSize;
+    protected int mySamplingRate; // nedded because subsampling
 
     private float hopDuration;
-    private float[] relTimestamp = new float[]{0, 0};
+    private float[] relTimestamp;
+
+    private int inStage_hopSizeOut, inStage_blockSizeOut;
 
     private float featFileSize = 60; // size of feature files in seconds.
 
@@ -79,17 +82,30 @@ public class StageFeatureWrite extends Stage {
             isUdp = 0;
         else
             isUdp = Integer.parseInt((String) parameter.get("udp"));
-
+        mySamplingRate = samplingrate;
     }
 
     @Override
     void start(){
 
+        inStage_hopSizeOut = inStage.hopSizeOut;
+        inStage_blockSizeOut = inStage.blockSizeOut;
+
         startTime = Stage.startTime;
         currentTime = startTime;
+        relTimestamp = new float[]{0, 0};
         openFeatureFile();
 
         super.start();
+    }
+
+    void startWithoutThread(){
+        inStage_hopSizeOut = inStage.hopSizeOut;
+        inStage_blockSizeOut = inStage.blockSizeOut;
+        startTime = Stage.startTime;
+        currentTime = startTime;
+        relTimestamp = new float[]{0, 0};
+        openFeatureFile();
     }
 
     @Override
@@ -109,12 +125,14 @@ public class StageFeatureWrite extends Stage {
 
         while (!Thread.currentThread().isInterrupted() & !abort) {
 
-            float[][] data = receive();
+            if (hasInQueue()) {
+                float[][] data = receive();
 
-            if (data != null) {
-                process(data);
-            } else {
-                abort = true;
+                if (data != null) {
+                    process(data);
+                } else {
+                    abort = true;
+                }
             }
         }
 
@@ -124,7 +142,6 @@ public class StageFeatureWrite extends Stage {
     }
 
     protected void process(float[][] data) {
-
         appendFeature(data);
     }
 
@@ -154,12 +171,12 @@ public class StageFeatureWrite extends Stage {
             featureRAF.writeInt(2);               // Feature File Version
             featureRAF.writeInt(0);               // block count, written on close
             featureRAF.writeInt(0);               // feature dimensions, written on close
-            featureRAF.writeInt(inStage.blockSizeOut);  // [samples]
-            featureRAF.writeInt(inStage.hopSizeOut);    // [samples]
+            featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
+            featureRAF.writeInt(inStage_hopSizeOut);    // [samples]
 
-            featureRAF.writeInt(samplingrate);
+            featureRAF.writeInt(mySamplingRate);
 
-            featureRAF.writeBytes(timestamp.substring(2));  // HHMMssSSS, 9 bytes (absolute timestamp)
+            featureRAF.writeBytes(timestamp.substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
 
             featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
             featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
@@ -167,17 +184,15 @@ public class StageFeatureWrite extends Stage {
             blockCount = 0;
             relTimestamp[0] = 0;
 
-            hopDuration = (float) inStage.hopSizeOut / samplingrate;
-            relTimestamp[1] = (float) inStage.blockSizeOut / samplingrate;
+            hopDuration = (float) inStage_hopSizeOut / mySamplingRate;
+            relTimestamp[1] = (float) inStage_blockSizeOut / mySamplingRate;
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-
-    protected void appendFeature(float[][] data) {
+    protected void  appendFeature(float[][] data) {
 
         //System.out.println("timestamp: " + relTimestamp[1] + " | size: " + featFileSize);
 
@@ -219,7 +234,8 @@ public class StageFeatureWrite extends Stage {
         relTimestamp[1] = Math.round((relTimestamp[1] + hopDuration) * 10000.0f) / 10000.0f;
 
         try {
-            featureRAF.getChannel().write(bbuffer);
+            if (featureRAF != null)
+                featureRAF.getChannel().write(bbuffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -228,7 +244,7 @@ public class StageFeatureWrite extends Stage {
     }
 
 
-    private void closeFeatureFile() {
+    synchronized private void closeFeatureFile() {
         try {
             float[] calibValuesInDB = new float[]{0, 0};
             Stage tempStage = this;
@@ -236,21 +252,22 @@ public class StageFeatureWrite extends Stage {
                 tempStage = tempStage.inStage;
                 if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[1])) {
                     calibValuesInDB = ((StageRFCOMM)tempStage).calibValuesInDB.clone();
-                    Log.d(LOG, "calibValues: " + calibValuesInDB[0] + ", " + calibValuesInDB[1]);
+                    //Log.d(LOG, "calibValues: " + calibValuesInDB[0] + ", " + calibValuesInDB[1]);
                     break;
                 }
             }
-            featureRAF.seek(4);
-            featureRAF.writeInt(blockCount); // block count for this feature file
-            featureRAF.writeInt(nFeatures);  // features + timestamps per block
-            featureRAF.seek(40);
-            featureRAF.writeFloat(calibValuesInDB[0]);
-            featureRAF.writeFloat(calibValuesInDB[1]);
-            featureRAF.close();
-            if (blockCount == 0 && nFeatures == 0)
-                featureFile.delete();
-            featureRAF = null;
-
+            if (featureRAF != null) {
+                featureRAF.seek(4);
+                featureRAF.writeInt(blockCount); // block count for this feature file
+                featureRAF.writeInt(nFeatures);  // features + timestamps per block
+                featureRAF.seek(40);
+                featureRAF.writeFloat(calibValuesInDB[0]);
+                featureRAF.writeFloat(calibValuesInDB[1]);
+                featureRAF.close();
+                if (blockCount == 0 && nFeatures == 0)
+                    featureFile.delete();
+                featureRAF = null;
+            }
             new SingleMediaScanner(context, featureFile);
         } catch (IOException e) {
             e.printStackTrace();

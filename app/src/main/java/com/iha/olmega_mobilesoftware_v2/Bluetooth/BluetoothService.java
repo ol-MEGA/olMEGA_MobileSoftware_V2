@@ -210,6 +210,7 @@ public class BluetoothService {
         boolean isRunning = true;
 
         public AcceptThread(boolean isAndroid) {
+            setName("BT AcceptThread");
             BluetoothServerSocket tmp = null;
 
             // Create a new listening server socket
@@ -282,6 +283,7 @@ public class BluetoothService {
         private String mSocketType;
 
         public ConnectThread(BluetoothDevice device) {
+            setName("BT ConnectThread");
             mmDevice = device;
             BluetoothDevice_MAC = device.getAddress();
             BluetoothSocket tmp = null;
@@ -342,6 +344,7 @@ public class BluetoothService {
         private final OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothSocket socket, String socketType) {
+            setName("BT ConnectedThread");
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -363,10 +366,11 @@ public class BluetoothService {
             while (true) {
                 try {
                     if (mmInStream != null) {
-                        if (mmInStream.available() >= buffer.length) {
+                        while (mmInStream.available() >= buffer.length) {
                             mmInStream.read(buffer, 0, buffer.length);
-                            mHandler.obtainMessage(BluetoothState.MESSAGE_READ, buffer.length, -1, buffer).sendToTarget();
+                            mHandler.obtainMessage(BluetoothState.MESSAGE_READ, buffer.length, -1, buffer.clone()).sendToTarget();
                         }
+                        sleep(25);
                     }
                     else {
                         connectionLost();

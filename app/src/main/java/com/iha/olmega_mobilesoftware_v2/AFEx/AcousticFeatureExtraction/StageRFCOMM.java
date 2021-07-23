@@ -18,9 +18,11 @@ import com.iha.olmega_mobilesoftware_v2.Core.RingBuffer;
 import com.iha.olmega_mobilesoftware_v2.R;
 import com.iha.olmega_mobilesoftware_v2.States;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -41,8 +43,10 @@ public class StageRFCOMM extends Stage {
     private initState initializeState;
     byte[] emptyAudioBlock;
     float[][] dataOut;
+    float[][] ValidBlocksFeature;
     private long lastStateChange = System.currentTimeMillis();
     int ReconnectTrials = 0;
+    StageFeatureWrite myStageFeatureWrite;
 
     public StageRFCOMM(HashMap parameter) {
         super(parameter);
@@ -51,6 +55,7 @@ public class StageRFCOMM extends Stage {
         int blocksize_ms = 25;
         frames = blocksize_ms * samplingrate / 100;
         dataOut = new float[channels][frames];
+        ValidBlocksFeature = new float[1][1];
         ringBuffer = new RingBuffer(AudioBufferSize * 2);
         emptyAudioBlock = new byte[AudioBufferSize];
     }
@@ -149,11 +154,12 @@ public class StageRFCOMM extends Stage {
                                 }, 1000);
                             }
                         } else if (initializeState == initState.INITIALIZED) {
-                            if (System.currentTimeMillis() - lastEmptyPackageTimer > 100) {
-                                for (long count = 0; count < 100 / millisPerBlock; count++) {
+                            if (System.currentTimeMillis() - lastEmptyPackageTimer > 200) {
+                                for (long count = 0; count < 200 / millisPerBlock; count++) {
                                     lostBlockCount++;
                                     lastBlockNumber++;
-                                    writeData(emptyAudioBlock);
+                                    writeData(emptyAudioBlock, true);
+                                    Log.d(LOG, "emptyAudioBlock (in Loop)");
                                 }
                                 lastEmptyPackageTimer = System.currentTimeMillis();
                             }
@@ -214,6 +220,8 @@ public class StageRFCOMM extends Stage {
     }
 
     public void stop() {
+        if (myStageFeatureWrite != null)
+            myStageFeatureWrite.stop();
         if (bt != null)
             bt.stopService();
         bt = null;
@@ -230,7 +238,7 @@ public class StageRFCOMM extends Stage {
         }
     }
 
-    private void DataReceived(byte[] data) {
+    synchronized private void DataReceived(byte[] data) {
         for (byte sample : data) {
             ringBuffer.addByte(sample);
             checksum ^= ringBuffer.getByte(0);
@@ -276,15 +284,6 @@ public class StageRFCOMM extends Stage {
                                 if (!Float.isNaN(calibValuesInDB[0]) && !Float.isNaN(calibValuesInDB[1])) {
                                     calibValues[0] = (float)Math.pow(10, calibValuesInDB[0] / 20.0);
                                     calibValues[1] = (float)Math.pow(10, calibValuesInDB[1] / 20.0);
-                                    /*
-                                    if (calibValuesInDB[0] <= calibValuesInDB[1]) {
-                                        calibValues[0] = Math.pow(10, (calibValuesInDB[0] - calibValuesInDB[1]) / 20.0);
-                                        calibValues[1] = 1;
-                                    } else {
-                                        calibValues[0] = 1;
-                                        calibValues[1] = Math.pow(10, (calibValuesInDB[1] - calibValuesInDB[0]) / 20.0);
-                                    }
-                                     */
                                     setState(initState.WAITING_FOR_AUDIOTRANSMISSION);
                                     sendBroadcast(States.connecting);
                                 }
@@ -308,6 +307,23 @@ public class StageRFCOMM extends Stage {
                         if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
                             if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
                                 if (restartStages) {
+                                    if (myStageFeatureWrite != null)
+                                        myStageFeatureWrite.stop();
+                                    Stage.startTime = Instant.now();
+                                    HashMap<String, String> parameters = new HashMap<String, String>();
+                                    parameters.put("id", "9999999");
+                                    parameters.put("prefix", "VALIDBLOCKS");
+                                    parameters.put("nfeatures", "1");
+                                    parameters.put("blocksize", "1");
+                                    parameters.put("hopsize", "1");
+                                    myStageFeatureWrite = new StageFeatureWrite(parameters);
+                                    myStageFeatureWrite.mySamplingRate = samplingrate / block_size;
+                                    this.hopSizeOut = 1;
+                                    this.blockSizeOut = 1;
+                                    myStageFeatureWrite.inStage = this;
+                                    myStageFeatureWrite.startWithoutThread();
+                                    this.hopSizeOut = 400;
+                                    this.blockSizeOut = 400;
                                     for (Stage consumer : consumerSet) {
                                         consumer.start();
                                     }
@@ -320,19 +336,12 @@ public class StageRFCOMM extends Stage {
                                     lostBlockCount += currBlockNumber - lastBlockNumber - 1;
                                     while (lastBlockNumber < currBlockNumber - 1) {
                                         //Log.d(LOG, "CurrentBlock: " + currBlockNumber + "\tLostBlocks: " + lostBlockCount);
-                                        writeData(emptyAudioBlock);
+                                        writeData(emptyAudioBlock, true);
+                                        //Log.d(LOG, "emptyAudioBlock " + lastBlockNumber);
                                         lastBlockNumber++;
                                     }
                                     lastBlockNumber = currBlockNumber % 65536;
-                                    /*
-                                    for (int idx = 0; idx < AudioBufferSize / 2; idx++) {
-                                        if (useCalib)
-                                            ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2) * calibValues[idx % 2]), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
-                                        else
-                                            ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2)), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
-                                    }
-                                     */
-                                    writeData(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize));
+                                    writeData(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize), false);
                                     lastStreamTimer = System.currentTimeMillis();
                                     lastEmptyPackageTimer = System.currentTimeMillis();
                                 }
@@ -345,7 +354,9 @@ public class StageRFCOMM extends Stage {
         }
     }
 
-    private void writeData(byte[] data) {
+    synchronized private void writeData(byte[] data, boolean isEmpty) {
+        if (!isEmpty)
+            emptyAudioBlock = data.clone();
         short[] buffer = new short[data.length/2];
         ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buffer);
         for (int k = 0; k < buffer.length / 2; k++) {
@@ -358,5 +369,12 @@ public class StageRFCOMM extends Stage {
                 BufferIdx = 0;
             }
         }
+        if (myStageFeatureWrite != null) {
+            ValidBlocksFeature[0][0] = 1;
+            if (isEmpty)
+                ValidBlocksFeature[0][0] = 0;
+            myStageFeatureWrite.process(ValidBlocksFeature);
+        }
+        ValidBlocksFeature = new float[1][1];
     }
 }
