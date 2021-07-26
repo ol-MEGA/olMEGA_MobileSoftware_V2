@@ -481,8 +481,6 @@ public class Questionnaire {
     }
 
     private void returnToMenu() {
-        Intent returnIntent = new Intent();
-        mQuestionnaireActivity.setResult(Activity.RESULT_OK, returnIntent);
         mQuestionnaireActivity.finish();
     }
 

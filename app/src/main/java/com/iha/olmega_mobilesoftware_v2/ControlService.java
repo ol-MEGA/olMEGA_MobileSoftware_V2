@@ -53,7 +53,7 @@ public class ControlService extends Service {
     public void onCreate() {
         super.onCreate();
         systemStatus = new SystemStatus(this);
-        Log.d(TAG, "Service onCreate");
+        //Log.d(TAG, "Service onCreate");
         mTaskHandler.post(mActivityCheckRunnable);
 
         // Register receiver for display activity
@@ -103,10 +103,10 @@ public class ControlService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Service destroyed");
+        //Log.d(TAG, "Service destroyed");
         Status().onDestroy();
-        super.onDestroy();
         unregisterReceiver(mDisplayReceiver);
+        super.onDestroy();
     }
 
     public class LocalBinder extends Binder {

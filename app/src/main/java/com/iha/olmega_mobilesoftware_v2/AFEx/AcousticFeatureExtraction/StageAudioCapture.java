@@ -69,8 +69,8 @@ public class StageAudioCapture extends Stage {
             for (int k = 0; k < samplesRead / 2; k++) {
 
                 // split channels
-                dataOut[0][i] = buffer[k * 2];
-                dataOut[1][i] = buffer[k * 2 + 1];
+                dataOut[0][i] = (float)buffer[k * 2] / Short.MAX_VALUE;
+                dataOut[1][i] = (float)buffer[k * 2 + 1] / Short.MAX_VALUE;
                 i++;
 
                 if (i >= frames) {

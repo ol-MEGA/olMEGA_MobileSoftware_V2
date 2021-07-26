@@ -26,6 +26,7 @@ import com.github.javiersantos.appupdater.enums.AppUpdaterError;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
 import com.github.javiersantos.appupdater.objects.Update;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -76,7 +77,7 @@ public class PreferencesActivity extends PreferenceActivity {
                     String uriString = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                     File myFile = new File(uriString.replace("file://", ""));
                     if (myFile.isFile()) {
-
+                        LogIHAB.log("Installing Update '" + myFile.getName() + "'");
                         Intent returnIntent = new Intent();
                         returnIntent.putExtra("installNewApp", myFile.toString());
                         PreferencesActivity.this.setResult(Activity.RESULT_OK, returnIntent);
@@ -91,8 +92,6 @@ public class PreferencesActivity extends PreferenceActivity {
         }
     };
 
-
-
     public static class Preferences extends PreferenceFragment {
         private String TAG = this.getClass().getSimpleName();
 
@@ -100,7 +99,7 @@ public class PreferencesActivity extends PreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
             PreferencesActivity tmp = (PreferencesActivity)getActivity();
-            findPreference("unsetDeviceAdmin").setEnabled(tmp.isDeviceOwner);
+            findPreference("disableDeviceAdmin").setEnabled(tmp.isDeviceOwner);
             findPreference("checkForUpdate").setEnabled(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists());
             if (findPreference("checkForUpdate").isEnabled() == false)
                 findPreference("checkForUpdate").setSummary(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.getAbsolutePath() + " is missing!");
@@ -109,41 +108,36 @@ public class PreferencesActivity extends PreferenceActivity {
 
             includeQuestList();
             includedAFExList();
-            Preference deviceOwnerPref = (Preference) findPreference("unsetDeviceAdmin");
-            deviceOwnerPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference arg0) {
-                    confirmUnsetDeviceOwner();
-                    return true;
-                }
+            Preference DisabledeviceOwnerPref = (Preference) findPreference("disableDeviceAdmin");
+            DisabledeviceOwnerPref.setOnPreferenceClickListener(arg0 -> {
+                confirmDisableDeviceAdmin();
+                return true;
             });
+            /*
+            Preference EnabledeviceOwnerPref = (Preference) findPreference("enableDeviceAdmin");
+            EnabledeviceOwnerPref.setOnPreferenceClickListener(arg0 -> {
+                confirmEnableDeviceAdmin();
+                return true;
+            });
+             */
             Preference killAppAndServicePref = (Preference) findPreference("killAppAndService");
-            killAppAndServicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference arg0) {
-                    confirmKillAppAndService();
-                    return true;
-                }
+            killAppAndServicePref.setOnPreferenceClickListener(arg0 -> {
+                confirmKillAppAndService();
+                return true;
             });
             Preference LinkDevicePref = (Preference) findPreference("LinkDevice");
-            LinkDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference arg0) {
-                    Intent intent = new Intent(getActivity(), LinkDeviceHelper.class);
-                    startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
-                    return true;
-                }
+            LinkDevicePref.setOnPreferenceClickListener(arg0 -> {
+                Intent intent = new Intent(getActivity(), LinkDeviceHelper.class);
+                startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
+                return true;
             });
             Preference VersionPref = (Preference) findPreference("Version");
             VersionPref.setSummary(BuildConfig.VERSION_NAME);
             Preference button = (Preference) findPreference("checkForUpdate");
             if (button != null) {
-                button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference arg0) {
-                        checkForUpdate();
-                        return true;
-                    }
+                button.setOnPreferenceClickListener(arg0 -> {
+                    checkForUpdate();
+                    return true;
                 });
             }
         }
@@ -283,16 +277,38 @@ public class PreferencesActivity extends PreferenceActivity {
             }
         }
 
-        private void confirmUnsetDeviceOwner() {
+        private void confirmDisableDeviceAdmin() {
             new AlertDialog.Builder(getActivity(), R.style.SwipeDialogTheme)
                     .setTitle(R.string.app_name)
-                    .setMessage(R.string.deviceOwnerMessage)
+                    .setMessage(R.string.deviceOwnerMessageDisable)
                     .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Intent returnIntent = new Intent();
                             returnIntent.putExtra("killAppAndService", true);
-                            returnIntent.putExtra("unsetDeviceAdmin", true);
+                            returnIntent.putExtra("disableDeviceAdmin", true);
+                            getActivity().setResult(Activity.RESULT_OK, returnIntent);
+                            getActivity().finish();
+                        }
+                    })
+                    .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
+        }
+
+        private void confirmEnableDeviceAdmin() {
+            new AlertDialog.Builder(getActivity(), R.style.SwipeDialogTheme)
+                    .setTitle(R.string.app_name)
+                    .setMessage(R.string.deviceOwnerMessageEnable)
+                    .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent returnIntent = new Intent();
+                            returnIntent.putExtra("enableDeviceAdmin", true);
                             getActivity().setResult(Activity.RESULT_OK, returnIntent);
                             getActivity().finish();
                         }

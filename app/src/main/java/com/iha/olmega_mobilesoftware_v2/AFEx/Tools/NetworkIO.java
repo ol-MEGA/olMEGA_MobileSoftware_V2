@@ -31,7 +31,7 @@ public class NetworkIO {
                     System.out.println("Send failed. " + e.toString());
                 }
             }
-        }));
+        }), "NetworkIO");
 
         thread.start();
 

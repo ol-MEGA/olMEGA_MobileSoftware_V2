@@ -29,17 +29,19 @@
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>
 
-    <string name="deviceOwnerMessage">Wirklich den Device Owner abschalten?</string>
+    <string name="deviceOwnerMessageDisable">Wirklich den Device Admin deaktivieren?</string>
+    <string name="deviceOwnerMessageEnable">Wirklich den Device Admin aktivieren?</string>
     <string name="killAppAndServiceMessage">Really kill App and Server?</string>
     <string name="deviceOwnerYes">Ja</string>
     <string name="deviceOwnerNo">Nein</string>
+    <string name="UnableToStartKioskMode">Unable to start Kiosk Mode</string>
 
     <string name="pref_head_Questionnaire">Fragebogen</string>
     <string name="pref_head_General">Allgemein</string>
     <string name="pref_head_Bluetooth">Bluetooth</string>
     <string name="pref_head_Recording">Aufnahme</string>
     <string name="pref_head_Processing">Verarbeitung</string>
-    <string name="pref_head_Administration">Verwaltung</string>
+    <string name="pref_head_Administration">Administration</string>
 
 
     <string name="help_headline">Bedienung des\nFragebogens</string>
@@ -56,21 +58,23 @@
         automatisch eine Antwort wieder ab.</string>
     <string name="help_button_ready">Fertig</string>
 
-    <string name="pref_isAdmin_title">Administrator</string>
+    <string name="pref_isAdmin_title">Konfigurationsmodus</string>
     <string name="pref_enableKioskMode_summary">Nur für Personal</string>
-    <string name="pref_unsetAdmin_title">Device Administrator löschen</string>
+    <string name="pref_setAdmin_title">Device Admin setzen</string>
+    <string name="pref_unsetAdmin_title">Device Admin löschen</string>
     <string name="pref_linkDevice_title">Link Device</string>
     <string name="pref_killAppAndService">Kill App and Service</string>
     <string name="pref_unsetAdmin_summary">Nur zur Deinstallation</string>
     <string name="pref_button_scan_title">Verbinden</string>
     <string name="pref_button_scan_summary">Scanne Geräte</string>
-    <string name="pref_show_activateTimer_title">Timer anzeigen</string>
+    <string name="pref_show_activateTimer_title">Countdown anzeigen</string>
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
-    <string name="pref_isKioskModeNecessary">Kiosk-Mode erforderlich?</string>
+    <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>
+    <string name="pref_clientID_summary">Nur für eingebette Online-Fragebögen notwendig</string>
     <string name="pref_whichQuest_title">Auswahl Fragebogen</string>
     <string name="pref_whichQuest_dialogTitle">Auswahl Fragebogen</string>
     <string name="pref_forceAnswer_title">Antworten erzwingen</string>

@@ -31,7 +31,8 @@ enum ActiviyRequestCode {
     HelpActiviy,
     QuestionnaireActivity,
     PreferencesActivity,
-    LinkDeviceHelper
+    LinkDeviceHelper,
+    DEVICE_ADMIN
 }
 
 enum LinkHelperBluetoothStates {
@@ -39,4 +40,16 @@ enum LinkHelperBluetoothStates {
     connected,
     disconnecting,
     disconnected,
+}
+
+class AcitivyStates {
+    public boolean isCharging = false;
+    public boolean questionaireEnabled = false;
+    public boolean isAutomaticQuestionaireActive = false;
+    public String InfoText = "";
+    public String NextQuestText = "";
+    public BatteryStates BatteryState = BatteryStates.undefined;
+    public float batteryLevel = -1.0f;
+    public States profileState = States.undefined;
+    public String InputProfile = "";
 }
