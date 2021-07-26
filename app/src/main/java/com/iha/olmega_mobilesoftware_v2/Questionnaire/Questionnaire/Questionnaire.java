@@ -381,7 +381,11 @@ public class Questionnaire {
                     if (qI.isHidden()) {                                                                // View is declared "Hidden"
                         removeQuestion(iPos);
                         wasChanged = true;
-                    } else if (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // Not even 1 positive Filter Id exists OR No positive filter Ids declared
+                    /*} else if (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // Not even 1 positive Filter Id exists OR No positive filter Ids declared
+                            && qI.getFilterIdPositive().size() > 0) {
+                        removeQuestion(iPos);
+                        wasChanged = true;*/
+                    } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())      // Not all positive Filter Id exist OR No positive filter Ids declared
                             && qI.getFilterIdPositive().size() > 0) {
                         removeQuestion(iPos);
                         wasChanged = true;
@@ -393,8 +397,10 @@ public class Questionnaire {
                 } else {                                                                                // View is inactive but should possibly be active
 
                     if (!qI.isHidden()
-                            && (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // View is not declared "Hidden"
-                            || qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
+                            //&& (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // View is not declared "Hidden"
+                            //|| qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
+                            && (mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())    // View is not declared "Hidden"
+                            || qI.getFilterIdPositive().size() == 0)                                    // && (All positive Filter Ids exist OR No positive filter Ids declared)
                             && (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())   // && (Not even 1 negative Filter Id exists OR No negative filter Ids declared)
                             || qI.getFilterIdNegative().size() == 0)
                     ) {
