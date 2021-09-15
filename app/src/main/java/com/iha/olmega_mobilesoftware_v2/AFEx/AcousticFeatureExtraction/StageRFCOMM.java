@@ -168,7 +168,7 @@ public class StageRFCOMM extends Stage {
                                     bt.send(" ", false);
                                 lastBluetoothPingTimer = System.currentTimeMillis();
                             }
-                            if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
+                            if (System.currentTimeMillis() - lastStreamTimer >= 5 * 1000) // 5 seconds
                             {
                                 LogIHAB.log("Bluetooth: Transmission Timeout");
                                 setState(initState.UNINITIALIZED);

@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 StringWriter sw = new StringWriter();
                 paramThrowable.printStackTrace(new PrintWriter(sw));
                 Log.e(TAG, sw.toString());
-                LogIHAB.log("StateError\n" + sw.toString());
+                LogIHAB.log("<begin stacktrace>\n" + sw.toString() + "\n<end stacktrace>");
                 System.exit(2);
             }
         });
@@ -236,8 +236,8 @@ public class MainActivity extends AppCompatActivity {
                 SystemStatus.AFExConfigFolder.mkdirs();
             if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
-                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone};
-                    String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml"};
+                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone, R.raw.rfcomm};
+                    String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml", "rfcomm.xml"};
                     for (int idx = 0; idx < fileListIn.length; idx++) {
                         File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
                         InputStream inputStream = getResources().openRawResource(fileListIn[idx]);
