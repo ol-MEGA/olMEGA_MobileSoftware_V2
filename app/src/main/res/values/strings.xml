@@ -82,7 +82,7 @@
     <string name="pref_autostart_summary">Start app with system</string>
     <string name="pref_maxBrightness_title">Display always bright</string>
     <string name="pref_maxBrightness_summary">Keep display brightness maximum</string>
-    <string name="pref_operationMode_title">Operation Mode</string>
+    <string name="pref_operationMode_title">Input Profile</string>
     <string name="pref_samplerate_title">Sampling Rate</string>
     <string name="pref_samplerate_summary">Recording sampling rate in Hz</string>
     <string name="pref_chunklengthInS_title">Cache size in seconds</string>

@@ -88,16 +88,7 @@ public class MainActivity extends AppCompatActivity {
          */
         super.onCreate(savedInstanceState);
         MainActivity.context = getApplicationContext();
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
-                StringWriter sw = new StringWriter();
-                paramThrowable.printStackTrace(new PrintWriter(sw));
-                Log.e(TAG, sw.toString());
-                LogIHAB.log("<begin stacktrace>\n" + sw.toString() + "\n<end stacktrace>");
-                System.exit(2);
-            }
-        });
+        Thread.setDefaultUncaughtExceptionHandler(new myUncaughtExceptionHandler(this, MainActivity.class));
         setContentView(R.layout.activity_main);
         //MainActivity.this.doBindService();
         findViewById(R.id.logo).setOnClickListener(new View.OnClickListener() {
@@ -207,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (controlService != null && controlService.Status() != null && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
-            LogIHAB.log("AppClosed");
+            LogIHAB.log("   AppClosed");
             AppClosed = true;
         }
     }
@@ -283,28 +274,6 @@ public class MainActivity extends AppCompatActivity {
             mDevicePolicyManager.addUserRestriction(mAdminComponentName, restriction);
         } else {
             mDevicePolicyManager.clearUserRestriction(mAdminComponentName, restriction);
-        }
-    }
-
-    private void setKioskMode(boolean enabled) {
-        if (enabled) {
-            if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
-                startLockTask();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    getWindow().setDecorFitsSystemWindows(false);
-                    if (getWindow().getInsetsController() != null) {
-                        getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                        getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-                    }
-                } else {
-                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-                }
-            } else {
-                stopLockTask();
-                Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            stopLockTask();
         }
     }
 
@@ -423,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
 
     // KIOSK MODE
     // adb shell dpm set-device-owner com.iha.olmega_mobilesoftware_v2/.AdminReceiver .
-    private void setKioskMode() {
+    private void checkIsDeviceOwner() {
         ComponentName deviceAdmin = new ComponentName(MainActivity.this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         try {
@@ -442,6 +411,28 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 controlService.Status().Preferences().isInKioskMode = false;
             }
+        }
+    }
+
+    private void setKioskMode(boolean enabled) {
+        if (enabled) {
+            if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
+                startLockTask();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    getWindow().setDecorFitsSystemWindows(false);
+                    if (getWindow().getInsetsController() != null) {
+                        getWindow().getInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        getWindow().getInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    }
+                } else {
+                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                }
+            } else {
+                stopLockTask();
+                Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            stopLockTask();
         }
     }
 
@@ -475,8 +466,9 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             controlService = ((ControlService.LocalBinder) service).getService();
             controlService.startForeground();
-            if (!controlService.Status().Preferences().isAdmin())
-                setKioskMode();
+            //if (!controlService.Status().Preferences().isAdmin())
+            //    checkKioskMode();
+            checkIsDeviceOwner();
             checkWifi();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
@@ -550,8 +542,9 @@ public class MainActivity extends AppCompatActivity {
             if (requestCode == ActiviyRequestCode.DEVICE_ADMIN.ordinal()) {
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(MainActivity.this, "You have enabled the Admin Device features", Toast.LENGTH_SHORT).show();
-                    if (!controlService.Status().Preferences().isAdmin())
-                        setKioskMode();
+                    checkIsDeviceOwner();
+                    //if (!controlService.Status().Preferences().isAdmin())
+                    //    setKioskMode();
                 } else {
                     Toast.makeText(MainActivity.this, "Problem to enable the Admin Device features", Toast.LENGTH_SHORT).show();
                 }
@@ -590,7 +583,7 @@ public class MainActivity extends AppCompatActivity {
                     stopService(new Intent(this, ControlService.class));
                     controlService.stopForeground(true);
                     doUnbindService();
-                    Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(MainActivity.this, "App and Service killed!", Toast.LENGTH_LONG).show();
                     this.finish();
                     System.exit(1);
                 }

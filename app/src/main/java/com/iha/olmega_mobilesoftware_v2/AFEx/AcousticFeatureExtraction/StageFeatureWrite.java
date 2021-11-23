@@ -163,8 +163,8 @@ public class StageFeatureWrite extends Stage {
 
         try {
 
-            featureFile = new File(directory +
-                    "/" + feature + "_" + timestamp + EXTENSION);
+            //featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
+            featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
             featureRAF = new RandomAccessFile(featureFile, "rw");
 
             // write header
@@ -177,6 +177,7 @@ public class StageFeatureWrite extends Stage {
             featureRAF.writeInt(mySamplingRate);
 
             featureRAF.writeBytes(timestamp.substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
+            //featureRAF.writeBytes(timeFormat.format(Instant.now()));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
 
             featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
             featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
@@ -234,13 +235,14 @@ public class StageFeatureWrite extends Stage {
         relTimestamp[1] = Math.round((relTimestamp[1] + hopDuration) * 10000.0f) / 10000.0f;
 
         try {
-            if (featureRAF != null)
+            if (featureRAF != null) {
                 featureRAF.getChannel().write(bbuffer);
+                blockCount++;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        blockCount++;
     }
 
 

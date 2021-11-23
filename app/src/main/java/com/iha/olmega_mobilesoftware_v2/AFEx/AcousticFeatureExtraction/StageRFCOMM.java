@@ -136,15 +136,15 @@ public class StageRFCOMM extends Stage {
                             }
                         }
                         if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 && initializeState == initState.UNINITIALIZED) ||
-                                (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
-                                (System.currentTimeMillis() - lastStateChange > 30 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
+                                (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
+                                (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
                             lastStateChange = System.currentTimeMillis();
                             setState(initState.UNINITIALIZED);
                             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                             if (mBluetoothAdapter.isEnabled() && bt != null) {
                                 bt.stopService();
                                 ReconnectTrials += 1;
-                                if (ReconnectTrials > 5) {
+                                if (ReconnectTrials >= 5 || initializeState == initState.WAITING_FOR_CALIBRATION_VALUES || initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) {
                                     LogIHAB.log("Bluetooth: Disable Bluetooth Adapter");
                                     mBluetoothAdapter.disable();
                                     ReconnectTrials = 0;

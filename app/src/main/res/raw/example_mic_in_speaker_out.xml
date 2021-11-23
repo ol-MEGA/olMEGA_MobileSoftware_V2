@@ -12,4 +12,5 @@
         </stage>
     </stage>
     <stage feature="StageAudioOutput" id="20"/>
+    <stage feature="StageAudioWrite" id="30"/>
 </stage>

@@ -20,6 +20,8 @@ public class StageAudioWrite extends Stage {
 
     AudioFileIO io;
     DataOutputStream stream;
+    private float[] calibValues = new float[]{1, 1};
+    boolean CalibValuesLoaded = false;
 
     DateTimeFormatter timeFormat =
             DateTimeFormatter.ofPattern("uuuuMMdd_HHmmssSSS")
@@ -76,17 +78,25 @@ public class StageAudioWrite extends Stage {
     protected void process(float[][] buffer) {
 
         byte[] dataOut = new byte[buffer.length * buffer[0].length * 2];
-
+        short tmp;
+        if (!CalibValuesLoaded) {
+            Stage tempStage = this;
+            while (tempStage != null) {
+                tempStage = tempStage.inStage;
+                if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValues[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValues[1])) {
+                    calibValues = ((StageRFCOMM)tempStage).calibValues.clone();
+                    break;
+                }
+            }
+            CalibValuesLoaded = true;
+        }
         for (int i = 0; i < buffer[0].length; i++) {
-
-            short tmp = (short) buffer[0][i];
+            tmp = (short) ((buffer[0][i] * (float)Short.MAX_VALUE) / calibValues[0]);
             dataOut[i * 4] = (byte) (tmp & 0xff);
             dataOut[i * 4 + 1] = (byte) ((tmp >> 8) & 0xff);
-
-            tmp = (short) buffer[1][i];
+            tmp = (short) ((buffer[1][i] * (float)Short.MAX_VALUE) / calibValues[1]);
             dataOut[i * 4 + 2] = (byte) (tmp & 0xff);
             dataOut[i * 4 + 3] = (byte) ((tmp >> 8) & 0xff);
-
         }
 
         try {

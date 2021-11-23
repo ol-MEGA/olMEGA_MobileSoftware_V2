@@ -1,5 +1,6 @@
 package com.iha.olmega_mobilesoftware_v2;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -116,8 +117,12 @@ public class SystemStatus {
                 acitivyStates.profileState = States.undefined;
                 acitivyStates.InputProfile = "";
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                if (stageManager != null && stageManager.isRunning)
+                if (stageManager != null && stageManager.isRunning) {
+                    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                    if (mBluetoothAdapter.isEnabled())
+                        mBluetoothAdapter.disable();
                     stageManager.stop();
+                }
             } else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
                 acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
