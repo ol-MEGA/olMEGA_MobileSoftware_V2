@@ -55,12 +55,13 @@ public class StageFeatureWrite extends Stage {
     private int bufferSize;
     protected int mySamplingRate; // nedded because subsampling
 
-    private float hopDuration;
-    private float[] relTimestamp;
+    private int hopDuration;
+    private int[] relTimestamp;
 
     private int inStage_hopSizeOut, inStage_blockSizeOut;
 
     private float featFileSize = 60; // size of feature files in seconds.
+    private long HeaderPos_calibValues = -1;
 
     DateTimeFormatter timeFormat =
             DateTimeFormatter.ofPattern("uuuuMMdd_HHmmssSSS")
@@ -93,7 +94,7 @@ public class StageFeatureWrite extends Stage {
 
         startTime = Stage.startTime;
         currentTime = startTime;
-        relTimestamp = new float[]{0, 0};
+        relTimestamp = new int[]{0, 0};
         openFeatureFile();
 
         super.start();
@@ -104,7 +105,7 @@ public class StageFeatureWrite extends Stage {
         inStage_blockSizeOut = inStage.blockSizeOut;
         startTime = Stage.startTime;
         currentTime = startTime;
-        relTimestamp = new float[]{0, 0};
+        relTimestamp = new int[]{0, 0};
         openFeatureFile();
     }
 
@@ -158,17 +159,17 @@ public class StageFeatureWrite extends Stage {
         }
 
         // add length of last feature file to current time
-        currentTime = currentTime.plusMillis((long) (relTimestamp[1]*1000));
+        currentTime = currentTime.plusMillis((long) ((float)(relTimestamp[0]) / (float)mySamplingRate * 1000.0));
         timestamp = timeFormat.format(currentTime);
 
         try {
 
-            //featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
-            featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
+            featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
+            //featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
             featureRAF = new RandomAccessFile(featureFile, "rw");
 
             // write header
-            featureRAF.writeInt(2);               // Feature File Version
+            featureRAF.writeInt(3);               // Feature File Version
             featureRAF.writeInt(0);               // block count, written on close
             featureRAF.writeInt(0);               // feature dimensions, written on close
             featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
@@ -177,28 +178,30 @@ public class StageFeatureWrite extends Stage {
             featureRAF.writeInt(mySamplingRate);
 
             featureRAF.writeBytes(timestamp.substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
-            //featureRAF.writeBytes(timeFormat.format(Instant.now()));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
+            featureRAF.writeBytes(timeFormat.format(Instant.now()).substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
 
+            HeaderPos_calibValues = featureRAF.getFilePointer();
             featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
             featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
+
 
             blockCount = 0;
             relTimestamp[0] = 0;
 
-            hopDuration = (float) inStage_hopSizeOut / mySamplingRate;
-            relTimestamp[1] = (float) inStage_blockSizeOut / mySamplingRate;
+            hopDuration = inStage_hopSizeOut;
+            relTimestamp[1] = (inStage_blockSizeOut - 1);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    protected void  appendFeature(float[][] data) {
+    protected void appendFeature(float[][] data) {
 
         //System.out.println("timestamp: " + relTimestamp[1] + " | size: " + featFileSize);
 
         // start a new feature file?
-        if (relTimestamp[1] >= featFileSize) {
+        if (relTimestamp[0] >= featFileSize * mySamplingRate) {
             // Update timestamp based on samples processed. This only considers block- and hopsize
             // of the previous stage. If another stage uses different hopping, averaging or any
             // other mechanism to obscure samples vs. time, this has to be tracked elsewhere!
@@ -219,11 +222,11 @@ public class StageFeatureWrite extends Stage {
         ByteBuffer bbuffer = ByteBuffer.allocate(bufferSize);
         FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
-        fbuffer.put(relTimestamp);
+        fbuffer.put(new float[]{(float)relTimestamp[0] / mySamplingRate, (float)relTimestamp[1] / mySamplingRate});
 
         // send UDP packets. Only passes the first array!
         if ((isUdp == 1) && (data[0][0] == 1)) {
-            NetworkIO.sendUdpPacket(timeFormatUdp.format(currentTime.plusMillis((long) (relTimestamp[0] * 1000))));
+            NetworkIO.sendUdpPacket(timeFormatUdp.format(currentTime.plusMillis((long) ((float)relTimestamp[0] / mySamplingRate * 1000.0))));
         }
 
         for (float[] aData : data) {
@@ -231,8 +234,8 @@ public class StageFeatureWrite extends Stage {
         }
 
         // round to 4 decimals -> milliseconds * 10^-1.
-        relTimestamp[0] = Math.round((relTimestamp[0] + hopDuration) * 10000.0f) / 10000.0f;
-        relTimestamp[1] = Math.round((relTimestamp[1] + hopDuration) * 10000.0f) / 10000.0f;
+        relTimestamp[0] = relTimestamp[0] + hopDuration;
+        relTimestamp[1] = relTimestamp[1] + hopDuration;
 
         try {
             if (featureRAF != null) {
@@ -262,7 +265,7 @@ public class StageFeatureWrite extends Stage {
                 featureRAF.seek(4);
                 featureRAF.writeInt(blockCount); // block count for this feature file
                 featureRAF.writeInt(nFeatures);  // features + timestamps per block
-                featureRAF.seek(40);
+                featureRAF.seek(HeaderPos_calibValues);
                 featureRAF.writeFloat(calibValuesInDB[0]);
                 featureRAF.writeFloat(calibValuesInDB[1]);
                 featureRAF.close();

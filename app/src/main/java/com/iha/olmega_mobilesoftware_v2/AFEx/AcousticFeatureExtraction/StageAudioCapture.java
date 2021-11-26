@@ -59,7 +59,7 @@ public class StageAudioCapture extends Stage {
 
         Log.d(LOG, "Started producing");
 
-        Stage.startTime = Instant.now();
+        //Stage.startTime = Instant.now();
 
         while (!stopRecording & !Thread.currentThread().isInterrupted()) {
 

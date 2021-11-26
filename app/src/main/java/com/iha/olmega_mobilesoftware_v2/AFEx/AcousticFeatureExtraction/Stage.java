@@ -86,6 +86,7 @@ abstract class Stage extends TreeSet {
         };
 
         thread = new Thread(runnable, "Stage ID " + id);
+        thread.setPriority(Thread.MAX_PRIORITY);
         thread.start();
 
         // call start() of attached consumer
@@ -183,7 +184,7 @@ abstract class Stage extends TreeSet {
 
         try {
             for (LinkedBlockingQueue queue : outQueue) {
-                queue.put(data);
+                queue.put(data.clone());
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
