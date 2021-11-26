@@ -73,12 +73,19 @@ public class SystemStatus {
                     acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
                     Refresh();
                 }
+                else if (intent.getAction().equals("CalibrationValuesError") && curentActivity != ActiviyRequestCode.PreferencesActivity) {
+                    acitivyStates.showCalibrationValuesError = intent.getBooleanExtra("Value", false);
+                    Refresh();
+                }
             }
         };
         taskHandler.postDelayed(AutomaticQuestionnaireRunnable, 1000);
         IntentFilter filter = new IntentFilter("StageState");
         filter.setPriority(999);
         mContext.registerReceiver(mStageStateReceiver, filter);
+        IntentFilter filter2 = new IntentFilter("CalibrationValuesError");
+        filter2.setPriority(999);
+        mContext.registerReceiver(mStageStateReceiver, filter2);
 
         BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
         acitivyStates.batteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -121,6 +128,7 @@ public class SystemStatus {
                     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                     if (mBluetoothAdapter.isEnabled())
                         mBluetoothAdapter.disable();
+                    acitivyStates.showCalibrationValuesError = false;
                     stageManager.stop();
                 }
             } else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
@@ -221,6 +229,7 @@ public class SystemStatus {
     }
 
     private void startStageManager() {
+        acitivyStates.showCalibrationValuesError = false;
         lockUntilStageManagerIsRunning = true;
         if (stageManager != null && stageManager.isRunning)
             stageManager.stop();

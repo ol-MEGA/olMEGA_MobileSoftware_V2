@@ -476,6 +476,7 @@ public class MainActivity extends AppCompatActivity {
                         if (QuestionnaireActivity.thisAppCompatActivity != null)
                             QuestionnaireActivity.thisAppCompatActivity.finish();
                     }
+                    findViewById(R.id.Layout_CalibrationValues).setVisibility((acitivyStates.showCalibrationValuesError ? 0 : 1) * 8);
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                     InfoTextView.setText(acitivyStates.InfoText);

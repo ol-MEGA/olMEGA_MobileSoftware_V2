@@ -52,4 +52,5 @@ class AcitivyStates {
     public float batteryLevel = -1.0f;
     public States profileState = States.undefined;
     public String InputProfile = "";
+    public boolean showCalibrationValuesError = true;
 }

@@ -90,6 +90,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical">
+
         <TextView
             android:id="@+id/nextQuestTextView"
             android:layout_width="match_parent"
@@ -116,6 +117,41 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/Layout_CalibrationValues"
+            android:layout_width="fill_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:visibility="invisible">
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <View
+                android:id="@+id/Action_CalibrationValues"
+                android:layout_width="32dp"
+                android:layout_height="@dimen/toolbarHeight"
+                android:layout_weight="0"
+                android:background="?android:attr/alertDialogIcon"
+                android:backgroundTint="@color/JadeRed" />
+
+            <TextView
+                android:id="@+id/textView_CalibrationValues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="WARNING: Calibration Values not valid!"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+        </LinearLayout>
         <TextView
             android:id="@+id/DateTimeTextView"
             android:layout_width="match_parent"

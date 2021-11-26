@@ -131,7 +131,8 @@ public class StageRFCOMM extends Stage {
                     public void run() {
                         if (initializeState == initState.WAITING_FOR_CALIBRATION_VALUES) {
                             if (System.currentTimeMillis() - lastStreamTimer > 1000 && bt != null) {
-                                bt.send("GC", false);
+                                if (bt != null)
+                                    bt.send("GC", false);
                                 lastStreamTimer = System.currentTimeMillis();
                             }
                         }
@@ -262,7 +263,8 @@ public class StageRFCOMM extends Stage {
                                 calibValues[0] = Float.NaN;
                                 calibValues[1] = Float.NaN;
                                 additionalBytesCount = 12;
-                                bt.send("GC", false);
+                                if (bt != null)
+                                    bt.send("GC", false);
                                 setState(initState.WAITING_FOR_CALIBRATION_VALUES);
                                 sendBroadcast(States.connecting);
                                 break;
@@ -284,6 +286,12 @@ public class StageRFCOMM extends Stage {
                                 if (!Float.isNaN(calibValuesInDB[0]) && !Float.isNaN(calibValuesInDB[1])) {
                                     calibValues[0] = (float)Math.pow(10, calibValuesInDB[0] / 20.0);
                                     calibValues[1] = (float)Math.pow(10, calibValuesInDB[1] / 20.0);
+                                    if (calibValuesInDB[0] <= 0 || calibValuesInDB[1] <= 0){
+                                        Intent  intent = new Intent("CalibrationValuesError");    //action: "msg"
+                                        intent.setPackage(context.getPackageName());
+                                        intent.putExtra("Value", true);
+                                        context.sendBroadcast(intent);
+                                    }
                                     setState(initState.WAITING_FOR_AUDIOTRANSMISSION);
                                     sendBroadcast(States.connecting);
                                 }
