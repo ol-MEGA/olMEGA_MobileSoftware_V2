@@ -25,7 +25,7 @@ abstract class Stage extends TreeSet {
 
     final int timeout = 2000; // in ms, wait this long to receive data before stopping a stage.
 
-    static Instant startTime;
+    static Instant startTime = null;
     static int samplingrate;
     static int channels;
 

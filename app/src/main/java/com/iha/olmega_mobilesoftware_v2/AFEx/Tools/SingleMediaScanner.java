@@ -20,12 +20,14 @@ public class SingleMediaScanner implements MediaScannerConnectionClient {
 
     @Override
     public void onMediaScannerConnected() {
-        mMs.scanFile(mFile.getAbsolutePath(), null);
+        if (mFile != null)
+            mMs.scanFile(mFile.getAbsolutePath(), null);
     }
 
     @Override
     public void onScanCompleted(String path, Uri uri) {
-        mMs.disconnect();
+        if (mMs != null)
+            mMs.disconnect();
     }
 
 }

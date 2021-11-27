@@ -1,6 +1,5 @@
 package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
-import android.os.Environment;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.AudioFileIO;
@@ -73,7 +72,6 @@ public class StageFeatureWrite extends Stage {
                     .withLocale(Locale.getDefault())
                     .withZone(ZoneId.systemDefault());
 
-
     public StageFeatureWrite(HashMap parameter) {
         super(parameter);
 
@@ -88,47 +86,35 @@ public class StageFeatureWrite extends Stage {
 
     @Override
     void start(){
-
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
-
-        startTime = Stage.startTime;
-        currentTime = startTime;
+        //startTime = Stage.startTime;
+        //currentTime = startTime;
         relTimestamp = new int[]{0, 0};
-        openFeatureFile();
-
+        //openFeatureFile();
         super.start();
     }
 
     void startWithoutThread(){
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
-        startTime = Stage.startTime;
-        currentTime = startTime;
         relTimestamp = new int[]{0, 0};
-        openFeatureFile();
+        //openFeatureFile();
     }
 
     @Override
     protected void cleanup() {
-
         closeFeatureFile();
         super.cleanup();
     }
 
     void rebuffer() {
-
         // we do not want rebuffering in a writer stage, just get the data and and pass it on.
-
         boolean abort = false;
-
         Log.d(LOG, "----------> " + id + ": Start processing");
-
         while (!Thread.currentThread().isInterrupted() & !abort) {
-
             if (hasInQueue()) {
                 float[][] data = receive();
-
                 if (data != null) {
                     process(data);
                 } else {
@@ -136,9 +122,7 @@ public class StageFeatureWrite extends Stage {
                 }
             }
         }
-
         closeFeatureFile();
-
         Log.d(LOG, id + ": Stopped consuming");
     }
 
@@ -146,24 +130,22 @@ public class StageFeatureWrite extends Stage {
         appendFeature(data);
     }
 
-
     private void openFeatureFile() {
-
         File directory = new File(AudioFileIO.FEATURE_FOLDER);
         if (!directory.exists()) {
             directory.mkdir();
         }
-
         if (featureRAF != null) {
             closeFeatureFile();
         }
-
+        if (startTime == null) {
+            startTime = Stage.startTime;
+            currentTime = startTime;
+        }
         // add length of last feature file to current time
         currentTime = currentTime.plusMillis((long) ((float)(relTimestamp[0]) / (float)mySamplingRate * 1000.0));
         timestamp = timeFormat.format(currentTime);
-
         try {
-
             featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
             //featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
             featureRAF = new RandomAccessFile(featureFile, "rw");
@@ -184,30 +166,24 @@ public class StageFeatureWrite extends Stage {
             featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
             featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
 
-
             blockCount = 0;
-            relTimestamp[0] = 0;
-
             hopDuration = inStage_hopSizeOut;
-            relTimestamp[1] = (inStage_blockSizeOut - 1);
-
+            relTimestamp[0] = relTimestamp[0] % (int)(featFileSize * mySamplingRate);
+            relTimestamp[1] = relTimestamp[0] + (inStage_blockSizeOut - 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     protected void appendFeature(float[][] data) {
-
         //System.out.println("timestamp: " + relTimestamp[1] + " | size: " + featFileSize);
-
         // start a new feature file?
-        if (relTimestamp[0] >= featFileSize * mySamplingRate) {
+        if (featureRAF == null || relTimestamp[0] >= featFileSize * mySamplingRate) {
             // Update timestamp based on samples processed. This only considers block- and hopsize
             // of the previous stage. If another stage uses different hopping, averaging or any
             // other mechanism to obscure samples vs. time, this has to be tracked elsewhere!
             openFeatureFile();
         }
-
         // calculate buffer size from actual data to take care of jagged arrays (e.g. PSDs):
         // (samples in data + 2 timestamps) * 4 bytes
         if (bufferSize == 0) {
@@ -218,7 +194,6 @@ public class StageFeatureWrite extends Stage {
             }
             bufferSize = nFeatures * 4; // 4 bytes to a float
         }
-
         ByteBuffer bbuffer = ByteBuffer.allocate(bufferSize);
         FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
@@ -245,9 +220,7 @@ public class StageFeatureWrite extends Stage {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 
     synchronized private void closeFeatureFile() {
         try {
@@ -278,5 +251,4 @@ public class StageFeatureWrite extends Stage {
             e.printStackTrace();
         }
     }
-
 }

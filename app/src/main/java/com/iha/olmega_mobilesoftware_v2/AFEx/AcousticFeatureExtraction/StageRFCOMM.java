@@ -317,7 +317,7 @@ public class StageRFCOMM extends Stage {
                                 if (restartStages) {
                                     if (myStageFeatureWrite != null)
                                         myStageFeatureWrite.stop();
-                                    Stage.startTime = Instant.now();
+                                    //Stage.startTime = Instant.now();
                                     HashMap<String, String> parameters = new HashMap<String, String>();
                                     parameters.put("id", "9999999");
                                     parameters.put("prefix", "VALIDBLOCKS");
@@ -372,6 +372,8 @@ public class StageRFCOMM extends Stage {
             dataOut[1][BufferIdx] = ((float)buffer[k * 2 + 1] * calibValues[1]) / (float)Short.MAX_VALUE;
             BufferIdx++;
             if (BufferIdx == frames) {
+                if (Stage.startTime == null)
+                    Stage.startTime = Instant.now();
                 send(dataOut);
                 dataOut = new float[channels][frames];
                 BufferIdx = 0;
@@ -381,6 +383,8 @@ public class StageRFCOMM extends Stage {
             ValidBlocksFeature[0][0] = 1;
             if (isEmpty)
                 ValidBlocksFeature[0][0] = 0;
+            if (Stage.startTime == null)
+                Stage.startTime = Instant.now();
             myStageFeatureWrite.process(ValidBlocksFeature);
         }
         ValidBlocksFeature = new float[1][1];
