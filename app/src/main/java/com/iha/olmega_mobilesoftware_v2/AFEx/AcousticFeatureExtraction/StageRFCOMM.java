@@ -35,7 +35,7 @@ public class StageRFCOMM extends Stage {
     private boolean restartStages = false;
     private BluetoothSPP bt;
     private static final int block_size = 64;
-    private int alivePingTimeout = 100, BufferIdx = 0, frames, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0, lostBlockCount, AudioBufferSize = block_size * 4, millisPerBlock = block_size * 1000 / 16000;
+    private int alivePingTimeout = 100, ValidBlocksFeatureBufferIdx = 0, BufferIdx = 0, frames, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0, lostBlockCount, AudioBufferSize = block_size * 4, millisPerBlock = block_size * 1000 / 16000;
     private long lastEmptyPackageTimer, lastStreamTimer, lastBluetoothPingTimer;
     public float[] calibValues = new float[]{Float.NaN, Float.NaN};
     public float[] calibValuesInDB = new float[]{Float.NaN, Float.NaN};
@@ -55,7 +55,7 @@ public class StageRFCOMM extends Stage {
         int blocksize_ms = 25;
         frames = blocksize_ms * samplingrate / 100;
         dataOut = new float[channels][frames];
-        ValidBlocksFeature = new float[1][1];
+        ValidBlocksFeature = new float[1][(int)Math.ceil(frames / block_size) + 1];
         ringBuffer = new RingBuffer(AudioBufferSize * 2);
         emptyAudioBlock = new byte[AudioBufferSize];
     }
@@ -365,6 +365,12 @@ public class StageRFCOMM extends Stage {
     synchronized private void writeData(byte[] data, boolean isEmpty) {
         if (!isEmpty)
             emptyAudioBlock = data.clone();
+        if (myStageFeatureWrite != null) {
+            ValidBlocksFeature[0][0] = 1;
+            if (isEmpty)
+                ValidBlocksFeature[0][0] = 0;
+        }
+        ValidBlocksFeatureBufferIdx++;
         short[] buffer = new short[data.length/2];
         ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buffer);
         for (int k = 0; k < buffer.length / 2; k++) {
@@ -376,17 +382,17 @@ public class StageRFCOMM extends Stage {
                     Stage.startTime = Instant.now();
                 send(dataOut);
                 dataOut = new float[channels][frames];
+                float[][] tempFloat = new float[1][1];
+                if (myStageFeatureWrite != null) {
+                    for (int i = 0; i < ValidBlocksFeatureBufferIdx; i++){
+                        tempFloat[0][0] = ValidBlocksFeature[0][i];
+                        myStageFeatureWrite.process(tempFloat.clone());
+                    }
+                    ValidBlocksFeature = new float[1][ValidBlocksFeature[0].length];
+                    ValidBlocksFeatureBufferIdx = 0;
+                }
                 BufferIdx = 0;
             }
         }
-        if (myStageFeatureWrite != null) {
-            ValidBlocksFeature[0][0] = 1;
-            if (isEmpty)
-                ValidBlocksFeature[0][0] = 0;
-            if (Stage.startTime == null)
-                Stage.startTime = Instant.now();
-            myStageFeatureWrite.process(ValidBlocksFeature);
-        }
-        ValidBlocksFeature = new float[1][1];
     }
 }
