@@ -75,7 +75,7 @@ public class StageAudioCapture extends Stage {
 
                 if (i >= frames) {
                     if (Stage.startTime == null)
-                        Stage.startTime = Instant.now();
+                        Stage.startTime = Instant.now().minusMillis((long)((float)frames / (float)samplingrate * 1000.0));
                     // send data to queue, reset dataOut & counter
                     send(dataOut);
                     dataOut = new float[channels][frames];

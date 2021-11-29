@@ -379,7 +379,7 @@ public class StageRFCOMM extends Stage {
             BufferIdx++;
             if (BufferIdx == frames) {
                 if (Stage.startTime == null)
-                    Stage.startTime = Instant.now();
+                    Stage.startTime = Instant.now().minusMillis((long)((float)frames / (float)samplingrate * 1000.0));
                 send(dataOut);
                 dataOut = new float[channels][frames];
                 float[][] tempFloat = new float[1][1];
