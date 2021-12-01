@@ -366,9 +366,9 @@ public class StageRFCOMM extends Stage {
         if (!isEmpty)
             emptyAudioBlock = data.clone();
         if (myStageFeatureWrite != null) {
-            ValidBlocksFeature[0][0] = 1;
+            ValidBlocksFeature[0][ValidBlocksFeatureBufferIdx] = 1;
             if (isEmpty)
-                ValidBlocksFeature[0][0] = 0;
+                ValidBlocksFeature[0][ValidBlocksFeatureBufferIdx] = 0;
         }
         ValidBlocksFeatureBufferIdx++;
         short[] buffer = new short[data.length/2];
