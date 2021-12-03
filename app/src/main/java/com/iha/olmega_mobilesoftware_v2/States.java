@@ -4,7 +4,8 @@ public enum States {
     undefined,
     init,
     connecting,
-    connected
+    connected,
+    requestDisconnection
 }
 
 enum BatteryStates {

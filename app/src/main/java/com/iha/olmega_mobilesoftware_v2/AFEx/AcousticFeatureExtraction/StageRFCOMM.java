@@ -35,7 +35,7 @@ public class StageRFCOMM extends Stage {
     private boolean restartStages = false;
     private BluetoothSPP bt;
     private static final int block_size = 64;
-    private int alivePingTimeout = 100, ValidBlocksFeatureBufferIdx = 0, BufferIdx = 0, frames, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0, lostBlockCount, AudioBufferSize = block_size * 4, millisPerBlock = block_size * 1000 / 16000;
+    private int alivePingTimeout = 100, ValidBlocksFeatureBufferIdx = 0, BufferIdx = 0, frames, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0, lostBlockCount, AudioBufferSize = block_size * 4, millisPerBlock = block_size * 1000 / 16000, contiguousLostBlockCount = 0;
     private long lastEmptyPackageTimer, lastStreamTimer, lastBluetoothPingTimer;
     public float[] calibValues = new float[]{Float.NaN, Float.NaN};
     public float[] calibValuesInDB = new float[]{Float.NaN, Float.NaN};
@@ -102,6 +102,7 @@ public class StageRFCOMM extends Stage {
                         currBlockNumber = 0;
                         additionalBytesCount = 0;
                         lostBlockCount = 0;
+                        contiguousLostBlockCount = 0;
                         checksum = 0;
                         lastEmptyPackageTimer = System.currentTimeMillis();
                         lastStreamTimer = System.currentTimeMillis();
@@ -168,6 +169,9 @@ public class StageRFCOMM extends Stage {
                                 if (bt != null)
                                     bt.send(" ", false);
                                 lastBluetoothPingTimer = System.currentTimeMillis();
+                            }
+                            if (contiguousLostBlockCount > 10) {
+                                sendBroadcast(States.requestDisconnection);
                             }
                             if (System.currentTimeMillis() - lastStreamTimer >= 5 * 1000) // 5 seconds
                             {
@@ -367,8 +371,12 @@ public class StageRFCOMM extends Stage {
             emptyAudioBlock = data.clone();
         if (myStageFeatureWrite != null) {
             ValidBlocksFeature[0][ValidBlocksFeatureBufferIdx] = 1;
-            if (isEmpty)
+            if (isEmpty) {
                 ValidBlocksFeature[0][ValidBlocksFeatureBufferIdx] = 0;
+                contiguousLostBlockCount++;
+            }
+            else
+                contiguousLostBlockCount = 0;
         }
         ValidBlocksFeatureBufferIdx++;
         short[] buffer = new short[data.length/2];

@@ -135,7 +135,7 @@ public class SystemStatus {
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
                 acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
                 preferences.configHasErrors = true;
-            } else if (stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
+            } else if (acitivyStates.profileState == States.requestDisconnection || stageManager == null || !stageManager.isRunning || !acitivyStates.InputProfile.equals(preferences.inputProfile()) && curentActivity != ActiviyRequestCode.PreferencesActivity) {
                 acitivyStates.InputProfile = "";
                 acitivyStates.profileState = States.undefined;
                 if (getStageMangerConfigFile().exists() && getStageMangerConfigFile().isFile()) {
