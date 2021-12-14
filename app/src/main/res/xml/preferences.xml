@@ -124,14 +124,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:title="@string/pref_head_Administration">
-
         <Preference
             android:selectable="false"
             android:enabled="true"
             android:key="Version"
             android:title="Version"
             android:summary="" />
-
+        <Preference android:title="Android ID"
+            android:key="AndroidID"
+            android:summary="" />
+        />
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -2,9 +2,12 @@ package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -39,6 +42,7 @@ public class StageRFCOMM extends Stage {
     private long lastEmptyPackageTimer, lastStreamTimer, lastBluetoothPingTimer;
     public float[] calibValues = new float[]{Float.NaN, Float.NaN};
     public float[] calibValuesInDB = new float[]{Float.NaN, Float.NaN};
+    public String[] HardwareIDs = new String[]{"", ""};
     private RingBuffer ringBuffer;
     private initState initializeState;
     byte[] emptyAudioBlock;
@@ -58,6 +62,8 @@ public class StageRFCOMM extends Stage {
         ValidBlocksFeature = new float[1][(int)Math.ceil(frames / block_size) + 1];
         ringBuffer = new RingBuffer(AudioBufferSize * 2);
         emptyAudioBlock = new byte[AudioBufferSize];
+
+        HardwareIDs[0] =  Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
     public void start() {
@@ -210,8 +216,10 @@ public class StageRFCOMM extends Stage {
                 break;
             case connected:
                 LogIHAB.log("Bluetooth: connected");
-                if (bt != null && bt.getBluetoothService() != null)
+                if (bt != null && bt.getBluetoothService() != null) {
+                    HardwareIDs[1] = bt.getBluetoothService().BluetoothDevice_MAC;
                     LogIHAB.log("Bluetooth: Device '" + bt.getBluetoothService().BluetoothDevice_MAC + "'");
+                }
                 break;
         }
         Intent  intent = new Intent("StageState");    //action: "msg"
@@ -324,7 +332,7 @@ public class StageRFCOMM extends Stage {
                                     //Stage.startTime = Instant.now();
                                     HashMap<String, String> parameters = new HashMap<String, String>();
                                     parameters.put("id", "9999999");
-                                    parameters.put("prefix", "VALIDBLOCKS");
+                                    parameters.put("prefix", "VTB");
                                     parameters.put("nfeatures", "1");
                                     parameters.put("blocksize", "1");
                                     parameters.put("hopsize", "1");

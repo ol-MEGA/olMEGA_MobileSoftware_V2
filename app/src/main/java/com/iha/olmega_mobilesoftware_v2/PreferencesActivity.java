@@ -18,6 +18,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -99,6 +100,7 @@ public class PreferencesActivity extends PreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
             PreferencesActivity tmp = (PreferencesActivity)getActivity();
+            findPreference("AndroidID").setSummary(Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ANDROID_ID));
             findPreference("disableDeviceAdmin").setEnabled(tmp.isDeviceOwner);
             findPreference("checkForUpdate").setEnabled(com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists());
             if (findPreference("checkForUpdate").isEnabled() == false)

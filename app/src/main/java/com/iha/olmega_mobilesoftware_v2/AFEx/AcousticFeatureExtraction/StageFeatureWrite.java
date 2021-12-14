@@ -151,7 +151,7 @@ public class StageFeatureWrite extends Stage {
             featureRAF = new RandomAccessFile(featureFile, "rw");
 
             // write header
-            featureRAF.writeInt(3);               // Feature File Version
+            featureRAF.writeInt(4);               // Feature File Version
             featureRAF.writeInt(0);               // block count, written on close
             featureRAF.writeInt(0);               // feature dimensions, written on close
             featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
@@ -165,6 +165,9 @@ public class StageFeatureWrite extends Stage {
             HeaderPos_calibValues = featureRAF.getFilePointer();
             featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
             featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
+
+            featureRAF.writeBytes(String.format("%1$16s", ""));  // Android ID
+            featureRAF.writeBytes(String.format("%1$17s", ""));  // Bluetooth Transmitter MAC
 
             blockCount = 0;
             hopDuration = inStage_hopSizeOut;
@@ -225,12 +228,14 @@ public class StageFeatureWrite extends Stage {
     synchronized private void closeFeatureFile() {
         try {
             float[] calibValuesInDB = new float[]{0, 0};
+            String[] HardwareIDs = new String[]{String.format("%1$16s", ""), String.format("%1$16s", "")};
+
             Stage tempStage = this;
             while (tempStage != null) {
                 tempStage = tempStage.inStage;
                 if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[1])) {
                     calibValuesInDB = ((StageRFCOMM)tempStage).calibValuesInDB.clone();
-                    //Log.d(LOG, "calibValues: " + calibValuesInDB[0] + ", " + calibValuesInDB[1]);
+                    HardwareIDs = ((StageRFCOMM)tempStage).HardwareIDs.clone();
                     break;
                 }
             }
@@ -241,6 +246,8 @@ public class StageFeatureWrite extends Stage {
                 featureRAF.seek(HeaderPos_calibValues);
                 featureRAF.writeFloat(calibValuesInDB[0]);
                 featureRAF.writeFloat(calibValuesInDB[1]);
+                featureRAF.writeBytes(String.format("%1$16s", HardwareIDs[0]).substring(0, 16));
+                featureRAF.writeBytes(String.format("%1$17s", HardwareIDs[1]).substring(0, 17));
                 featureRAF.close();
                 if (blockCount == 0 && nFeatures == 0)
                     featureFile.delete();
