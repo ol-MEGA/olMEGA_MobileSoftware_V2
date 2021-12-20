@@ -337,9 +337,9 @@ public class StageRFCOMM extends Stage {
                                     parameters.put("blocksize", "1");
                                     parameters.put("hopsize", "1");
                                     myStageFeatureWrite = new StageFeatureWrite(parameters);
-                                    myStageFeatureWrite.mySamplingRate = samplingrate / block_size;
-                                    this.hopSizeOut = 1;
-                                    this.blockSizeOut = 1;
+                                    myStageFeatureWrite.mySamplingRate = samplingrate;
+                                    this.hopSizeOut = block_size;
+                                    this.blockSizeOut = block_size;
                                     myStageFeatureWrite.inStage = this;
                                     myStageFeatureWrite.startWithoutThread();
                                     this.hopSizeOut = 400;
