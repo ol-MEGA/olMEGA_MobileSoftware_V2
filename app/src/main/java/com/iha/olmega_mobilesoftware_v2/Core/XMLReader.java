@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.MainActivity;
+import com.iha.olmega_mobilesoftware_v2.Questionnaire.Core.IDforUUID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +27,7 @@ public class XMLReader {
     private int nDefaultTimerMean = 30, nDefaultTimerDeviation = 5, nSecondsInMinute = 60;
     private ArrayList<String> mDateList;
     private String mTimerLayout = "";
+    IDforUUID IDExchanger;
 
     public XMLReader(Context context, String fileName) {
 
@@ -193,7 +195,11 @@ public class XMLReader {
     }
 
     public ArrayList<String> getQuestionList() {
-        return mQuestionList;
+
+        IDExchanger = new IDforUUID();
+        ArrayList<String> mQuestionList_UUID = IDExchanger.exchange(mQuestionList);
+
+        return mQuestionList_UUID;
     }
 
     private ArrayList<String> thinOutList(ArrayList<String> mQuestionList) {
