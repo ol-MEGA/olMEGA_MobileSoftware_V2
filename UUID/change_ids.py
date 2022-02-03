@@ -14,14 +14,20 @@ f_new = open(f"{os.path.splitext(file_path)[0]}_UUID{extension}", "a")
 
 print(f"File selected: {file_path}")
 
-identifiers = ['id="', 'filter="']
-
 f_original = open(file_path, "r")
 lines = f_original.readlines()
 
 uuids = {}
 
 for line in lines:
+
+    # Pre-processing in case filter ids are separated by comma AND space - could be performed using regular expressions
+    if line.__contains__("filter=\""):
+        idx_in = line.find("filter=\"") + 8
+        idx_out = line.find("\"", idx_in)
+        line_parts : list[str] = [line[:idx_in], line[idx_in:idx_out], line[idx_out:]]
+        line_parts[1] = line_parts[1].replace(" ", "")
+        line = "".join(line_parts)
 
     parts = line.split(" ")
 
