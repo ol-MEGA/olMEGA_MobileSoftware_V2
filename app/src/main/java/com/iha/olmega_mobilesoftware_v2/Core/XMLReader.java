@@ -27,7 +27,6 @@ public class XMLReader {
     private int nDefaultTimerMean = 30, nDefaultTimerDeviation = 5, nSecondsInMinute = 60;
     private ArrayList<String> mDateList;
     private String mTimerLayout = "";
-    IDforUUID IDExchanger;
 
     public XMLReader(Context context, String fileName) {
 
@@ -195,16 +194,12 @@ public class XMLReader {
     }
 
     public ArrayList<String> getQuestionList() {
-
-        IDExchanger = new IDforUUID();
-        ArrayList<String> mQuestionList_UUID = IDExchanger.exchange(mQuestionList);
-
-        return mQuestionList_UUID;
+        IDforUUID IDExchanger = IDforUUID.getInstance();
+        return IDExchanger.exchange(mQuestionList);
     }
 
     private ArrayList<String> thinOutList(ArrayList<String> mQuestionList) {
         // Removes irrelevant data from question sheet
-
         for (int iItem = mQuestionList.size() - 1; iItem >= 0; iItem = iItem - 2) {
             mQuestionList.remove(iItem);
         }

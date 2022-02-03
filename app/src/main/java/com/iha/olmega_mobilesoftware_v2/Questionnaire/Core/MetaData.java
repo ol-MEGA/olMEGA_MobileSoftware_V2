@@ -33,10 +33,9 @@ public class MetaData extends AppCompatActivity {
     private int mTimeQueryUTC = 0;
 
     private ArrayList<Question> mQuestionList;
-
     private Context mContext;
-
     private EvaluationList mEvaluationList;
+    private IDforUUID IDExchanger = IDforUUID.getInstance();
 
     public MetaData(Context context, String head, String foot, String surveyUri, String motivation,
                     String version) {
@@ -57,6 +56,7 @@ public class MetaData extends AppCompatActivity {
         KEY_VALUE_CLOSE = "</value>";
         KEY_NEW_LINE = "\n";
         KEY_SHORT_CLOSE = "/>";
+
     }
 
     public boolean initialise() {
@@ -146,11 +146,12 @@ public class MetaData extends AppCompatActivity {
         for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
 
             questionId = mQuestionList.get(iQuestion).getQuestionId();
-            if (questionId != 99999) {
+            Log.e(LOG, "Question ID: " + questionId);
+            if (questionId != 999999999) {
 
                 KEY_DATA += KEY_VALUE_OPEN;
                 KEY_DATA += "question_id=\"";
-                KEY_DATA += questionId;
+                KEY_DATA += IDExchanger.getUUID(""+questionId);
                 KEY_DATA += "\"";
 
                 String ANSWER_DATA = "";
@@ -169,11 +170,14 @@ public class MetaData extends AppCompatActivity {
                                 mEvaluationList.getCheckedAnswerIdsFromQuestionId(questionId);
                         Log.e(LOG,"id: "+questionId+" num: "+listOfIds.size());
                         ANSWER_DATA += " option_ids=\"";
-                        ANSWER_DATA += listOfIds.get(0);
+                        ANSWER_DATA += IDExchanger.getUUID(listOfIds.get(0));
                         if (listOfIds.size() > 1) {
                             for (int iId = 1; iId < listOfIds.size(); iId++) {
-                                ANSWER_DATA += ";";
-                                ANSWER_DATA += listOfIds.get(iId);
+                                String id_string = IDExchanger.getUUID(listOfIds.get(iId));
+                                if (!id_string.isEmpty()) {
+                                    ANSWER_DATA += ";";
+                                    ANSWER_DATA += id_string;
+                                }
                             }
                         }
                         ANSWER_DATA += "\"/>";

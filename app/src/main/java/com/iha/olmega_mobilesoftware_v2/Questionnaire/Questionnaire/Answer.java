@@ -11,6 +11,7 @@ public class Answer {
     private String LOG_STRING = "Answer";
     String Text;
     int Id, Group;
+    private String mUUID;
     private boolean isDefault = false;
     private boolean isDebug = false;
     private boolean isExclusive = false;
@@ -48,4 +49,6 @@ public class Answer {
     }
 
     public boolean isExclusive() { return isExclusive; }
+
+    public void setUUID(String uuid) { mUUID = uuid; }
 }

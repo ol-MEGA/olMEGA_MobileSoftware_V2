@@ -17,6 +17,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
+import com.iha.olmega_mobilesoftware_v2.Questionnaire.Core.IDforUUID;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire.QuestionnairePagerAdapter;
 import com.iha.olmega_mobilesoftware_v2.R;
 
@@ -32,6 +33,7 @@ public class QuestionnaireActivity extends AppCompatActivity {
     String clientID, selectedQuest;
     private int falseSwipes = 0;
     private static boolean bRecordSwipes = true;
+    public IDforUUID IDExchanger;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
@@ -42,6 +44,8 @@ public class QuestionnaireActivity extends AppCompatActivity {
         isAdmin = getIntent().getExtras().getBoolean("isAdmin");
         clientID = getIntent().getExtras().getString("clientID");
         selectedQuest = getIntent().getExtras().getString("selectedQuest");
+
+        IDExchanger = new IDforUUID();
 
         mViewPager = null;
         mViewPager = findViewById(R.id.viewpager);
@@ -167,6 +171,10 @@ public class QuestionnaireActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+    }
+
+    public IDforUUID getIDExchanger() {
+        return IDExchanger;
     }
 
 }

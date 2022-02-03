@@ -19,4 +19,5 @@ public class StringAndInteger {
     public String getText() { return Text; }
 
     public int getId() { return Id; }
+
 }

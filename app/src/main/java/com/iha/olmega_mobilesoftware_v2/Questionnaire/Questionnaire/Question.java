@@ -1,6 +1,7 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 

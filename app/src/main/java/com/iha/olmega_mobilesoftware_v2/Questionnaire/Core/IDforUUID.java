@@ -1,27 +1,31 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire.Core;
-
 import android.util.Log;
 
-import com.iha.olmega_mobilesoftware_v2.Questionnaire.DataTypes.StringAndInteger;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.DataTypes.StringAndString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+public class IDforUUID {
 
-public final class IDforUUID {
-
-    private final String LOG = "IDforUUID";
+    private static final String LOG = "IDforUUID";
     private static ArrayList<StringAndString> mIDs;
     private static ArrayList<String> mQuestionList;
+    private static IDforUUID instance = null;
+
+    public static IDforUUID getInstance() {
+        if (instance == null) {
+            instance = new IDforUUID();
+        }
+        return instance;
+    }
 
     public IDforUUID() {
         mIDs = new ArrayList<>();
-
     }
 
-    public ArrayList<String> exchange(ArrayList<String> questionList) {
+    public static ArrayList<String> exchange(ArrayList<String> questionList) {
 
         mQuestionList = questionList;
 
@@ -99,29 +103,42 @@ public final class IDforUUID {
         return mQuestionList;
     }
 
-    public String getId(String uuid) {
-        for (int i=0; i<mIDs.size(); i++) {
-            if (mIDs.get(i).getText().equals(uuid)) {
+    public static String getId(String uuid) {
+        for (int i=0; i<IDforUUID.mIDs.size(); i++) {
+            if (IDforUUID.mIDs.get(i).getText().equals(uuid)) {
                 //Log.e(LOG, "I've seen this id before!");
-                return mIDs.get(i).getId();
-            } else if (mIDs.get(i).getText().equals(uuid.substring(1))) {
+                return IDforUUID.mIDs.get(i).getId();
+            } else if (IDforUUID.mIDs.get(i).getText().equals(uuid.substring(1))) {
                 //Log.e(LOG, "I've seen this id before! - but now negative");
-                return mIDs.get(i).getId();
+                return IDforUUID.mIDs.get(i).getId();
             }
         }
 
-        mIDs.add(new StringAndString(uuid, "" + (mIDs.size() + 10001)));
-        return mIDs.get(mIDs.size()-1).getId();
+        IDforUUID.mIDs.add(new StringAndString(uuid, "" + (mIDs.size() + 10001)));
+        Log.e(LOG, "Size: " + IDforUUID.mIDs.size());
+        return IDforUUID.mIDs.get(IDforUUID.mIDs.size()-1).getId();
     }
 
-    public String getUUID(String id) {
-        for (int i=0; i<mIDs.size(); i++) {
-            if (mIDs.get(i).getId().equals(id)) {
+    public static String getUUID(String id) {
+        Log.e(LOG, "Requesting UUID for: " + id);
+        for (int i=0; i<IDforUUID.mIDs.size(); i++) {
+            //Log.e(LOG, "UUID: " + IDforUUID.mIDs.get(i));
+            if (IDforUUID.mIDs.get(i).getId().equals(id)) {
+                Log.e(LOG, "Found: " + IDforUUID.mIDs.get(i).getText());
                 return mIDs.get(i).getText();
+                //return "TestID";
             }
+        }
+        if (id.equals("999999999")) {
+            return "Finish";
         }
         return "";
     }
+
+    public static int getTableLen() {
+        return mIDs.size();
+    }
+
 
 }
 

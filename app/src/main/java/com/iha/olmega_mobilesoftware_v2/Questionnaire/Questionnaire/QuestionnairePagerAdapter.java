@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.iha.olmega_mobilesoftware_v2.BuildConfig;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.Core.ListOfViews;
 import com.iha.olmega_mobilesoftware_v2.R;
@@ -43,6 +44,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mQuestionnaireActivity = questionnaireActivity;
         mViewPager = viewPager;
         isImmersive = immersive;
+        mVersion = BuildConfig.VERSION_NAME;
         // Set controls and listeners
         mQuestionnaireActivity.findViewById(R.id.Action_Back).setOnClickListener(new View.OnClickListener() {
             @Override
