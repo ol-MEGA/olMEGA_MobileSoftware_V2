@@ -23,8 +23,6 @@ def main():
     extension = ".xml"
     file_path = filedialog.askopenfilename(title="Please select questionnaire *.xml file", filetypes=(("Quest files", extension),))
 
-    open(f"{os.path.splitext(file_path)[0]}_UUID{extension}", 'w').close()
-
     print(f"File selected: {file_path}")
 
     try:
