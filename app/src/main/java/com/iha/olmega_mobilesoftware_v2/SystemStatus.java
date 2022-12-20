@@ -12,7 +12,6 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageManager;
-import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageRFCOMM;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
@@ -20,8 +19,6 @@ import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
-
 
 public class SystemStatus {
 

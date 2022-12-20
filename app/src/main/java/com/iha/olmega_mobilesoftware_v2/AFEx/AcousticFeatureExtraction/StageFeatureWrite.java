@@ -151,7 +151,7 @@ public class StageFeatureWrite extends Stage {
             featureRAF = new RandomAccessFile(featureFile, "rw");
 
             // write header
-            featureRAF.writeInt(4);               // Feature File Version
+            featureRAF.writeInt(5);               // Feature File Version
             featureRAF.writeInt(0);               // block count, written on close
             featureRAF.writeInt(0);               // feature dimensions, written on close
             featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
@@ -168,6 +168,8 @@ public class StageFeatureWrite extends Stage {
 
             featureRAF.writeBytes(String.format("%1$16s", ""));  // Android ID
             featureRAF.writeBytes(String.format("%1$17s", ""));  // Bluetooth Transmitter MAC
+
+            featureRAF.writeFloat((float)-1);      // Transmitter Sample Rate
 
             blockCount = 0;
             hopDuration = inStage_hopSizeOut;

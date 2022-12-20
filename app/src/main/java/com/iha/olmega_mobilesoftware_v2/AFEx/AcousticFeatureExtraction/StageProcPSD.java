@@ -44,10 +44,9 @@ public class StageProcPSD extends Stage {
         cpsd.calculate(buffer);
     }
 
-
     private class CPSD {
 
-        float alpha;
+        float alpha, win_energy = 0;
         float[] window, Xx, Xy;
         float[][] data, dataConj, P, Ptemp;
         int nfft, samples, block = 0;
@@ -56,35 +55,33 @@ public class StageProcPSD extends Stage {
         CPSD() {
             nfft = nextpow2(blockSize);
             System.out.println("----------------> NFFT: " + nfft);
-            window = hann(blockSize, nfft);
+            // window & energy
+            window = hann(blockSize);
+            for (float i : window) {
+                win_energy += i * i;
+            }
             fft = new FloatFFT_1D(nfft);
-            alpha = (float) Math.exp(-(blockSize - hopSize) / (samplingrate * 0.125));
+            alpha = (float) Math.exp(-hopSize / (samplingrate * 0.125));
             samples = blockSize;
+            dataConj = new float[channels][];
+            P = Ptemp = new float[3][nfft * 2];
         }
 
         void calculate(float[][] input) {
-
             data = new float[channels][nfft * 2];
-            dataConj = new float[channels][];
-            P = Ptemp = new float[3][nfft * 2];
-
             for (int iChannel = 0; iChannel < data.length; iChannel++) {
-
                 // window
                 for (int i = 0; i < samples; i++) {
                     data[iChannel][i] = input[iChannel][i] * window[i];
                 }
-
                 // FFT
                 fft.realForwardFull(data[iChannel]);
-
                 // complex conjugate
                 dataConj[iChannel] = Arrays.copyOf(data[iChannel], data[iChannel].length);
                 for (int iSample = 3; iSample < data[iChannel].length; iSample += 2) {
                     dataConj[iChannel][iSample] = -data[iChannel][iSample];
                 }
             }
-
             // correlation
             for (int i = 0; i < 2 * nfft - 1; i += 2) {
                 P[0][i] = data[0][i] * dataConj[1][i] - data[0][i + 1] * dataConj[1][i + 1];
@@ -96,78 +93,50 @@ public class StageProcPSD extends Stage {
                 P[2][i] = data[1][i] * dataConj[1][i] - data[1][i + 1] * dataConj[1][i + 1];
                 P[2][i + 1] = data[1][i] * dataConj[1][i + 1] + data[1][i + 1] * dataConj[1][i];
             }
-
-
             // recursive averaging & store data for next average
             for (int k = 0; k < 3; k++) {
                 for (int i = 0; i < nfft * 2; i++) {
                     P[k][i] = Ptemp[k][i] = alpha * Ptemp[k][i] + (1 - alpha) * P[k][i];
                 }
             }
-
             // count blocks
             block++;
-
             // write a block every 125 ms, i.e. every 10th block (for blocksize of 25ms)
             if (block >= 10) {
-
                 float[][] dataOut = new float[3][];
                 dataOut[0] = new float[nfft + 2]; // complex spectrum (cross-correlation)
                 dataOut[1] = new float[nfft / 2 + 1]; // real spectrum (auto-correlation)
                 dataOut[2] = new float[nfft / 2 + 1]; // real spectrum (auto-correlation)
-
                 // copy one-sided spectrum for cross-correlation and scale
-                dataOut[0][0]    = P[0][0] / samplingrate; // 0 Hz
-                dataOut[0][nfft] = P[0][nfft] / samplingrate; // fs/2
+                dataOut[0][0]    = P[0][0] / samplingrate / win_energy; // 0 Hz
+                dataOut[0][nfft] = P[0][nfft] / samplingrate / win_energy; // fs/2
                 for (int i = 2; i < nfft; i++) {
-                    dataOut[0][i] = P[0][i] / (2 * samplingrate);
+                    dataOut[0][i] = 2 * P[0][i] / samplingrate / win_energy;
                 }
-
                 // copy one sided spectrum for auto correlation, scale, omit imaginary parts
                 for (int k = 1; k < 3; k++) {
-                    dataOut[k][0] = P[k][0] / samplingrate;
-                    dataOut[k][nfft / 2] = P[k][nfft] / samplingrate;
+                    dataOut[k][0] = P[k][0] / samplingrate / win_energy;;
+                    dataOut[k][nfft / 2] = P[k][nfft] / samplingrate / win_energy;;
                     for (int i = 1; i < nfft / 2; i++) {
-                        dataOut[k][i] = P[k][2 * i] / (2 * samplingrate);
+                        dataOut[k][i] = 2 * P[k][2 * i] / samplingrate / win_energy;
                     }
                 }
-
                 send(dataOut);
                 block = 0;
-
             }
-
         }
-
 
         private int nextpow2(int x) {
-
             return 1 << (32 - Integer.numberOfLeadingZeros(x - 1));
-
         }
 
-
-        private float[] hann(int samples, int nfft) {
-
+        private float[] hann(int samples) {
             float[] window = new float[samples];
-            float norm = 0;
-
-            // calculate window & normalisation constant
+            // calculate window
             for (int i = 0; i < samples; i++) {
                 window[i] = (float) (0.5 - 0.5 * Math.cos(2 * Math.PI * (float) i / samples));
-                norm += window[i] * window[i];
             }
-            norm *= (float) samples / nfft;
-
-            // normalise
-            for (int i = 0; i < samples; i++) {
-                window[i] /= norm;
-            }
-
             return window;
-
         }
-
     }
-
 }
