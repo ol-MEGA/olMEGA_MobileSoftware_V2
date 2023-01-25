@@ -258,6 +258,7 @@ public class StageRFCOMM extends Stage {
             if (ringBuffer.getByte(-2) == (byte) 0x00 && ringBuffer.getByte(-3) == (byte) 0x80) {
                 switch (initializeState) {
                     case UNINITIALIZED:
+                        Stage.startTime = null;
                         int protocollVersion = (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF));
                         switch (protocollVersion) { // Check Protocol-Version
                             case 1:
@@ -283,6 +284,7 @@ public class StageRFCOMM extends Stage {
                         }
                         break;
                     case WAITING_FOR_CALIBRATION_VALUES:
+                        Stage.startTime = null;
                         if (ringBuffer.getByte(-15) == (byte) 0xFF && ringBuffer.getByte(-16) == (byte) 0x7F && ringBuffer.getByte(-14) == (byte) 'C' && (ringBuffer.getByte(-13) == (byte) 'L' || ringBuffer.getByte(-13) == (byte) 'R')) {
                             byte[] values = new byte[8];
                             byte ValuesChecksum = ringBuffer.getByte(-13);
@@ -311,6 +313,7 @@ public class StageRFCOMM extends Stage {
                         }
                         break;
                     case WAITING_FOR_AUDIOTRANSMISSION:
+                        Stage.startTime = null;
                         //Log.d(LOG, "ConnectedThread::RUN::WAITING_FOR_AUDIOTRANSMISSION");
                         if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
                             if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
@@ -394,8 +397,11 @@ public class StageRFCOMM extends Stage {
             dataOut[1][BufferIdx] = ((float)buffer[k * 2 + 1] * calibValues[1]) / (float)Short.MAX_VALUE;
             BufferIdx++;
             if (BufferIdx == frames) {
-                if (Stage.startTime == null)
+                if (Stage.startTime == null) {
                     Stage.startTime = Instant.now().minusMillis((long)((float)frames / (float)samplingrate * 1000.0));
+                    Log.d(LOG, "set Stage.startTime");
+
+                }
                 send(dataOut);
                 dataOut = new float[channels][frames];
                 float[][] tempFloat = new float[1][1];

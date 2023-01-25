@@ -84,6 +84,7 @@ public class StageAudioCapture extends Stage {
                 }
             }
         }
+        Stage.startTime = null;
 
         Log.d(LOG, "Stopped producing");
         audioRecord.stop();
