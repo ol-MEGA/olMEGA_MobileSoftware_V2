@@ -1,5 +1,6 @@
 package com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -173,6 +174,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         progress.setLayoutParams(progParams);
         regress.setLayoutParams(regParams);
+
     }
 
     // Adjust visibility of navigation symbols to given state
@@ -194,10 +196,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Add new page to display
     public void addView(View view, boolean isForced,
                         ArrayList<Integer> listOfAnswerIds, ArrayList<Integer> listOfFilterIds) {
-
         mListOfViews.add(new QuestionView(view, view.getId(), isForced,
                 listOfAnswerIds, listOfFilterIds));
-
     }
 
     // Sets up visible control elements for questionnaire i.e. navigation symbols
@@ -290,6 +290,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
+
+        // Make sure the correct navigation arrows (forward, backward) are displayed
+        // (this becomes an issue once the set is shortened and then enlarged again)
+        int nCurrentItem = mViewPager.getCurrentItem();
+        setArrows(nCurrentItem);
     }
 
     // Returns position of object in displayed list
