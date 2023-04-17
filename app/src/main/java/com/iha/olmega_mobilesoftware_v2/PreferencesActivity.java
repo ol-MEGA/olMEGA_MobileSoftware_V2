@@ -18,6 +18,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -113,6 +114,20 @@ public class PreferencesActivity extends PreferenceActivity {
             Preference DisabledeviceOwnerPref = (Preference) findPreference("disableDeviceAdmin");
             DisabledeviceOwnerPref.setOnPreferenceClickListener(arg0 -> {
                 confirmDisableDeviceAdmin();
+                return true;
+            });
+            if (((SwitchPreference)findPreference("usbCutsConnection")).isChecked())
+                ((SwitchPreference)findPreference("usbCutsDataStorage")).setEnabled(false);
+            else if (((SwitchPreference)findPreference("usbCutsDataStorage")).isChecked())
+                ((SwitchPreference)findPreference("usbCutsConnection")).setEnabled(false);
+            findPreference("usbCutsConnection").setOnPreferenceClickListener(arg0 -> {
+                ((SwitchPreference)findPreference("usbCutsDataStorage")).setEnabled(!((SwitchPreference)findPreference("usbCutsConnection")).isChecked());
+                ((SwitchPreference)findPreference("usbCutsDataStorage")).setChecked(false);
+                return true;
+            });
+            findPreference("usbCutsDataStorage").setOnPreferenceClickListener(arg0 -> {
+                ((SwitchPreference)findPreference("usbCutsConnection")).setEnabled(!((SwitchPreference)findPreference("usbCutsDataStorage")).isChecked());
+                ((SwitchPreference)findPreference("usbCutsConnection")).setChecked(false);
                 return true;
             });
             /*

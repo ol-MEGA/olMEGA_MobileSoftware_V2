@@ -22,6 +22,7 @@ abstract class Stage extends TreeSet {
     final static String LOG = "Stage";
 
     static Context context;
+    static boolean WriteDataToStorage = true;
 
     final int timeout = 2000; // in ms, wait this long to receive data before stopping a stage.
 

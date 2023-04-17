@@ -13,6 +13,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -70,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
     private boolean wifiActivated = false, AppClosed = true;
+    private boolean questionaireEnabled = false;
+    private States profileState = States.undefined;
+    private long AppStartTime = 0;
 
     private static Context context;
 
@@ -87,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
+        AppStartTime = System.currentTimeMillis();
         MainActivity.context = getApplicationContext();
         Thread.setDefaultUncaughtExceptionHandler(new myUncaughtExceptionHandler(this, MainActivity.class));
         setContentView(R.layout.activity_main);
@@ -133,8 +138,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.InfoTextView).setOnTouchListener((view, motionEvent) -> {
-            if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                startQuestionnaire();
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                if (questionaireEnabled)
+                    startQuestionnaire();
+                else if (profileState == States.connecting) {
+                    final PackageManager pm = MainActivity.this.getPackageManager();
+                    final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
+                    MainActivity.this.finishAffinity(); // Finishes all activities.
+                    MainActivity.this.startActivity(intent);    // Start the launch activity
+                    System.exit(0);    // System finishes and automatically relaunches us.
+                }
+            }
             return true;
         });
 
@@ -470,6 +484,7 @@ public class MainActivity extends AppCompatActivity {
             //    checkKioskMode();
             checkIsDeviceOwner();
             checkWifi();
+            controlService.Status().writePreferencesToLog();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
                     if (acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection()) {
@@ -480,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                     InfoTextView.setText(acitivyStates.InfoText);
-                    InfoTextView.setEnabled(acitivyStates.questionaireEnabled);
+                    questionaireEnabled = acitivyStates.questionaireEnabled;
                     if (controlService.Status().Preferences().isAdmin())
                         findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
                     else if (controlService.Status().Preferences().configHasErrors)
@@ -509,10 +524,28 @@ public class MainActivity extends AppCompatActivity {
                     battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
                     battery_top.setLayoutParams(battery_topParams);
 
-                    if (acitivyStates.profileState == States.connected)
+                    profileState = acitivyStates.profileState;
+                    SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
+                    int AppRestartForConnection = prefs.getInt("AppRestartForConnection",0);
+                    if (acitivyStates.profileState == States.restart) {
+                        AppRestartForConnection += 1;
+                        LogIHAB.log("App Restart Connection Counter: " + AppRestartForConnection);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("AppRestartForConnection", AppRestartForConnection);
+                        editor.commit();
+                        final PackageManager pm = MainActivity.this.getPackageManager();
+                        final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
+                        MainActivity.this.finishAffinity(); // Finishes all activities.
+                        MainActivity.this.startActivity(intent);    // Start the launch activity
+                        System.exit(0);    // System finishes and automatically relaunches us.
+                    }
+                    else if (acitivyStates.profileState == States.connected)
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
-                    else
+                    else {
+                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - AppStartTime >= Math.max(1, controlService.Status().Preferences().rebootConnectionFailsTime()) * 1000 * 60 / 10 && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                            InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
+                    }
                 }
 
                 public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
@@ -578,6 +611,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Device Admin for Kiosk Mode");
                     startActivityForResult(intent, ActiviyRequestCode.DEVICE_ADMIN.ordinal());
                 }
+                controlService.Status().writePreferencesToLog();
                 if (data.getBooleanExtra("killAppAndService", false)) {
                     if (controlService.Status().Preferences().isInKioskMode)
                         stopLockTask();

@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire.QuestionnairePagerAdapter;
 import com.iha.olmega_mobilesoftware_v2.R;
@@ -131,6 +132,7 @@ public class QuestionnaireActivity extends AppCompatActivity {
             this.finish();
         }
         if (mXmlReader != null && mFileIO.setupFirstUse(this)) {
+            LogIHAB.log("Questionnaire: Started");
             ArrayList<String> questionList = mXmlReader.getQuestionList();
             String head = mXmlReader.getHead();
             String foot = mXmlReader.getFoot();

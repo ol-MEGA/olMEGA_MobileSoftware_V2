@@ -19,7 +19,18 @@
             android:checked="true"
             android:key="usbCutsConnection"
             android:title="@string/pref_usbCutsConnection"
-            android:summary="@string/pref_usbCutsConnection_summary" />
+            android:summary="@string/pref_usbCutsConnection_summary"
+            />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:checked="true"
+            android:key="usbCutsDataStorage"
+            android:title="@string/pref_usbCutsDataStorage"
+            android:summary="@string/pref_usbCutsDataStorage_summary"
+            />
 
         <SwitchPreference
             android:layout_width="wrap_content"
@@ -36,6 +47,15 @@
             android:title="@string/pref_operationMode_title"
             android:dialogTitle="@string/pref_operationMode_title"
             android:summary="%s" />
+
+        <EditTextPreference android:title="@string/pref_rebootConnectionFailsTime_title"
+            android:defaultValue = "5"
+            android:key="rebootConnectionFailsTime"
+            android:inputType="numberDecimal"
+            android:digits="0123456789"
+            android:summary="" />
+        />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_head_Questionnaire">

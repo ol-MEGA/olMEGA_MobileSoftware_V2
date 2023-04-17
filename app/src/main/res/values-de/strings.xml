@@ -9,6 +9,7 @@
     <string name="infoConnected">Verbunden</string>
     <string name="hintTextAnswer">Bitte hier klicken.</string>
     <string name="pleaseWait">Bitte warten...</string>
+    <string name="TransmitterNotFound">Es kann keine Verbindung zum Sender hergestellt werden. Ist dieser in Reichweite, bitte aus- und wieder einschalten.</string>
     <string name="buttonTextOkay">Weiter</string>
     <string name="buttonTextClose">Beenden</string>
     <string name="buttonLink">Link Transmitter</string>
@@ -71,8 +72,10 @@
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
+    <string name="pref_usbCutsDataStorage">USB unterbindet Speicherung der Audiodaten</string>
     <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
+    <string name="pref_usbCutsDataStorage_summary">Kein Speichern der Audiodaten während des Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_clientID_summary">Nur für eingebette Online-Fragebögen notwendig</string>
     <string name="pref_whichQuest_title">Auswahl Fragebogen</string>
@@ -86,6 +89,7 @@
     <string name="pref_maxBrightness_title">Bildschirmhelligkeit</string>
     <string name="pref_maxBrightness_summary">Display immer hell</string>
     <string name="pref_operationMode_title">Input-Modus</string>
+    <string name="pref_rebootConnectionFailsTime_title">Timeout für Neustart bei Verbindungsfehler (min)</string>
     <string name="pref_samplerate_title">Sampling Frequenz</string>
     <string name="pref_samplerate_summary">Sampling Frequenz in Hz</string>
     <string name="pref_chunklengthInS_title">Cache Größe in Sekunden</string>

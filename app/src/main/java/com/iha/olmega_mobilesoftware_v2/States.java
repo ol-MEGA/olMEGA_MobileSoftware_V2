@@ -5,7 +5,8 @@ public enum States {
     init,
     connecting,
     connected,
-    requestDisconnection
+    requestDisconnection,
+    restart
 }
 
 enum BatteryStates {

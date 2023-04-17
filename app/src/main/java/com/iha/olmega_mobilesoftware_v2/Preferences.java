@@ -31,6 +31,7 @@ public class Preferences {
 
     public boolean isAdmin() {return sharedPreferences.getBoolean("isAdmin", false);}
     public boolean usbCutsConnection() {return sharedPreferences.getBoolean("usbCutsConnection", true);}
+    public boolean usbCutsDataStorage() {return sharedPreferences.getBoolean("usbCutsDataStorage", false);}
     public boolean autoStartActivity() {return sharedPreferences.getBoolean("autoStartActivity", true);}
     public boolean forceAnswer() {return sharedPreferences.getBoolean("forceAnswer", true);}
     public boolean isKioskModeNecessary() {return sharedPreferences.getBoolean("isKioskModeNecessary", true);}
@@ -45,6 +46,13 @@ public class Preferences {
     public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
     public String inputProfile() {
         return sharedPreferences.getString("inputProfile", "");
+    }
+    public int rebootConnectionFailsTime()  {
+        try {
+            return Integer.parseInt(sharedPreferences.getString("rebootConnectionFailsTime", "5"));
+        } catch(NumberFormatException nfe) {
+            return 5;
+        }
     }
 
     public void onDestroy() {

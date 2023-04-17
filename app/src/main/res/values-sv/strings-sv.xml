@@ -10,6 +10,7 @@
     <string name="infoConnected">Connected</string>
     <string name="hintTextAnswer">Skriv text här.</string>
     <string name="pleaseWait">Please wait...</string>
+    <string name="TransmitterNotFound">A connection to the transmitter cannot be established. If this is within range, please switch it off and on again.</string>
     <string name="buttonTextOkay">OK</string>
     <string name="buttonTextClose">Close</string>
     <string name="buttonLink">Link Transmitter</string>
@@ -69,8 +70,10 @@
     <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
+    <string name="pref_usbCutsDataStorage">USB cuts Data Storage</string>
     <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
     <string name="pref_usbCutsConnection_summary">No Operation when charging</string>
+    <string name="pref_usbCutsDataStorage_summary">No Storage of Audio Data when charging</string>
     <string name="pref_clientID">ClientID</string>
     <string name="pref_clientID_summary">Only needed for embedded online questionnaires</string>
     <string name="pref_whichQuest_title">Select questionnaire</string>
@@ -84,6 +87,7 @@
     <string name="pref_maxBrightness_title">Display always bright</string>
     <string name="pref_maxBrightness_summary">Keep display brightness maximum</string>
     <string name="pref_operationMode_title">Input Profile</string>
+    <string name="pref_rebootConnectionFailsTime_title">Timeout for Reboot at connection failure (min)</string>
     <string name="pref_samplerate_title">Sampling Rate</string>
     <string name="pref_samplerate_summary">Recording sampling rate in Hz</string>
     <string name="pref_chunklengthInS_title">Cache size in seconds</string>

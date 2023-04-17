@@ -98,11 +98,12 @@ public class StageAudioWrite extends Stage {
             dataOut[i * 4 + 2] = (byte) (tmp & 0xff);
             dataOut[i * 4 + 3] = (byte) ((tmp >> 8) & 0xff);
         }
-
-        try {
-            stream.write(dataOut);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (WriteDataToStorage) {
+            try {
+                stream.write(dataOut);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

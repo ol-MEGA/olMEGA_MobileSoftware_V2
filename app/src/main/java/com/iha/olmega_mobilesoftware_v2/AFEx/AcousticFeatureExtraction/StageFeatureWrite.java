@@ -5,6 +5,7 @@ import android.util.Log;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.AudioFileIO;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.NetworkIO;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.SingleMediaScanner;
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +61,10 @@ public class StageFeatureWrite extends Stage {
     private int inStage_hopSizeOut, inStage_blockSizeOut;
 
     private float featFileSize = 60; // size of feature files in seconds.
-    private long HeaderPos_calibValues = -1;
+
+    boolean calibValuesReadingDone = false;
+    float[] calibValuesInDB = new float[]{0, 0};
+    String[] HardwareIDs = new String[]{String.format("%1$16s", ""), String.format("%1$16s", "")};
 
     DateTimeFormatter timeFormat =
             DateTimeFormatter.ofPattern("uuuuMMdd_HHmmssSSS")
@@ -86,6 +90,7 @@ public class StageFeatureWrite extends Stage {
 
     @Override
     void start(){
+        calibValuesReadingDone = false;
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
         //startTime = Stage.startTime;
@@ -96,6 +101,7 @@ public class StageFeatureWrite extends Stage {
     }
 
     void startWithoutThread(){
+        calibValuesReadingDone = false;
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
         relTimestamp = new int[]{0, 0};
@@ -104,6 +110,7 @@ public class StageFeatureWrite extends Stage {
 
     @Override
     protected void cleanup() {
+        calibValuesReadingDone = false;
         closeFeatureFile();
         super.cleanup();
     }
@@ -145,38 +152,51 @@ public class StageFeatureWrite extends Stage {
         // add length of last feature file to current time
         currentTime = currentTime.plusMillis((long) ((float)(relTimestamp[0]) / (float)mySamplingRate * 1000.0));
         timestamp = timeFormat.format(currentTime);
-        try {
-            featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
-            //featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
-            featureRAF = new RandomAccessFile(featureFile, "rw");
+        if (WriteDataToStorage) {
+            try {
+                if (!calibValuesReadingDone) {
+                    Stage tempStage = this;
+                    while (tempStage != null) {
+                        tempStage = tempStage.inStage;
+                        if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[1])) {
+                            calibValuesInDB = ((StageRFCOMM)tempStage).calibValuesInDB.clone();
+                            HardwareIDs = ((StageRFCOMM)tempStage).HardwareIDs.clone();
+                            break;
+                        }
+                    }
+                    calibValuesReadingDone = true;
+                }
+                featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
+                LogIHAB.log("openFeatureFile: " + feature + "_" + timestamp + EXTENSION);
+                //featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
+                featureRAF = new RandomAccessFile(featureFile, "rw");
 
-            // write header
-            featureRAF.writeInt(5);               // Feature File Version
-            featureRAF.writeInt(0);               // block count, written on close
-            featureRAF.writeInt(0);               // feature dimensions, written on close
-            featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
-            featureRAF.writeInt(inStage_hopSizeOut);    // [samples]
+                // write header
+                featureRAF.writeInt(5);               // Feature File Version
+                featureRAF.writeInt(0);               // block count, written on close
+                featureRAF.writeInt(0);               // feature dimensions, written on close
+                featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
+                featureRAF.writeInt(inStage_hopSizeOut);    // [samples]
 
-            featureRAF.writeInt(mySamplingRate);
+                featureRAF.writeInt(mySamplingRate);
 
-            featureRAF.writeBytes(timestamp.substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
-            featureRAF.writeBytes(timeFormat.format(Instant.now()).substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
+                featureRAF.writeBytes(timestamp.substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
+                featureRAF.writeBytes(timeFormat.format(Instant.now()).substring(2));  // YYMMDD_HHMMssSSS, 16 bytes (absolute timestamp)
 
-            HeaderPos_calibValues = featureRAF.getFilePointer();
-            featureRAF.writeFloat((float)0.0);      // calibration value 1, written on close
-            featureRAF.writeFloat((float)0.0);      // calibration value 2, written on close
+                featureRAF.writeFloat(calibValuesInDB[0]);
+                featureRAF.writeFloat(calibValuesInDB[1]);
+                featureRAF.writeBytes(String.format("%1$16s", HardwareIDs[0]).substring(0, 16));
+                featureRAF.writeBytes(String.format("%1$17s", HardwareIDs[1]).substring(0, 17));
 
-            featureRAF.writeBytes(String.format("%1$16s", ""));  // Android ID
-            featureRAF.writeBytes(String.format("%1$17s", ""));  // Bluetooth Transmitter MAC
+                featureRAF.writeFloat((float)-1);      // Transmitter Sample Rate
 
-            featureRAF.writeFloat((float)-1);      // Transmitter Sample Rate
-
-            blockCount = 0;
-            hopDuration = inStage_hopSizeOut;
-            relTimestamp[0] = relTimestamp[0] % (int)(featFileSize * mySamplingRate);
-            relTimestamp[1] = relTimestamp[0] + (inStage_blockSizeOut - 1);
-        } catch (IOException e) {
-            e.printStackTrace();
+                blockCount = 0;
+                hopDuration = inStage_hopSizeOut;
+                relTimestamp[0] = relTimestamp[0] % (int)(featFileSize * mySamplingRate);
+                relTimestamp[1] = relTimestamp[0] + (inStage_blockSizeOut - 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -229,27 +249,10 @@ public class StageFeatureWrite extends Stage {
 
     synchronized private void closeFeatureFile() {
         try {
-            float[] calibValuesInDB = new float[]{0, 0};
-            String[] HardwareIDs = new String[]{String.format("%1$16s", ""), String.format("%1$16s", "")};
-
-            Stage tempStage = this;
-            while (tempStage != null) {
-                tempStage = tempStage.inStage;
-                if (tempStage != null && tempStage.getClass() == StageRFCOMM.class && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[0]) && !Float.isNaN(((StageRFCOMM)tempStage).calibValuesInDB[1])) {
-                    calibValuesInDB = ((StageRFCOMM)tempStage).calibValuesInDB.clone();
-                    HardwareIDs = ((StageRFCOMM)tempStage).HardwareIDs.clone();
-                    break;
-                }
-            }
             if (featureRAF != null) {
                 featureRAF.seek(4);
                 featureRAF.writeInt(blockCount); // block count for this feature file
                 featureRAF.writeInt(nFeatures);  // features + timestamps per block
-                featureRAF.seek(HeaderPos_calibValues);
-                featureRAF.writeFloat(calibValuesInDB[0]);
-                featureRAF.writeFloat(calibValuesInDB[1]);
-                featureRAF.writeBytes(String.format("%1$16s", HardwareIDs[0]).substring(0, 16));
-                featureRAF.writeBytes(String.format("%1$17s", HardwareIDs[1]).substring(0, 17));
                 featureRAF.close();
                 if (blockCount == 0 && nFeatures == 0)
                     featureFile.delete();

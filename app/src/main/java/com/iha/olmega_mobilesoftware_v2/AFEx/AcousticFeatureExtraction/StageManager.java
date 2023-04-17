@@ -25,10 +25,15 @@ public class StageManager {
         Stage.samplingrate = 16000;
         Stage.channels = 2;
         Stage.context = context;
+        Stage.WriteDataToStorage = true;
         // build processing tree
         if (features == null)
             features = new File(AudioFileIO.MAIN_FOLDER + File.separator + AudioFileIO.STAGE_CONFIG);
         mainStage = new StageFactory().parseConfig(features);
+    }
+
+    public void setWriteDataToStorage(boolean value) {
+        mainStage.WriteDataToStorage = value;
     }
 
     public void start() {

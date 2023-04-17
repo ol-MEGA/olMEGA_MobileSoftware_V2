@@ -2,6 +2,7 @@ package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,8 +17,10 @@ import androidx.core.content.ContextCompat;
 
 import com.iha.olmega_mobilesoftware_v2.Bluetooth.BluetoothSPP;
 import com.iha.olmega_mobilesoftware_v2.Bluetooth.BluetoothState;
+import com.iha.olmega_mobilesoftware_v2.ControlService;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.RingBuffer;
+import com.iha.olmega_mobilesoftware_v2.MainActivity;
 import com.iha.olmega_mobilesoftware_v2.R;
 import com.iha.olmega_mobilesoftware_v2.States;
 
@@ -143,7 +146,7 @@ public class StageRFCOMM extends Stage {
                                 lastStreamTimer = System.currentTimeMillis();
                             }
                         }
-                        if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 && initializeState == initState.UNINITIALIZED) ||
+                        if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 * Math.max(1, ((ControlService)context).Status().Preferences().rebootConnectionFailsTime()) / 5 && initializeState == initState.UNINITIALIZED) ||
                                 (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
                                 (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
                             lastStateChange = System.currentTimeMillis();
@@ -153,13 +156,22 @@ public class StageRFCOMM extends Stage {
                                 bt.stopService();
                                 ReconnectTrials += 1;
                                 if (ReconnectTrials >= 5 || initializeState == initState.WAITING_FOR_CALIBRATION_VALUES || initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) {
-                                    LogIHAB.log("Bluetooth: Disable Bluetooth Adapter");
                                     mBluetoothAdapter.disable();
-                                    ReconnectTrials = 0;
+                                    LogIHAB.log("App restarted programmatically");
+                                    Intent  intent = new Intent("StageState");    //action: "msg"
+                                    intent.setPackage(context.getPackageName());
+                                    intent.putExtra("currentState", States.restart.ordinal());
+                                    context.sendBroadcast(intent);
+
+                                    //LogIHAB.log("Bluetooth: Disable Bluetooth Adapter");
+                                    //mBluetoothAdapter.disable();
+                                    //ReconnectTrials = 0;
                                 }
-                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    initBluetooth();
-                                }, 1000);
+                                else {
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        initBluetooth();
+                                    }, 1000);
+                                }
                             }
                         } else if (initializeState == initState.INITIALIZED) {
                             if (System.currentTimeMillis() - lastEmptyPackageTimer > 200) {
@@ -238,6 +250,7 @@ public class StageRFCOMM extends Stage {
         if (bt != null)
             bt.stopService();
         bt = null;
+        setState(initState.UNINITIALIZED);
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.disable();
@@ -246,6 +259,8 @@ public class StageRFCOMM extends Stage {
 
     private void setState(initState state) {
         if (initializeState != state) {
+            if (initializeState == initState.INITIALIZED)
+                LogIHAB.log("Bluetooth: Stopped producing");;
             lastStateChange = System.currentTimeMillis();
             initializeState = state;
         }
@@ -347,6 +362,7 @@ public class StageRFCOMM extends Stage {
                                     myStageFeatureWrite.startWithoutThread();
                                     this.hopSizeOut = 400;
                                     this.blockSizeOut = 400;
+                                    LogIHAB.log("Bluetooth: Started producing");
                                     for (Stage consumer : consumerSet) {
                                         consumer.start();
                                     }

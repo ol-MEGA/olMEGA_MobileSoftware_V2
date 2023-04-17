@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -68,6 +70,12 @@ public class SystemStatus {
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals("StageState") && stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity && acitivyStates.profileState != States.values()[intent.getIntExtra("currentState", States.connected.ordinal())]) {
                     acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
+                    if (acitivyStates.profileState == States.connected) {
+                        SharedPreferences prefs = context.getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("AppRestartForConnection", 0);
+                        editor.commit();
+                    }
                     Refresh();
                 }
                 else if (intent.getAction().equals("CalibrationValuesError") && curentActivity != ActiviyRequestCode.PreferencesActivity) {
@@ -99,6 +107,7 @@ public class SystemStatus {
             acitivyStates.NextQuestText = "";
             acitivyStates.questionaireEnabled = false;
             preferences.configHasErrors = false;
+            boolean WriteDataToStorage = true;
 
             acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
             if (lastChargingState != acitivyStates.isCharging) {
@@ -110,23 +119,28 @@ public class SystemStatus {
             // Charging State
             if (curentActivity != ActiviyRequestCode.MainActivity)
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-            if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && Preferences().usbCutsConnection()) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
+            if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && (Preferences().usbCutsConnection() || Preferences().usbCutsDataStorage())) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
                 if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {
                     acitivyStates.InfoText = mContext.getResources().getString(R.string.UnableToStartKioskMode);
                     preferences.configHasErrors = true;
                 }
-                if (acitivyStates.isCharging && Preferences().usbCutsConnection())
+                if (acitivyStates.isCharging && (Preferences().usbCutsConnection() || Preferences().usbCutsDataStorage()))
                     acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
-                stageMangerState = StageManagerStates.undefined;
-                acitivyStates.profileState = States.undefined;
-                acitivyStates.InputProfile = "";
-                raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                if (stageManager != null && stageManager.isRunning) {
-                    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                    if (mBluetoothAdapter.isEnabled())
-                        mBluetoothAdapter.disable();
-                    acitivyStates.showCalibrationValuesError = false;
-                    stageManager.stop();
+                if (acitivyStates.isCharging && Preferences().usbCutsConnection() == false && Preferences().usbCutsDataStorage() == true && stageManager != null && stageManager.isRunning) {
+                    WriteDataToStorage = false;
+                }
+                else {
+                    stageMangerState = StageManagerStates.undefined;
+                    acitivyStates.profileState = States.undefined;
+                    acitivyStates.InputProfile = "";
+                    raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+                    if (stageManager != null && stageManager.isRunning) {
+                        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                        if (mBluetoothAdapter.isEnabled())
+                            mBluetoothAdapter.disable();
+                        acitivyStates.showCalibrationValuesError = false;
+                        stageManager.stop();
+                    }
                 }
             } else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
@@ -203,6 +217,8 @@ public class SystemStatus {
                 mySystemStatusListener.setAcitivyStates(acitivyStates);
             lockUntilStageManagerIsRunning = false;
             updateAutomaticQuestionnaireTimer();
+            if (stageManager != null && stageManager.isRunning)
+                stageManager.setWriteDataToStorage(WriteDataToStorage);
         } else if (refreshHandlerIsActive == false) {
             refreshHandlerIsActive = true;
             Handler refreshHandler = new Handler(Looper.getMainLooper());
@@ -340,6 +356,23 @@ public class SystemStatus {
 
         public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
         }
+    }
+
+    public void writePreferencesToLog() {
+        LogIHAB.log("Preferences: ");
+        LogIHAB.log("   isAdmin: " + this.preferences.isAdmin());
+        LogIHAB.log("   usbCutsConnection: " + this.preferences.usbCutsConnection());
+        LogIHAB.log("   usbCutsDataStorage: " + this.preferences.usbCutsDataStorage());
+        LogIHAB.log("   autoStartActivity: " + this.preferences.autoStartActivity());
+        LogIHAB.log("   inputProfile: " + this.preferences.inputProfile());
+        LogIHAB.log("   rebootConnectionFailsTime: " + this.preferences.rebootConnectionFailsTime());
+        LogIHAB.log("   isKioskModeNecessary: " + this.preferences.isKioskModeNecessary());
+        LogIHAB.log("   useQuestionnaire: " + this.preferences.useQuestionnaire());
+        LogIHAB.log("   selectedQuest: " + this.preferences.selectedQuest());
+        LogIHAB.log("   forceAnswer: " + this.preferences.forceAnswer());
+        LogIHAB.log("   showQuestionnaireTimer: " + this.preferences.showQuestionnaireTimer());
+        LogIHAB.log("   clientID: " + this.preferences.clientID());
+
     }
 
 }

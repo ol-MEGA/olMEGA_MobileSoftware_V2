@@ -5,6 +5,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
+
 import java.time.Instant;
 import java.util.HashMap;
 
@@ -58,6 +60,7 @@ public class StageAudioCapture extends Stage {
         audioRecord.startRecording();
 
         Log.d(LOG, "Started producing");
+        LogIHAB.log("Audio Capture: Started producing");
 
         //Stage.startTime = Instant.now();
 
@@ -87,6 +90,7 @@ public class StageAudioCapture extends Stage {
         Stage.startTime = null;
 
         Log.d(LOG, "Stopped producing");
+        LogIHAB.log("Audio Capture: Stopped producing");
         audioRecord.stop();
         stopRecording = false;
     }

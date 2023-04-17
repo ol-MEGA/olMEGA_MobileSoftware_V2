@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.Questionnaire.Question;
 
 import java.text.SimpleDateFormat;
@@ -73,7 +74,7 @@ public class MetaData extends AppCompatActivity {
     }
 
     public boolean finalise(EvaluationList evaluationList) {
-
+        LogIHAB.log("Questionnaire: Results written");
         mEvaluationList = evaluationList;
         // Obtain current Time Stamp at the End of Questionnaire
         END_DATE = generateTimeNow();
