@@ -40,7 +40,6 @@ public class SystemStatus {
     private ActiviyRequestCode curentActivity = ActiviyRequestCode.MainActivity;
     public ActiviyRequestCode getCurentActivity() {return curentActivity;}
     private float lastBatteryLevel = 0;
-    private boolean lastChargingState = false;
     private boolean AutomaticQuestionaireIsTriggered = false;
     private boolean refreshHandlerIsActive = false;
 
@@ -110,11 +109,8 @@ public class SystemStatus {
             boolean WriteDataToStorage = true;
 
             acitivyStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
-            if (lastChargingState != acitivyStates.isCharging) {
-                if (acitivyStates.isCharging)
-                    LogIHAB.log("StateCharging");
-                lastChargingState = acitivyStates.isCharging;
-            }
+            if (acitivyStates.lastChargingState != acitivyStates.isCharging && acitivyStates.isCharging)
+                LogIHAB.log("StateCharging");
             acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
             // Charging State
             if (curentActivity != ActiviyRequestCode.MainActivity)
@@ -126,22 +122,19 @@ public class SystemStatus {
                 }
                 if (acitivyStates.isCharging && (Preferences().usbCutsConnection() || Preferences().usbCutsDataStorage()))
                     acitivyStates.InfoText = mContext.getResources().getString(R.string.infoCharging);
-                if (acitivyStates.isCharging && Preferences().usbCutsConnection() == false && Preferences().usbCutsDataStorage() == true && stageManager != null && stageManager.isRunning) {
+                if (acitivyStates.isCharging && Preferences().usbCutsDataStorage() == true)
                     WriteDataToStorage = false;
+                else if (stageManager != null && stageManager.isRunning) {
+                    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                    if (mBluetoothAdapter.isEnabled())
+                        mBluetoothAdapter.disable();
+                    stageManager.stop();
                 }
-                else {
-                    stageMangerState = StageManagerStates.undefined;
-                    acitivyStates.profileState = States.undefined;
-                    acitivyStates.InputProfile = "";
-                    raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
-                    if (stageManager != null && stageManager.isRunning) {
-                        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                        if (mBluetoothAdapter.isEnabled())
-                            mBluetoothAdapter.disable();
-                        acitivyStates.showCalibrationValuesError = false;
-                        stageManager.stop();
-                    }
-                }
+                stageMangerState = StageManagerStates.undefined;
+                acitivyStates.profileState = States.undefined;
+                acitivyStates.InputProfile = "";
+                acitivyStates.showCalibrationValuesError = false;
+                raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
             } else if (!new FileIO().scanForQuestionnaire(preferences.selectedQuest()) && preferences.useQuestionnaire()) {
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
                 acitivyStates.InfoText = mContext.getResources().getString(R.string.noQuestionnaires);
@@ -217,6 +210,7 @@ public class SystemStatus {
                 mySystemStatusListener.setAcitivyStates(acitivyStates);
             lockUntilStageManagerIsRunning = false;
             updateAutomaticQuestionnaireTimer();
+            acitivyStates.lastChargingState = acitivyStates.isCharging;
             if (stageManager != null && stageManager.isRunning)
                 stageManager.setWriteDataToStorage(WriteDataToStorage);
         } else if (refreshHandlerIsActive == false) {

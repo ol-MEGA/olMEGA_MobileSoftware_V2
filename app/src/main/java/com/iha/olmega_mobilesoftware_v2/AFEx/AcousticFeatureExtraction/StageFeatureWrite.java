@@ -5,6 +5,7 @@ import android.util.Log;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.AudioFileIO;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.NetworkIO;
 import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.SingleMediaScanner;
+import com.iha.olmega_mobilesoftware_v2.BuildConfig;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 
 import java.io.File;
@@ -172,7 +173,7 @@ public class StageFeatureWrite extends Stage {
                 featureRAF = new RandomAccessFile(featureFile, "rw");
 
                 // write header
-                featureRAF.writeInt(5);               // Feature File Version
+                featureRAF.writeInt(6);               // Feature File Version
                 featureRAF.writeInt(0);               // block count, written on close
                 featureRAF.writeInt(0);               // feature dimensions, written on close
                 featureRAF.writeInt(inStage_blockSizeOut);  // [samples]
@@ -189,6 +190,8 @@ public class StageFeatureWrite extends Stage {
                 featureRAF.writeBytes(String.format("%1$17s", HardwareIDs[1]).substring(0, 17));
 
                 featureRAF.writeFloat((float)-1);      // Transmitter Sample Rate
+
+                featureRAF.writeBytes(String.format("%1$20s", BuildConfig.VERSION_NAME).substring(0, 20));
 
                 blockCount = 0;
                 hopDuration = inStage_hopSizeOut;

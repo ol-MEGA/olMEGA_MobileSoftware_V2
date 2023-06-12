@@ -9,6 +9,7 @@ import androidx.core.content.res.ResourcesCompat;
 import android.Manifest;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -44,12 +45,14 @@ import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
     private States profileState = States.undefined;
-    private long AppStartTime = 0;
+    private long connectionFailsTimer = 0;
 
     private static Context context;
 
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
-        AppStartTime = System.currentTimeMillis();
+        connectionFailsTimer = System.currentTimeMillis();
         MainActivity.context = getApplicationContext();
         Thread.setDefaultUncaughtExceptionHandler(new myUncaughtExceptionHandler(this, MainActivity.class));
         setContentView(R.layout.activity_main);
@@ -122,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return false;
             }
-
             // Timer enabling long click for user access to preferences menu
             private long durationLongClick = 5 * 1000;
             private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
@@ -137,11 +139,52 @@ public class MainActivity extends AppCompatActivity {
             };
         });
 
+        findViewById(R.id.InfoTextView).setOnTouchListener(new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (!questionaireEnabled && profileState == States.connecting)
+                        timerLongClick.start();
+                    else if (questionaireEnabled)
+                        startQuestionnaire();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    timerLongClick.cancel();
+                    break;
+            }
+            return false;
+        }
+        // Timer enabling long click for user access to preferences menu
+        private long durationLongClick = 2 * 1000;
+        private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
+            @Override
+            public void onTick(long l) {}
+
+            @Override
+            public void onFinish() {
+                if (!questionaireEnabled && profileState == States.connecting) {
+                    Toast.makeText(MainActivity.this, "Restarting App...", Toast.LENGTH_SHORT).show();
+                    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                    if (mBluetoothAdapter.isEnabled())
+                        mBluetoothAdapter.disable();
+                    final PackageManager pm = MainActivity.this.getPackageManager();
+                    final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
+                    MainActivity.this.finishAffinity(); // Finishes all activities.
+                    MainActivity.this.startActivity(intent);    // Start the launch activity
+                    System.exit(0);    // System finishes and automatically relaunches us.
+                }
+            }
+        };
+        });
+
+        /*
         findViewById(R.id.InfoTextView).setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                 if (questionaireEnabled)
                     startQuestionnaire();
                 else if (profileState == States.connecting) {
+                    Toast.makeText(this, "Restarting App!", Toast.LENGTH_LONG).show();
                     final PackageManager pm = MainActivity.this.getPackageManager();
                     final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
                     MainActivity.this.finishAffinity(); // Finishes all activities.
@@ -151,6 +194,8 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
+
+         */
 
         final Handler dateTimeHandler = new Handler(Looper.myLooper());
         dateTimeHandler.postDelayed(new Runnable() {
@@ -239,17 +284,39 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!SystemStatus.AFExConfigFolder.exists())
                 SystemStatus.AFExConfigFolder.mkdirs();
+            int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone, R.raw.rfcomm};
+            String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml", "rfcomm.xml"};
             if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
-                    int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone, R.raw.rfcomm};
-                    String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml", "rfcomm.xml"};
                     for (int idx = 0; idx < fileListIn.length; idx++) {
                         File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
                         InputStream inputStream = getResources().openRawResource(fileListIn[idx]);
                         byte[] buffer = new byte[inputStream.available()];
                         inputStream.read(buffer);
+                        inputStream.close();
                         OutputStream outStream = new FileOutputStream(file);
                         outStream.write(buffer);
+                        outStream.close();
+                    }
+                } catch (IOException e) {
+                }
+            }
+            else if (BuildConfig.VERSION_NAME == "2.0beta48") {
+                try {
+                    for (int idx = 0; idx < fileListOut.length; idx++) {
+                        File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
+                        FileInputStream inputStream =new FileInputStream(file);
+                        byte[] buffer = new byte[inputStream.available()];
+                        inputStream.read(buffer);
+                        inputStream.close();
+                        String content = new String(buffer, StandardCharsets.UTF_8);
+                        if (content.contains("<stage feature=\"StagePreHighpass\" id=\"10\" cutoff_hz=\"250\">")) {
+                            content = content.replace("<stage feature=\"StagePreHighpass\" id=\"10\" cutoff_hz=\"250\">", "<stage feature=\"StagePreHighpass\" id=\"10\" cutoff_hz=\"100\">");
+                            OutputStream outStream = new FileOutputStream(file);
+                            outStream.write(content.getBytes());
+                            outStream.close();
+                            LogIHAB.log("Changed cutoff_hz of StagePreHighpass to 100 Hz in " + SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
+                        }
                     }
                 } catch (IOException e) {
                 }
@@ -480,20 +547,31 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             controlService = ((ControlService.LocalBinder) service).getService();
             controlService.startForeground();
-            //if (!controlService.Status().Preferences().isAdmin())
+            // if (!controlService.Status().Preferences().isAdmin())
             //    checkKioskMode();
             checkIsDeviceOwner();
             checkWifi();
             controlService.Status().writePreferencesToLog();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
-                    if (acitivyStates.isCharging && controlService.Status().Preferences().usbCutsConnection()) {
+                    SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
+                    TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
+                    if (acitivyStates.isCharging && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                         if (QuestionnaireActivity.thisAppCompatActivity != null)
                             QuestionnaireActivity.thisAppCompatActivity.finish();
+                        findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.gray_400, getTheme()));
+                    }
+                    else {
+                        if (acitivyStates.isCharging == false && acitivyStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putInt("AppRestartForConnection", 0);
+                            editor.commit();
+                            connectionFailsTimer = System.currentTimeMillis();
+                        }
+                        findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
                     }
                     findViewById(R.id.Layout_CalibrationValues).setVisibility((acitivyStates.showCalibrationValuesError ? 0 : 1) * 8);
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
-                    TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                     InfoTextView.setText(acitivyStates.InfoText);
                     questionaireEnabled = acitivyStates.questionaireEnabled;
                     if (controlService.Status().Preferences().isAdmin())
@@ -525,7 +603,6 @@ public class MainActivity extends AppCompatActivity {
                     battery_top.setLayoutParams(battery_topParams);
 
                     profileState = acitivyStates.profileState;
-                    SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
                     int AppRestartForConnection = prefs.getInt("AppRestartForConnection",0);
                     if (acitivyStates.profileState == States.restart) {
                         AppRestartForConnection += 1;
@@ -533,6 +610,9 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putInt("AppRestartForConnection", AppRestartForConnection);
                         editor.commit();
+                        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                        if (mBluetoothAdapter.isEnabled())
+                            mBluetoothAdapter.disable();
                         final PackageManager pm = MainActivity.this.getPackageManager();
                         final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
                         MainActivity.this.finishAffinity(); // Finishes all activities.
@@ -542,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
                     else if (acitivyStates.profileState == States.connected)
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
                     else {
-                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - AppStartTime >= Math.max(1, controlService.Status().Preferences().rebootConnectionFailsTime()) * 1000 * 60 / 10 && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - connectionFailsTimer >= Math.max(1, controlService.Status().Preferences().rebootConnectionFailsTime()) * 1000 * 60 / 10 && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
                             InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
                     }

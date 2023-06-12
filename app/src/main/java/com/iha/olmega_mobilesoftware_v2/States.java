@@ -55,4 +55,5 @@ class AcitivyStates {
     public States profileState = States.undefined;
     public String InputProfile = "";
     public boolean showCalibrationValuesError = false;
+    public boolean lastChargingState = false;
 }

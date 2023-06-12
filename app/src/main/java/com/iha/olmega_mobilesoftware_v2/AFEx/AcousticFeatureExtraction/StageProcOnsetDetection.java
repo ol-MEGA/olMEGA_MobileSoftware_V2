@@ -72,7 +72,7 @@ public class StageProcOnsetDetection extends Stage {
                 (float) (1.0f - Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[0] * 0.001 * samplingrate))),
                 (float) (1.0f - Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[1] * 0.001 * samplingrate))),
                 (float) (1.0f - Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[2] * 0.001 * samplingrate))),
-                (float) (1.0f - Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[2] * 0.001 * samplingrate)))};
+                (float) (1.0f - Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[3] * 0.001 * samplingrate)))};
         energyRatio_Alpha_Fast_MinusOne = new float[] {
                 (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Fast_ms[0] * 0.001 * samplingrate))),
                 (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Fast_ms[1] * 0.001 * samplingrate))),
@@ -82,7 +82,7 @@ public class StageProcOnsetDetection extends Stage {
                 (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[0] * 0.001 * samplingrate))),
                 (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[1] * 0.001 * samplingrate))),
                 (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[2] * 0.001 * samplingrate))),
-                (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[2] * 0.001 * samplingrate)))};
+                (float) (- Math.exp(-1.0f / (this.energyRatio_Tau_Slow_ms[3] * 0.001 * samplingrate)))};
         // [LP, BP, HP, WB]
         detectOnsets_ThreshBase = new float[] {8.0f, 4.0f, 4.0f, 16.0f}; //8.0f, 8.0f, 8.0f, 8.0f
         detectOnsets_ThreshRaise = new float[] {0.0f, 0.0f, 0.0f, 0.0f}; //0.0f, 0.0f, 0.0f, 0.0f

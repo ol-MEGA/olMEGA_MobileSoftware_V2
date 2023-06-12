@@ -64,7 +64,7 @@ public class StageProcPSD extends Stage {
             alpha = (float) Math.exp(-hopSize / (samplingrate * 0.125));
             samples = blockSize;
             dataConj = new float[channels][];
-            P = Ptemp = new float[3][nfft * 2];
+            P = new float[3][nfft * 2];
         }
 
         void calculate(float[][] input) {
@@ -94,9 +94,20 @@ public class StageProcPSD extends Stage {
                 P[2][i + 1] = data[1][i] * dataConj[1][i + 1] + data[1][i + 1] * dataConj[1][i];
             }
             // recursive averaging & store data for next average
-            for (int k = 0; k < 3; k++) {
-                for (int i = 0; i < nfft * 2; i++) {
-                    P[k][i] = Ptemp[k][i] = alpha * Ptemp[k][i] + (1 - alpha) * P[k][i];
+            if (Ptemp == null) {
+                // 1st block? Initialize Ptemp with (1-alpha) * P
+                Ptemp = new float[3][nfft * 2];
+                for (int k = 0; k < 3; k++) {
+                    for (int i = 0; i < nfft * 2; i++) {
+                        Ptemp[k][i] = (1 - alpha) * P[k][i];
+                    }
+                }
+            } else {
+                // recursive averaging & store data for next average (Ptemp)
+                for (int k = 0; k < 3; k++) {
+                    for (int i = 0; i < nfft * 2; i++) {
+                        Ptemp[k][i] = alpha * Ptemp[k][i] + (1 - alpha) * P[k][i];
+                    }
                 }
             }
             // count blocks
@@ -108,17 +119,17 @@ public class StageProcPSD extends Stage {
                 dataOut[1] = new float[nfft / 2 + 1]; // real spectrum (auto-correlation)
                 dataOut[2] = new float[nfft / 2 + 1]; // real spectrum (auto-correlation)
                 // copy one-sided spectrum for cross-correlation and scale
-                dataOut[0][0]    = P[0][0] / samplingrate / win_energy; // 0 Hz
-                dataOut[0][nfft] = P[0][nfft] / samplingrate / win_energy; // fs/2
+                dataOut[0][0]    = Ptemp[0][0] / samplingrate / win_energy; // 0 Hz
+                dataOut[0][nfft] = Ptemp[0][nfft] / samplingrate / win_energy; // fs/2
                 for (int i = 2; i < nfft; i++) {
-                    dataOut[0][i] = 2 * P[0][i] / samplingrate / win_energy;
+                    dataOut[0][i] = 2 * Ptemp[0][i] / samplingrate / win_energy;
                 }
                 // copy one sided spectrum for auto correlation, scale, omit imaginary parts
                 for (int k = 1; k < 3; k++) {
-                    dataOut[k][0] = P[k][0] / samplingrate / win_energy;;
-                    dataOut[k][nfft / 2] = P[k][nfft] / samplingrate / win_energy;;
+                    dataOut[k][0] = Ptemp[k][0] / samplingrate / win_energy;;
+                    dataOut[k][nfft / 2] = Ptemp[k][nfft] / samplingrate / win_energy;;
                     for (int i = 1; i < nfft / 2; i++) {
-                        dataOut[k][i] = 2 * P[k][2 * i] / samplingrate / win_energy;
+                        dataOut[k][i] = 2 * Ptemp[k][2 * i] / samplingrate / win_energy;
                     }
                 }
                 send(dataOut);
