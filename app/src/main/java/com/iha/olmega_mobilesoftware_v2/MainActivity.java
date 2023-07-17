@@ -67,7 +67,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean mIsBound = false;
     private DevicePolicyManager mDevicePolicyManager;
     private ComponentName mAdminComponentName;
-    private String[] neccessaryPermissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};
+    private String[] neccessaryPermissions = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_NETWORK_STATE
+    };
     private int neccessaryPermissionsIdx = 0;
     private boolean isLocked = false;
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;

@@ -29,7 +29,7 @@
             android:fontFamily="sans-serif"
             android:text="@string/menuHelp"
             android:textColor="@android:color/black"
-            android:textSize="24sp" />
+            android:textSize="22sp" />
         <View
             android:id="@+id/Action_Wifi"
             android:layout_width="32dp"
@@ -96,7 +96,7 @@
         <TextView
             android:id="@+id/nextQuestTextView"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="54dp"
             android:enabled="false"
             android:gravity="center_vertical|center_horizontal"
             android:textColor="@color/TextColor_Light"

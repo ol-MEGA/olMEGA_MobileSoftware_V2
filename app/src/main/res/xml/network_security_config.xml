@@ -5,4 +5,5 @@
             <certificates src="user" overridePins="true"/>
         </trust-anchors>
     </debug-overrides>
+    <base-config cleartextTrafficPermitted="true"/>
 </network-security-config>
