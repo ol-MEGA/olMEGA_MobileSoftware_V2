@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import android.net.NetworkInfo;
 import androidx.core.content.ContextCompat;
 
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.Core.Units;
@@ -134,6 +135,8 @@ public class AnswerTypeWebsite extends AnswerType {
     public boolean isNetworkAvailable()
     {
         final ConnectivityManager connectivityManager = ((ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE));
-        return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
+        return connectivityManager.getActiveNetworkInfo() != null &&
+                connectivityManager.getActiveNetworkInfo().isAvailable() &&
+                connectivityManager.getActiveNetworkInfo().isConnected();
     }
 }
