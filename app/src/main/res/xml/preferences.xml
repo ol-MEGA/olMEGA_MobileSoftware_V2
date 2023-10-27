@@ -33,12 +33,23 @@
             />
 
         <SwitchPreference
+            android:key="isKioskModeNecessary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="true"
             android:checked="true"
-            android:key="isKioskModeNecessary"
             android:title="@string/pref_isKioskModeNecessary" />
+
+        <SwitchPreference
+            android:key="isPowerOffAllowed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:dependency="isKioskModeNecessary"
+            android:checked="true"
+            android:title="@string/pref_allowManualPowerOff"
+            android:summary="@string/pref_isPowerOffAllowed_summary"
+            />
 
         <ListPreference
             android:layout_width="wrap_content"
@@ -48,12 +59,12 @@
             android:dialogTitle="@string/pref_operationMode_title"
             android:summary="%s" />
 
-        <EditTextPreference android:title="@string/pref_rebootConnectionFailsTime_title"
-            android:defaultValue = "5"
-            android:key="rebootConnectionFailsTime"
+        <EditTextPreference android:title="@string/pref_timeoutForTransmitterNotFoundMessage"
+            android:defaultValue = "1"
+            android:key="timeoutForTransmitterNotFoundMessage"
             android:inputType="numberDecimal"
-            android:digits="0123456789"
-            android:summary="" />
+            android:digits="0123456789."
+            android:summary="@string/pref_timeoutForTransmitterNotFoundMessage_summary"
         />
 
     </PreferenceCategory>

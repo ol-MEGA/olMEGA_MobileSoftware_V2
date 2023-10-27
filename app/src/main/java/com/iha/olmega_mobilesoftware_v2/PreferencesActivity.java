@@ -35,6 +35,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.util.prefs.PreferenceChangeListener;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -111,6 +112,18 @@ public class PreferencesActivity extends PreferenceActivity {
 
             includeQuestList();
             includedAFExList();
+            Preference timeoutForTransmitterNotFoundMessage = (Preference) findPreference("timeoutForTransmitterNotFoundMessage");
+            timeoutForTransmitterNotFoundMessage.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newVal) {
+                    final double value = Double. parseDouble((String)newVal);
+                    if (value < 0.0)
+                        Toast.makeText(getActivity(), "Value must be greater than 0 Minutes!", Toast.LENGTH_LONG).show();
+                    else if (value > 5.0)
+                        Toast.makeText(getActivity(), "Value must be less than 5 Minutes!", Toast.LENGTH_LONG).show();
+                    return ! (value < 0.0 || value > 5);
+                }
+            });
             Preference DisabledeviceOwnerPref = (Preference) findPreference("disableDeviceAdmin");
             DisabledeviceOwnerPref.setOnPreferenceClickListener(arg0 -> {
                 confirmDisableDeviceAdmin();
@@ -148,6 +161,29 @@ public class PreferencesActivity extends PreferenceActivity {
                 startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
                 return true;
             });
+
+            Preference.OnPreferenceChangeListener temp = new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    SwitchPreference secondPreference = null;
+                    if (preference == (SwitchPreference) findPreference("isKioskModeNecessary"))
+                        secondPreference = (SwitchPreference) findPreference("autoStartActivity");
+                    else if(preference == (SwitchPreference) findPreference("autoStartActivity"))
+                        secondPreference = (SwitchPreference) findPreference("isKioskModeNecessary");
+                    if (secondPreference != null) {
+                        SwitchPreference switchIsPowerOffAllowed = (SwitchPreference) findPreference("isPowerOffAllowed");
+                        switchIsPowerOffAllowed.setEnabled((boolean) newValue && secondPreference.isEnabled() && secondPreference.isChecked());
+                        if (!switchIsPowerOffAllowed.isEnabled())
+                            switchIsPowerOffAllowed.setChecked(false);
+                    }
+                    return true;
+                }
+            };
+            SwitchPreference switchAutoStartActivity = (SwitchPreference) findPreference("autoStartActivity");
+            switchAutoStartActivity.setOnPreferenceChangeListener(temp);
+            SwitchPreference switchIsKioskModeNecessary = (SwitchPreference) findPreference("isKioskModeNecessary");
+            switchIsKioskModeNecessary.setOnPreferenceChangeListener(temp);
+
             Preference VersionPref = (Preference) findPreference("Version");
             VersionPref.setSummary(BuildConfig.VERSION_NAME);
             Preference button = (Preference) findPreference("checkForUpdate");

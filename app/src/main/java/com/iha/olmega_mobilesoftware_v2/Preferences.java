@@ -35,6 +35,7 @@ public class Preferences {
     public boolean autoStartActivity() {return sharedPreferences.getBoolean("autoStartActivity", true);}
     public boolean forceAnswer() {return sharedPreferences.getBoolean("forceAnswer", true);}
     public boolean isKioskModeNecessary() {return sharedPreferences.getBoolean("isKioskModeNecessary", true);}
+    public boolean isPowerOffAllowed() {return sharedPreferences.getBoolean("isPowerOffAllowed", false);}
     //public boolean forceAnswerDialog() {return sharedPreferences.getBoolean("forceAnswerDialog", true);}
     //public boolean useQuestionnaireTimer() {return sharedPreferences.getBoolean("useQuestionnaireTimer", true);}
     //public boolean unsetDeviceAdmin() {return sharedPreferences.getBoolean("unsetDeviceAdmin", false);}
@@ -47,14 +48,13 @@ public class Preferences {
     public String inputProfile() {
         return sharedPreferences.getString("inputProfile", "");
     }
-    public int rebootConnectionFailsTime()  {
+    public int timeoutForTransmitterNotFoundMessage()  {
         try {
-            return Integer.parseInt(sharedPreferences.getString("rebootConnectionFailsTime", "5"));
+            return Integer.parseInt(sharedPreferences.getString("timeoutForTransmitterNotFoundMessage", "1"));
         } catch(NumberFormatException nfe) {
             return 5;
         }
     }
-
     public void onDestroy() {
     }
 }

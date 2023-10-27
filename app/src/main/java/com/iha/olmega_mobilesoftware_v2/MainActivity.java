@@ -525,6 +525,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER)) { // && !controlService.Status().Preferences().isAdmin() && !controlService.Status().Preferences().isInKioskMode) {
             Log.e(TAG, "POWER BUTTON WAS PRESSED");
+            if (controlService.Status().Preferences().isAdmin() == false && controlService.Status().Preferences().isKioskModeNecessary() == true && controlService.Status().Preferences().isPowerOffAllowed())
+                return true;
             return super.dispatchKeyEvent(event);
         } else {
             return super.dispatchKeyEvent(event);
@@ -622,7 +624,7 @@ public class MainActivity extends AppCompatActivity {
                     else if (acitivyStates.profileState == States.connected)
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
                     else {
-                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - connectionFailsTimer >= Math.max(1, controlService.Status().Preferences().rebootConnectionFailsTime()) * 1000 * 60 / 10 && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - connectionFailsTimer >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
                             InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
                     }

@@ -146,7 +146,7 @@ public class StageRFCOMM extends Stage {
                                 lastStreamTimer = System.currentTimeMillis();
                             }
                         }
-                        if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 * Math.max(1, ((ControlService)context).Status().Preferences().rebootConnectionFailsTime()) / 5 && initializeState == initState.UNINITIALIZED) ||
+                        if ((System.currentTimeMillis() - lastStateChange > 60 * 1000 && initializeState == initState.UNINITIALIZED) ||
                                 (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_AUDIOTRANSMISSION) ||
                                 (System.currentTimeMillis() - lastStateChange > 10 * 1000 && initializeState == initState.WAITING_FOR_CALIBRATION_VALUES)) {
                             lastStateChange = System.currentTimeMillis();

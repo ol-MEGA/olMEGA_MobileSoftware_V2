@@ -186,7 +186,7 @@ public class SystemStatus {
                     case connected:
                         LogIHAB.log("StateRunning");
                         acitivyStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
-                        if (preferences.useQuestionnaire()) {
+                        if (preferences.useQuestionnaire() && !(acitivyStates.isCharging == true && Preferences().usbCutsDataStorage() == true)) {
                             acitivyStates.questionaireEnabled = true;
                             acitivyStates.InfoText = mContext.getResources().getString(R.string.menuText);
                             if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
@@ -359,8 +359,9 @@ public class SystemStatus {
         LogIHAB.log("   usbCutsDataStorage: " + this.preferences.usbCutsDataStorage());
         LogIHAB.log("   autoStartActivity: " + this.preferences.autoStartActivity());
         LogIHAB.log("   inputProfile: " + this.preferences.inputProfile());
-        LogIHAB.log("   rebootConnectionFailsTime: " + this.preferences.rebootConnectionFailsTime());
+        LogIHAB.log("   timeoutForTransmitterNotFoundMessage: " + this.preferences.timeoutForTransmitterNotFoundMessage());
         LogIHAB.log("   isKioskModeNecessary: " + this.preferences.isKioskModeNecessary());
+        LogIHAB.log("   isPowerOffAllowed: " + this.preferences.isPowerOffAllowed());
         LogIHAB.log("   useQuestionnaire: " + this.preferences.useQuestionnaire());
         LogIHAB.log("   selectedQuest: " + this.preferences.selectedQuest());
         LogIHAB.log("   forceAnswer: " + this.preferences.forceAnswer());
