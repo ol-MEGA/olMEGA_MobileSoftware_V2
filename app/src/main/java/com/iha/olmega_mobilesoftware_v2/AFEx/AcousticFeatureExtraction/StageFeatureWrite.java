@@ -198,6 +198,7 @@ public class StageFeatureWrite extends Stage {
                 relTimestamp[0] = relTimestamp[0] % (int)(featFileSize * mySamplingRate);
                 relTimestamp[1] = relTimestamp[0] + (inStage_blockSizeOut - 1);
             } catch (IOException e) {
+                LogIHAB.log("StageFeatureWrite: " + e.getStackTrace());
                 e.printStackTrace();
             }
         }
@@ -246,6 +247,7 @@ public class StageFeatureWrite extends Stage {
                 blockCount++;
             }
         } catch (IOException e) {
+            LogIHAB.log("StageFeatureWrite: " + e.getStackTrace());
             e.printStackTrace();
         }
     }
@@ -257,12 +259,15 @@ public class StageFeatureWrite extends Stage {
                 featureRAF.writeInt(blockCount); // block count for this feature file
                 featureRAF.writeInt(nFeatures);  // features + timestamps per block
                 featureRAF.close();
-                if (blockCount == 0 && nFeatures == 0)
+                if (blockCount == 0 && nFeatures == 0) {
                     featureFile.delete();
+                    LogIHAB.log("StageFeatureWrite: empty File '" + featureFile.getName() + " deleted");
+                }
                 featureRAF = null;
             }
             new SingleMediaScanner(context, featureFile);
         } catch (IOException e) {
+            LogIHAB.log("StageFeatureWrite: " + e.getStackTrace());
             e.printStackTrace();
         }
     }

@@ -179,7 +179,7 @@ public class StageRFCOMM extends Stage {
                                     lostBlockCount++;
                                     lastBlockNumber++;
                                     writeData(emptyAudioBlock, true);
-                                    Log.d(LOG, "emptyAudioBlock (in Loop)");
+                                    LogIHAB.log("Bluetooth: emptyAudioBlock (in Loop)");
                                 }
                                 lastEmptyPackageTimer = System.currentTimeMillis();
                             }
@@ -233,6 +233,8 @@ public class StageRFCOMM extends Stage {
                     LogIHAB.log("Bluetooth: Device '" + bt.getBluetoothService().BluetoothDevice_MAC + "'");
                 }
                 break;
+            default:
+                LogIHAB.log("Bluetooth: " + state.name());
         }
         Intent  intent = new Intent("StageState");    //action: "msg"
         intent.setPackage(context.getPackageName());
@@ -376,6 +378,7 @@ public class StageRFCOMM extends Stage {
                                     while (lastBlockNumber < currBlockNumber - 1) {
                                         //Log.d(LOG, "CurrentBlock: " + currBlockNumber + "\tLostBlocks: " + lostBlockCount);
                                         writeData(emptyAudioBlock, true);
+                                        LogIHAB.log("Bluetooth: emptyAudioBlock");
                                         //Log.d(LOG, "emptyAudioBlock " + lastBlockNumber);
                                         lastBlockNumber++;
                                     }

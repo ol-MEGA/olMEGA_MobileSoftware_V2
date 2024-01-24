@@ -67,8 +67,8 @@ public class SystemStatus {
         mStageStateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals("StageState") && stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity && acitivyStates.profileState != States.values()[intent.getIntExtra("currentState", States.connected.ordinal())]) {
-                    acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.connected.ordinal())];
+                if (intent.getAction().equals("StageState") && stageManager != null && stageManager.isRunning && curentActivity != ActiviyRequestCode.PreferencesActivity && acitivyStates.profileState != States.values()[intent.getIntExtra("currentState", States.undefined.ordinal())]) {
+                    acitivyStates.profileState = States.values()[intent.getIntExtra("currentState", States.undefined.ordinal())];
                     if (acitivyStates.profileState == States.connected) {
                         SharedPreferences prefs = context.getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = prefs.edit();

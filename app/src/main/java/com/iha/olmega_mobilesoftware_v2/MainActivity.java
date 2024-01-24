@@ -530,7 +530,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER)) { // && !controlService.Status().Preferences().isAdmin() && !controlService.Status().Preferences().isInKioskMode) {
             Log.e(TAG, "POWER BUTTON WAS PRESSED");
-            if (controlService.Status().Preferences().isAdmin() == false && controlService.Status().Preferences().isKioskModeNecessary() == true && controlService.Status().Preferences().isPowerOffAllowed())
+            if (controlService.Status().Preferences().isAdmin() == false && controlService.Status().Preferences().isInKioskMode == true && controlService.Status().Preferences().isPowerOffAllowed() == false)
                 return true;
             return super.dispatchKeyEvent(event);
         } else {
@@ -542,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         // Little hack since the Power button seems to be inaccessible at this point
         super.onWindowFocusChanged(hasFocus);
-        if (!hasFocus && controlService != null && controlService.Status() != null && !controlService.Status().Preferences().isAdmin()) {
+        if (!hasFocus && controlService != null && controlService.Status() != null && controlService.Status().Preferences().isInKioskMode && !controlService.Status().Preferences().isPowerOffAllowed()) {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
