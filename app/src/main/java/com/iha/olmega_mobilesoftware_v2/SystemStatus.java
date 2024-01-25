@@ -14,13 +14,20 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageManager;
+import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.AudioFileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Core.XMLReader;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class SystemStatus {
 
@@ -100,6 +107,19 @@ public class SystemStatus {
         Refresh();
     }
 
+    boolean isRFCOMM(NodeList nodes) {
+        boolean hasRFCOMM = false;
+        for (int i = 0; i < nodes.getLength(); i++) {
+            for (int n = 0; n < nodes.item(i).getAttributes().getLength(); n++) {
+                if (nodes.item(i).getAttributes().item(n).getNodeValue().equals("StageRFCOMM"))
+                    return true;
+                else if (hasRFCOMM == false && nodes.item(i).getChildNodes().getLength() > 0)
+                    hasRFCOMM = isRFCOMM(nodes.item(i).getChildNodes());
+            }
+        }
+        return hasRFCOMM;
+    }
+
     synchronized public void Refresh() {
         if (lockUntilStageManagerIsRunning == false) {
             acitivyStates.InfoText = mContext.getResources().getString(R.string.pleaseWait);
@@ -145,9 +165,12 @@ public class SystemStatus {
                 if (getStageMangerConfigFile().exists() && getStageMangerConfigFile().isFile()) {
                     try {
                         acitivyStates.InputProfile = preferences.inputProfile();
-                        acitivyStates.profileState = States.connected;
                         stageMangerState = StageManagerStates.running;
-                        startStageManager();
+                        Document doc = startStageManager();
+                        if (isRFCOMM(doc.getChildNodes()))
+                            acitivyStates.profileState = States.undefined;
+                        else
+                            acitivyStates.profileState = States.connected;
                     } catch (Exception e) {
                         StringWriter sw = new StringWriter();
                         e.printStackTrace(new PrintWriter(sw));
@@ -235,12 +258,20 @@ public class SystemStatus {
         Refresh();
     }
 
-    private void startStageManager() {
+    private Document startStageManager() {
+        Document doc = null;
         acitivyStates.showCalibrationValuesError = false;
         lockUntilStageManagerIsRunning = true;
         if (stageManager != null && stageManager.isRunning)
             stageManager.stop();
         stageManager = new StageManager(mContext, getStageMangerConfigFile());
+        if (getStageMangerConfigFile() != null) {
+            try {
+                doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(getStageMangerConfigFile());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         try {
             stageManager.start();
         } catch (Exception e) {
@@ -248,6 +279,7 @@ public class SystemStatus {
                 stageManager.stop();
             throw e;
         }
+        return doc;
     }
 
     public void setActiveActivity(ActiviyRequestCode activity) {

@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
     private States profileState = States.undefined;
-    private long connectionFailsTimer = 0;
 
     private static Context context;
 
@@ -99,7 +98,14 @@ public class MainActivity extends AppCompatActivity {
                 .build());
          */
         super.onCreate(savedInstanceState);
-        connectionFailsTimer = System.currentTimeMillis();
+        SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
+        if (prefs.getLong("AppRestartForConnection", -1) == -1) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putLong("AppRestartForConnection", System.currentTimeMillis());
+            editor.commit();
+        }
+
+
         MainActivity.context = getApplicationContext();
         Thread.setDefaultUncaughtExceptionHandler(new myUncaughtExceptionHandler(this, MainActivity.class));
         setContentView(R.layout.activity_main);
@@ -571,9 +577,8 @@ public class MainActivity extends AppCompatActivity {
                     else {
                         if (acitivyStates.isCharging == false && acitivyStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                             SharedPreferences.Editor editor = prefs.edit();
-                            editor.putInt("AppRestartForConnection", 0);
+                            editor.putLong("AppRestartForConnection", System.currentTimeMillis());
                             editor.commit();
-                            connectionFailsTimer = System.currentTimeMillis();
                         }
                         findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
                     }
@@ -610,13 +615,9 @@ public class MainActivity extends AppCompatActivity {
                     battery_top.setLayoutParams(battery_topParams);
 
                     profileState = acitivyStates.profileState;
-                    int AppRestartForConnection = prefs.getInt("AppRestartForConnection",0);
+                    long AppRestartForConnection = prefs.getLong("AppRestartForConnection", System.currentTimeMillis());
                     if (acitivyStates.profileState == States.restart) {
-                        AppRestartForConnection += 1;
-                        LogIHAB.log("App Restart Connection Counter: " + AppRestartForConnection);
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putInt("AppRestartForConnection", AppRestartForConnection);
-                        editor.commit();
+                        LogIHAB.log("App Restarts because of Connection Issues");
                         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                         if (mBluetoothAdapter.isEnabled())
                             mBluetoothAdapter.disable();
@@ -626,10 +627,16 @@ public class MainActivity extends AppCompatActivity {
                         MainActivity.this.startActivity(intent);    // Start the launch activity
                         System.exit(0);    // System finishes and automatically relaunches us.
                     }
-                    else if (acitivyStates.profileState == States.connected)
+                    else if (acitivyStates.profileState == States.connected) {
+                        if (AppRestartForConnection < System.currentTimeMillis()) {
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putLong("AppRestartForConnection", System.currentTimeMillis() + 10 * 1000);
+                            editor.commit();
+                        }
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
+                    }
                     else {
-                        if (profileState == States.connecting && AppRestartForConnection >= 3 && System.currentTimeMillis() - connectionFailsTimer >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                        if (profileState == States.connecting && System.currentTimeMillis() - AppRestartForConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
                             InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
                     }
@@ -660,6 +667,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (controlService != null) {
+            if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal()) {
+                SharedPreferences prefs = context.getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putLong("AppRestartForConnection", System.currentTimeMillis() + 20 * 1000);
+                editor.commit();
+
+            }
             if (requestCode == ActiviyRequestCode.DEVICE_ADMIN.ordinal()) {
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(MainActivity.this, "You have enabled the Admin Device features", Toast.LENGTH_SHORT).show();
