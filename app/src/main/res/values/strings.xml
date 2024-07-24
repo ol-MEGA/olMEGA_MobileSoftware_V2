@@ -2,6 +2,7 @@
     <string name="app_name">olMEGA</string>
     <string name="buttonTextFinish">Push to complete</string>
     <string name="infoTextRevert">Data was reverted</string>
+    <string name="infoTextCancel">Questionnaire was cancelled by user</string>
     <string name="infoTextSave">Data was saved</string>
     <string name="infoError">Error</string>
     <string name="infoCharging">Charging</string>

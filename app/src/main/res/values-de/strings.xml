@@ -2,6 +2,7 @@
     <string name="app_name">olMEGA</string>
     <string name="buttonTextFinish">Abschließen</string>
     <string name="infoTextRevert">Daten wurden verworfen</string>
+    <string name="infoTextCancel">Fragebogen wurde durch Benutzer abgebrochen</string>
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="infoError">Fehler</string>
     <string name="infoCharging">Gerät wird geladen</string>
