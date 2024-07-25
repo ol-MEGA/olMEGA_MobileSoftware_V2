@@ -99,9 +99,11 @@ public class MainActivity extends AppCompatActivity {
          */
         super.onCreate(savedInstanceState);
         SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
-        if (prefs.getLong("AppRestartForConnection", -1) == -1) {
+        long AppRestartForFailedConnection = -1;
+        AppRestartForFailedConnection = prefs.getLong("AppRestartForFailedConnection", -1);
+        if (AppRestartForFailedConnection == -1) {
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putLong("AppRestartForConnection", System.currentTimeMillis());
+            editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
             editor.commit();
         }
 
@@ -577,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
                     else {
                         if (acitivyStates.isCharging == false && acitivyStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                             SharedPreferences.Editor editor = prefs.edit();
-                            editor.putLong("AppRestartForConnection", System.currentTimeMillis());
+                            editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
                             editor.commit();
                         }
                         findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
@@ -615,7 +617,7 @@ public class MainActivity extends AppCompatActivity {
                     battery_top.setLayoutParams(battery_topParams);
 
                     profileState = acitivyStates.profileState;
-                    long AppRestartForConnection = prefs.getLong("AppRestartForConnection", System.currentTimeMillis());
+                    long AppRestartForFailedConnection = prefs.getLong("AppRestartForFailedConnection", System.currentTimeMillis());
                     if (acitivyStates.profileState == States.restart) {
                         LogIHAB.log("App Restarts because of Connection Issues");
                         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -628,15 +630,15 @@ public class MainActivity extends AppCompatActivity {
                         System.exit(0);    // System finishes and automatically relaunches us.
                     }
                     else if (acitivyStates.profileState == States.connected) {
-                        if (AppRestartForConnection < System.currentTimeMillis()) {
+                        if (AppRestartForFailedConnection < System.currentTimeMillis()) {
                             SharedPreferences.Editor editor = prefs.edit();
-                            editor.putLong("AppRestartForConnection", System.currentTimeMillis() + 10 * 1000);
+                            editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 10 * 1000);
                             editor.commit();
                         }
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
                     }
                     else {
-                        if (profileState == States.connecting && System.currentTimeMillis() - AppRestartForConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                        if (profileState == States.connecting && controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() > 0 && System.currentTimeMillis() - AppRestartForFailedConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
                             InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
                     }
@@ -670,7 +672,7 @@ public class MainActivity extends AppCompatActivity {
             if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal()) {
                 SharedPreferences prefs = context.getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
-                editor.putLong("AppRestartForConnection", System.currentTimeMillis() + 20 * 1000);
+                editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 20 * 1000);
                 editor.commit();
 
             }

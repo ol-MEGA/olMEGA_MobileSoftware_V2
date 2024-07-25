@@ -118,10 +118,10 @@ public class PreferencesActivity extends PreferenceActivity {
                 public boolean onPreferenceChange(Preference preference, Object newVal) {
                     final double value = Double. parseDouble((String)newVal);
                     if (value < 0.0)
-                        Toast.makeText(getActivity(), "Value must be greater than 0 Minutes!", Toast.LENGTH_LONG).show();
-                    else if (value > 5.0)
-                        Toast.makeText(getActivity(), "Value must be less than 5 Minutes!", Toast.LENGTH_LONG).show();
-                    return ! (value < 0.0 || value > 5);
+                        Toast.makeText(getActivity(), "Value must be greater or equal than 0 Minutes!", Toast.LENGTH_LONG).show();
+                    else if (value > 60.0)
+                        Toast.makeText(getActivity(), "Value must be less or equal than 60 Minutes!", Toast.LENGTH_LONG).show();
+                    return ! (value < 0.0 || value > 60);
                 }
             });
             Preference DisabledeviceOwnerPref = (Preference) findPreference("disableDeviceAdmin");

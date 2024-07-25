@@ -92,7 +92,7 @@
     <string name="pref_maxBrightness_summary">Display immer hell</string>
     <string name="pref_operationMode_title">Input-Modus</string>
     <string name="pref_timeoutForTransmitterNotFoundMessage">Timeout für \"Transmitter neu starten\" Hinweis (in Minuten)</string>
-    <string name="pref_timeoutForTransmitterNotFoundMessage_summary">Dezimalzahlen zwischen 0.0 und 5.0 sind möglich</string>
+    <string name="pref_timeoutForTransmitterNotFoundMessage_summary">Dezimalzahlen zwischen 0 und 60 sind möglich</string>
     <string name="pref_samplerate_title">Sampling Frequenz</string>
     <string name="pref_samplerate_summary">Sampling Frequenz in Hz</string>
     <string name="pref_chunklengthInS_title">Cache Größe in Sekunden</string>
