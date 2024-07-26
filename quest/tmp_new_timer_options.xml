@@ -3,10 +3,10 @@
 
     /*This is where the timer values are modified. Mean and Deviation create an interval in which
     random times are generated.*/
-    <timer mean="1800" deviation="300"></timer> // randomised alarm interval
+    //<timer mean="1800" deviation="300"></timer> // randomised alarm interval
 	//<timer date="12:18;13:13;14:41"></timer> // exact dates where alarm is triggered
-	//<timer between="09:00-10:30;13:00-14:00;18:43-18:44"></timer> // always one random interrupt during time frame
-	<donotdisturb between="22:00-09:00"></donotdisturb> // blackout interval in which no random alarm is triggered
+	<timer interval="09:00-10:30;13:00-14:00;18:43-18:44"></timer> // always one random interrupt during time frame
+	//<donotdisturb between="22:00-09:00"></donotdisturb> // blackout interval in which no random alarm is triggered
 
         <title>
             <text>Template</text>

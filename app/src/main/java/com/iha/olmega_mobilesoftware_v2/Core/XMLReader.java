@@ -107,7 +107,7 @@ public class XMLReader {
             }
 
             // timer set once between each set of start and stop
-            if (timerTemp[1].split("between").length > 1) {
+            if (timerTemp[1].split("interval").length > 1) {
                 try {
                     mBetweenList = new ArrayList<>();
 
@@ -156,7 +156,7 @@ public class XMLReader {
                 } catch (Exception e) {
                     Log.e(LOG, "Invalid date specified.");
                 }
-                mTimerLayout = "between";
+                mTimerLayout = "interval";
                 use_timer = true;
             }
         }
@@ -212,7 +212,7 @@ public class XMLReader {
 
         return head;
     }
-    
+
     private String extractSurveyURI(String inString) {
         return inString;
     }
@@ -319,7 +319,7 @@ public class XMLReader {
                 mTimerInterval +=  + 24 * 60 * 60 + 60 * 60;
             }
 
-        } else if (mTimerLayout.equalsIgnoreCase("between"))  {
+        } else if (mTimerLayout.equalsIgnoreCase("interval"))  {
             // one alarm is set randomly for each user specified interval using uniform distribution
 
             // current time in hours and minutes
