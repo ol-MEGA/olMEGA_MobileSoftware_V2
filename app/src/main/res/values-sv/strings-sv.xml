@@ -67,8 +67,10 @@
     <string name="pref_button_scan_title">Connect</string>
     <string name="pref_button_scan_summary">Scan Devices</string>
     <string name="pref_show_activateTimer_title">Show Countdown</string>
+    <string name="pref_is_Questionnaire_Cancelable">is Questionnaire Cancelable</string>
     <string name="pref_use_questionnaire_title">Use Questionnaire</string>
     <string name="pref_show_activateTimer_summary">Display questionnaire timer, if activated</string>
+    <string name="pref_allow_Silent_Alarm">Allow Silent Alarm</string>
     <string name="pref_usbCutsConnection">USB cuts Connection</string>
     <string name="pref_usbCutsDataStorage">USB cuts Data Storage</string>
     <string name="pref_isKioskModeNecessary">Kiosk Mode</string>

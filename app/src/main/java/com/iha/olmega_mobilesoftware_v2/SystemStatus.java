@@ -133,7 +133,7 @@ public class SystemStatus {
                 LogIHAB.log("StateCharging");
             acitivyStates.BatteryState = (acitivyStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : acitivyStates.batteryLevel >= batteryStates[1] && acitivyStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
             // Charging State
-            if (curentActivity != ActiviyRequestCode.MainActivity)
+            if (curentActivity != ActiviyRequestCode.MainActivity && curentActivity != ActiviyRequestCode.HelpActiviy)
                 raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
             if ((!preferences.isAdmin() && (!Preferences().isInKioskMode && Preferences().isKioskModeNecessary())) || (acitivyStates.isCharging && (Preferences().usbCutsConnection() || Preferences().usbCutsDataStorage())) || (curentActivity == ActiviyRequestCode.PreferencesActivity)) {
                 if (curentActivity != ActiviyRequestCode.PreferencesActivity && !Preferences().isInKioskMode && Preferences().isKioskModeNecessary()) {

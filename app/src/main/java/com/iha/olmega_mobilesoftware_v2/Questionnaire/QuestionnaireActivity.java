@@ -29,7 +29,7 @@ public class QuestionnaireActivity extends AppCompatActivity {
     public static AppCompatActivity thisAppCompatActivity;
     public ViewPager mViewPager;
     private QuestionnairePagerAdapter mAdapter;
-    private boolean forceAnswer, isAdmin;
+    private boolean forceAnswer, isAdmin, isQuestionnaireCancelable;
     String clientID, selectedQuest;
     private int falseSwipes = 0;
     private static boolean bRecordSwipes = true;
@@ -43,6 +43,9 @@ public class QuestionnaireActivity extends AppCompatActivity {
         isAdmin = getIntent().getExtras().getBoolean("isAdmin");
         clientID = getIntent().getExtras().getString("clientID");
         selectedQuest = getIntent().getExtras().getString("selectedQuest");
+        isQuestionnaireCancelable = getIntent().getExtras().getBoolean("isQuestionnaireCancelable");
+        if (isQuestionnaireCancelable == false)
+            findViewById(R.id.Action_Cancel).setVisibility(View.GONE);
 
         mViewPager = null;
         mViewPager = findViewById(R.id.viewpager);

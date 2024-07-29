@@ -98,6 +98,26 @@
             android:title="@string/pref_show_activateTimer_title"
             android:summary="@string/pref_show_activateTimer_summary" />
 
+        <SwitchPreference
+            android:dependency="useQuestionnaire"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:checked="false"
+            android:key="isQuestionnaireCancelable"
+            android:title="@string/pref_is_Questionnaire_Cancelable"
+            />
+
+        <SwitchPreference
+            android:dependency="useQuestionnaire"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:checked="false"
+            android:key="allowSilentAlarm"
+            android:title="@string/pref_allow_Silent_Alarm"
+            />
+
         <EditTextPreference
             android:dependency="useQuestionnaire"
             android:layout_width="wrap_content"
