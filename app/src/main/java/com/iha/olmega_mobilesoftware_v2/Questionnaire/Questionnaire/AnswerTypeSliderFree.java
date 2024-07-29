@@ -63,9 +63,6 @@ private QuestionText mQuestion;
 
         mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive) ;
 
-        Log.e(LOG, "USABLEHEIGHT:" + mUsableHeight);
-
-
         /**
          *
          *  |           mHorizontalContainer          |
@@ -114,12 +111,6 @@ private QuestionText mQuestion;
     }
 
     public void buildView() {
-
-        Log.e(LOG, "NUMBER: " + mListOfAnswers.size());
-        for (int iTmp = 0; iTmp < mListOfAnswers.size(); iTmp++) {
-            Log.e(LOG, "ans: " + mListOfAnswers.get(iTmp));
-        }
-
 
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {

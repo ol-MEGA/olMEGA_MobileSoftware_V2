@@ -34,13 +34,6 @@ public class AnswerTypeRadio extends AnswerType {
 
         super(context, questionnaire, qParent, nQuestionId);
 
-        //mContext = context;
-        //mQuestionnaire = questionnaire;
-        //mParent = parent;
-        //mQuestionId = Id;
-
-        //mListOfAnswers = new ArrayList<>();
-
         // Answer Buttons of type "radio" are grouped and handled together
         mRadioGroup = new RadioGroup(mContext);
         mRadioGroup.setOrientation(RadioGroup.VERTICAL);
