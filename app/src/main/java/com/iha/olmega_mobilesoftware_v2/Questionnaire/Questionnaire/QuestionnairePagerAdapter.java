@@ -45,6 +45,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager = viewPager;
         isImmersive = immersive;
         // Set controls and listeners
+        mQuestionnaireActivity.findViewById(R.id.Action_Cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mQuestionnaireActivity, R.string.infoTextCancel, Toast.LENGTH_SHORT).show();
+                mQuestionnaireActivity.finish();
+            }
+        });
         mQuestionnaireActivity.findViewById(R.id.Action_Back).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

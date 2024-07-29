@@ -217,11 +217,11 @@ public class MetaData extends AppCompatActivity {
     }
 
     private String generateFileName() {
-        return getDeviceId() + "_" + generateTimeNowFilename() + ".xml";
+        return getOlmegaDeviceId() + "_" + generateTimeNowFilename() + ".xml";
     }
 
     private String generateQuestId() {
-        return getDeviceId() + "_" + getStartDateUTC();
+        return getOlmegaDeviceId() + "_" + getStartDateUTC();
     }
 
     private String generateDeviceId() {
@@ -247,7 +247,7 @@ public class MetaData extends AppCompatActivity {
         return KEY_QUESTID;
     }
 
-    private String getDeviceId() {
+    private String getOlmegaDeviceId() {
         return DEVICE_Id;
     }
 

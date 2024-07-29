@@ -74,7 +74,7 @@ public class ControlService extends Service {
             assert manager != null;
             manager.createNotificationChannel(chan);
 
-            PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
+            PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_IMMUTABLE);
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
             Notification notification = notificationBuilder.setOngoing(true)
                     .setSmallIcon(R.drawable.logo)

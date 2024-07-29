@@ -1,5 +1,6 @@
 package com.iha.olmega_mobilesoftware_v2;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -60,6 +61,7 @@ import java.util.Date;
 import java.util.List;
 
 
+@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class MainActivity extends AppCompatActivity {
     private String TAG = this.getClass().getSimpleName();
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
@@ -68,10 +70,22 @@ public class MainActivity extends AppCompatActivity {
     private DevicePolicyManager mDevicePolicyManager;
     private ComponentName mAdminComponentName;
     private String[] neccessaryPermissions = {
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.RECEIVE_BOOT_COMPLETED,
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.WAKE_LOCK,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.VIBRATE,
+            Manifest.permission.DISABLE_KEYGUARD,
+            Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.INTERNET,
-            Manifest.permission.ACCESS_NETWORK_STATE
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
     private int neccessaryPermissionsIdx = 0;
     private boolean isLocked = false;
@@ -106,7 +120,6 @@ public class MainActivity extends AppCompatActivity {
             editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
             editor.commit();
         }
-
 
         MainActivity.context = getApplicationContext();
         Thread.setDefaultUncaughtExceptionHandler(new myUncaughtExceptionHandler(this, MainActivity.class));
@@ -152,6 +165,34 @@ public class MainActivity extends AppCompatActivity {
             };
         });
 
+
+        findViewById(R.id.disableVibration).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        timerLongClick.start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        timerLongClick.cancel();
+                        break;
+                }
+                return false;
+            }
+            private long durationLongClick = 5 * 1000;
+            private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
+                @Override
+                public void onTick(long l) {
+                }
+                @Override
+                public void onFinish() {
+                    controlService.Status().Preferences().silentAlarmActive = !controlService.Status().Preferences().silentAlarmActive;
+                    updateDisableVibration();
+                }
+            };
+        });
+
+
         findViewById(R.id.InfoTextView).setOnTouchListener(new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -190,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         });
-
         /*
         findViewById(R.id.InfoTextView).setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
@@ -207,9 +247,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-
          */
-
         final Handler dateTimeHandler = new Handler(Looper.myLooper());
         dateTimeHandler.postDelayed(new Runnable() {
             public synchronized void run() {
@@ -226,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
-                    if (automaticQuestTimer >= 29 * 60) {
+                    if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                         LogIHAB.log("Vibration: 500");
                     }
@@ -277,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkPermission() {
         if (neccessaryPermissionsIdx < neccessaryPermissions.length) {
-            if (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED) {
+            if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.WRITE_EXTERNAL_STORAGE && neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.READ_EXTERNAL_STORAGE)) && (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED)) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{neccessaryPermissions[neccessaryPermissionsIdx]}, 1);
             } else {
                 neccessaryPermissionsIdx++;
@@ -385,6 +423,7 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("clientID", controlService.Status().Preferences().clientID());
             QuestionaireIntent.putExtra("selectedQuest", controlService.Status().Preferences().selectedQuest());
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
+            QuestionaireIntent.putExtra("isQuestionnaireCancelable", controlService.Status().Preferences().isQuestionnaireCancelable());
             questionnaireMotivation = QuestionnaireMotivation.manual;
             startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
         }
@@ -457,6 +496,15 @@ public class MainActivity extends AppCompatActivity {
         if (mIsBound) {
             unbindService(mServiceConnection);
             mIsBound = false;
+        }
+    }
+
+    private void updateDisableVibration() {
+        if (controlService.Status().Preferences().silentAlarmActive == false) {
+            findViewById(R.id.disableVibration).setBackgroundResource(R.color.lighterGray);
+        }
+        else {
+            findViewById(R.id.disableVibration).setBackgroundResource(R.color.colorAccent);
         }
     }
 
@@ -571,6 +619,13 @@ public class MainActivity extends AppCompatActivity {
                 public void setAcitivyStates(AcitivyStates acitivyStates) {
                     SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
+                    if (controlService.Status().Preferences().allowSilentAlarm() == false && findViewById(R.id.disableVibration).getVisibility() != View.GONE) {
+                        findViewById(R.id.disableVibration).setVisibility(View.GONE);
+                        if (controlService.Status().Preferences().silentAlarmActive == true) {
+                            controlService.Status().Preferences().silentAlarmActive = false;
+                            updateDisableVibration();
+                        }
+                    }
                     if (acitivyStates.isCharging && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                         if (QuestionnaireActivity.thisAppCompatActivity != null)
                             QuestionnaireActivity.thisAppCompatActivity.finish();
@@ -588,6 +643,8 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
                     InfoTextView.setText(acitivyStates.InfoText);
                     questionaireEnabled = acitivyStates.questionaireEnabled;
+                    if (questionaireEnabled && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
+                        findViewById(R.id.disableVibration).setVisibility(View.VISIBLE);
                     if (controlService.Status().Preferences().isAdmin())
                         findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
                     else if (controlService.Status().Preferences().configHasErrors)

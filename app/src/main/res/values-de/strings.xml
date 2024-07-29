@@ -2,6 +2,7 @@
     <string name="app_name">olMEGA</string>
     <string name="buttonTextFinish">Abschließen</string>
     <string name="infoTextRevert">Daten wurden verworfen</string>
+    <string name="infoTextCancel">Fragebogen wurde durch Benutzer abgebrochen</string>
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="infoError">Fehler</string>
     <string name="infoCharging">Gerät wird geladen</string>
@@ -69,8 +70,10 @@
     <string name="pref_button_scan_title">Verbinden</string>
     <string name="pref_button_scan_summary">Scanne Geräte</string>
     <string name="pref_show_activateTimer_title">Countdown anzeigen</string>
+    <string name="pref_is_Questionnaire_Cancelable">Fragebogen abbrechbar</string>
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
+    <string name="pref_allow_Silent_Alarm">Leisen Alarm erlauben</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
     <string name="pref_usbCutsDataStorage">USB unterbindet Speicherung der Audiodaten</string>
     <string name="pref_isKioskModeNecessary">Kiosk Mode</string>

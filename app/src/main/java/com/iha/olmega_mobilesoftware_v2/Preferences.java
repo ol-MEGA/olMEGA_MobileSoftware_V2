@@ -16,6 +16,7 @@ public class Preferences {
     public boolean isInKioskMode = false;
     public boolean isDeviceOwner = false;
     public boolean configHasErrors = false;
+    public boolean silentAlarmActive = false;
     //private Context mContext = null;
 
     public Preferences(Context mcontext) {
@@ -43,6 +44,8 @@ public class Preferences {
     //public String installNewApp() {return sharedPreferences.getString("installNewApp", "");}
     public boolean showQuestionnaireTimer() {return sharedPreferences.getBoolean("showQuestionnaireTimer", true);}
     public boolean useQuestionnaire() {return sharedPreferences.getBoolean("useQuestionnaire", false);}
+    public boolean isQuestionnaireCancelable() {return sharedPreferences.getBoolean("isQuestionnaireCancelable", false);}
+    public boolean allowSilentAlarm() {return sharedPreferences.getBoolean("allowSilentAlarm", false);}
     public String clientID()  {return sharedPreferences.getString("clientID", "0000");}
     public String selectedQuest()  {return sharedPreferences.getString("selectedQuest", "");}
     public String inputProfile() {

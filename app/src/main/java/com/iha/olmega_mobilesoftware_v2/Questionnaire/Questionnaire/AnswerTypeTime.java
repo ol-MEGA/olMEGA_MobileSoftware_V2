@@ -30,13 +30,9 @@ public class AnswerTypeTime extends AppCompatActivity {
         mQuestionnaire = questionnaire;
         mQuestionId = questionId;
         DATE_FORMAT = new SimpleDateFormat("HH:mm", Locale.ROOT);
-
-        Log.e(LOG, "TIME INIT");
     }
 
     public void addAnswer(int nAnswerId, String sAnswer) {
-
-        Log.e(LOG, "TIME ADDED");
 
         try {
 
