@@ -102,15 +102,17 @@
             android:textColor="@color/TextColor_Light"
             android:textSize="18sp" />
 
-        <ImageView
+        <Button
             android:id="@+id/disableVibration"
             android:layout_width="match_parent"
             android:layout_height="200px"
             android:background="@color/lighterGray"
+            android:foreground="@drawable/centered_vibration"
+            android:foregroundGravity="fill_vertical|center_horizontal"
             android:paddingTop="20px"
-            android:paddingEnd="20px"
-            android:visibility="gone"
-            app:srcCompat="@drawable/vibration" />
+            android:paddingEnd="20px" />
+            <!-- android:visibility="gone"-->
+
         <Space
             android:layout_width="match_parent"
             android:layout_height="match_parent"

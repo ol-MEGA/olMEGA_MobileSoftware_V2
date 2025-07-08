@@ -118,6 +118,13 @@
             android:title="@string/pref_allow_Silent_Alarm"
             />
 
+        <EditTextPreference android:title="@string/pref_vibrationDuration"
+            android:dependency="useQuestionnaire"
+            android:defaultValue = "60"
+            android:key="vibrationDuration"
+            android:inputType="numberDecimal"
+            android:digits="0123456789."
+            />
         <EditTextPreference
             android:dependency="useQuestionnaire"
             android:layout_width="wrap_content"

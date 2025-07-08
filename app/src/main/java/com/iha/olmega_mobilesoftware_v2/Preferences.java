@@ -51,6 +51,13 @@ public class Preferences {
     public String inputProfile() {
         return sharedPreferences.getString("inputProfile", "");
     }
+    public int vibrationDuration()  {
+        try {
+            return Integer.parseInt(sharedPreferences.getString("vibrationDuration", "60"));
+        } catch(NumberFormatException nfe) {
+            return 30;
+        }
+    }
     public int timeoutForTransmitterNotFoundMessage()  {
         try {
             return Integer.parseInt(sharedPreferences.getString("timeoutForTransmitterNotFoundMessage", "1"));
