@@ -255,6 +255,7 @@ public class SystemStatus {
     public void ResetAutomaticQuestionaireTimer() {
         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
         acitivyStates.isAutomaticQuestionaireActive = false;
+        mySystemStatusListener.updateAutomaticQuestionnaireTimer("", Long.MIN_VALUE);
         Refresh();
     }
 

@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
-                    if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
+                    if (automaticQuestTimer > (30 * 60 - controlService.Status().Preferences().vibrationDuration()) && controlService.Status().Preferences().silentAlarmActive == false) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                         LogIHAB.log("Vibration: 500");
                     }
@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkPermission() {
         if (neccessaryPermissionsIdx < neccessaryPermissions.length) {
-            if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.WRITE_EXTERNAL_STORAGE && neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.READ_EXTERNAL_STORAGE)) && (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED)) {
+            if (!(Build.VERSION.SDK_INT <= Build.VERSION_CODES.R && (neccessaryPermissions[neccessaryPermissionsIdx] == Manifest.permission.BLUETOOTH_CONNECT || neccessaryPermissions[neccessaryPermissionsIdx] == Manifest.permission.WRITE_EXTERNAL_STORAGE)) && (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.WRITE_EXTERNAL_STORAGE && neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.READ_EXTERNAL_STORAGE)) && (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED)) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{neccessaryPermissions[neccessaryPermissionsIdx]}, 1);
             } else {
                 neccessaryPermissionsIdx++;
@@ -425,6 +425,7 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
             QuestionaireIntent.putExtra("isQuestionnaireCancelable", controlService.Status().Preferences().isQuestionnaireCancelable());
             questionnaireMotivation = QuestionnaireMotivation.manual;
+            automaticQuestTimer = Long.MIN_VALUE;
             startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
         }
         else if (controlService == null)
@@ -501,10 +502,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateDisableVibration() {
         if (controlService.Status().Preferences().silentAlarmActive == false) {
-            findViewById(R.id.disableVibration).setBackgroundResource(R.color.lighterGray);
+            findViewById(R.id.disableVibration).setBackgroundColor(ContextCompat.getColor(this, R.color.lighterGray));
         }
         else {
-            findViewById(R.id.disableVibration).setBackgroundResource(R.color.colorAccent);
+            findViewById(R.id.disableVibration).setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
         }
     }
 
@@ -731,7 +732,6 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 20 * 1000);
                 editor.commit();
-
             }
             if (requestCode == ActiviyRequestCode.DEVICE_ADMIN.ordinal()) {
                 if (resultCode == Activity.RESULT_OK) {
@@ -744,6 +744,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             else if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal()) { // && resultCode == Activity.RESULT_OK) {
+                automaticQuestTimer = Long.MIN_VALUE;
                 questionnaireMotivation = QuestionnaireMotivation.manual;
                 controlService.Status().ResetAutomaticQuestionaireTimer();
             } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {

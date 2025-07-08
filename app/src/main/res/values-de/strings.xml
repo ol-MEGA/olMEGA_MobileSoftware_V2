@@ -74,6 +74,7 @@
     <string name="pref_use_questionnaire_title">Fragebogen nutzen</string>
     <string name="pref_show_activateTimer_summary">Zeige Fragebogen Timer, wenn dieser aktiv ist</string>
     <string name="pref_allow_Silent_Alarm">Leisen Alarm erlauben</string>
+    <string name="pref_vibrationDuration">Dauer Vibration in s</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
     <string name="pref_usbCutsDataStorage">USB unterbindet Speicherung der Audiodaten</string>
     <string name="pref_isKioskModeNecessary">Kiosk Mode</string>
@@ -106,5 +107,6 @@
     <string name="pref_filterHpFrequency_title">Grenzfrequenz in Hz</string>
     <string name="pref_downsample_title">Downsampling</string>
     <string name="pref_downsample_summary">Audio downsamplen (Faktor 2)</string>
+    <string name="notification_hour_name">Hour</string>
 
 </resources>
