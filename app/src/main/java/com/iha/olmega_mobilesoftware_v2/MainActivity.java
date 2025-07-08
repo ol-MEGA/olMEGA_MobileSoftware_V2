@@ -40,7 +40,6 @@ import android.view.WindowInsetsController;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageRFCOMM;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
@@ -51,8 +50,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -264,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                     else
                         findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                 }
-                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
+                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActivityRequestCode.MainActivity) {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
                     if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
@@ -310,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (controlService != null && controlService.Status() != null && controlService.Status().getCurentActivity() == ActiviyRequestCode.MainActivity) {
+        if (controlService != null && controlService.Status() != null && controlService.Status().getCurentActivity() == ActivityRequestCode.MainActivity) {
             LogIHAB.log("   AppClosed");
             AppClosed = true;
         }
@@ -416,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
         TextView InfoTextView = findViewById(R.id.InfoTextView);
         if (controlService != null && InfoTextView.isEnabled() && isLocked == false) {
             isLocked = true;
-            controlService.Status().setActiveActivity(ActiviyRequestCode.QuestionnaireActivity);
+            controlService.Status().setActiveActivity(ActivityRequestCode.QuestionnaireActivity);
             automaticQuestTimer = Long.MIN_VALUE;
             setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
@@ -428,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
             QuestionaireIntent.putExtra("motivation", questionnaireMotivation.toString());
             QuestionaireIntent.putExtra("isQuestionnaireCancelable", controlService.Status().Preferences().isQuestionnaireCancelable());
             questionnaireMotivation = QuestionnaireMotivation.manual;
-            startActivityForResult(QuestionaireIntent, ActiviyRequestCode.QuestionnaireActivity.ordinal());
+            startActivityForResult(QuestionaireIntent, ActivityRequestCode.QuestionnaireActivity.ordinal());
         }
         else if (controlService == null)
             LogIHAB.log("startQuestionnaire()");
@@ -453,7 +450,7 @@ public class MainActivity extends AppCompatActivity {
         lockUntilResumeComplete.postDelayed(new Runnable() {
             public synchronized void run() {
                 if (controlService != null) {
-                    controlService.Status().setActiveActivity(ActiviyRequestCode.MainActivity);
+                    controlService.Status().setActiveActivity(ActivityRequestCode.MainActivity);
                     isLocked = false;
                 }
                 else
@@ -514,20 +511,20 @@ public class MainActivity extends AppCompatActivity {
     private void showPreferences(boolean show) {
         if (show && isLocked == false) {
             isLocked = true;
-            controlService.Status().setActiveActivity(ActiviyRequestCode.PreferencesActivity);
+            controlService.Status().setActiveActivity(ActivityRequestCode.PreferencesActivity);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
             setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
             Intent intent = new Intent(controlService, PreferencesActivity.class);
             intent.putExtra("isDeviceOwner", controlService.Status().Preferences().isDeviceOwner);
-            startActivityForResult(intent, ActiviyRequestCode.PreferencesActivity.ordinal());
+            startActivityForResult(intent, ActivityRequestCode.PreferencesActivity.ordinal());
         }
     }
 
     private void createHelpScreen() {
         if (isLocked == false) {
             isLocked = true;
-            controlService.Status().setActiveActivity(ActiviyRequestCode.HelpActiviy);
+            controlService.Status().setActiveActivity(ActivityRequestCode.HelpActiviy);
             TextView InfoTextView = findViewById(R.id.InfoTextView);
             setInfoTextView(false);
             InfoTextView.setText(R.string.pleaseWait);
@@ -619,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
             checkWifi();
             controlService.Status().writePreferencesToLog();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
-                public void setAcitivyStates(AcitivyStates acitivyStates) {
+                public void setAcitivyStates(ActivityStates activityStates) {
                     SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
                     TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
                     if (controlService.Status().Preferences().allowSilentAlarm() == false && findViewById(R.id.disableVibration).getVisibility() != View.GONE) {
@@ -629,13 +626,13 @@ public class MainActivity extends AppCompatActivity {
                             updateDisableVibration();
                         }
                     }
-                    if (acitivyStates.isCharging && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
+                    if (activityStates.isCharging && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                         if (QuestionnaireActivity.thisAppCompatActivity != null)
                             QuestionnaireActivity.thisAppCompatActivity.finish();
                         findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.gray_400, getTheme()));
                     }
                     else {
-                        if (acitivyStates.isCharging == false && acitivyStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
+                        if (activityStates.isCharging == false && activityStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
                             editor.commit();
@@ -643,7 +640,7 @@ public class MainActivity extends AppCompatActivity {
                         findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
                     }
                     // start Questionnaire based on (acoustic) event
-                    if (acitivyStates.startEventQuestionnaire) {
+                    if (activityStates.startEventQuestionnaire) {
                         // check for timeout of event-based questionnaire
                         Log.d("EVENT", "Event-based Questionnaire requested");
                         if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
@@ -657,10 +654,10 @@ public class MainActivity extends AppCompatActivity {
 
 
                     }
-                    findViewById(R.id.Layout_CalibrationValues).setVisibility((acitivyStates.showCalibrationValuesError ? 0 : 1) * 8);
-                    findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);
-                    InfoTextView.setText(acitivyStates.InfoText);
-                    questionaireEnabled = acitivyStates.questionaireEnabled;
+                    findViewById(R.id.Layout_CalibrationValues).setVisibility((activityStates.showCalibrationValuesError ? 0 : 1) * 8);
+                    findViewById(R.id.charging).setVisibility((activityStates.isCharging ? 0 : 1) * 8);
+                    InfoTextView.setText(activityStates.InfoText);
+                    questionaireEnabled = activityStates.questionaireEnabled;
                     if (questionaireEnabled && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
                         findViewById(R.id.disableVibration).setVisibility(View.VISIBLE);
                     if (controlService.Status().Preferences().isAdmin())
@@ -670,7 +667,7 @@ public class MainActivity extends AppCompatActivity {
                     else
                         findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
                     View battery_bottom = findViewById(R.id.battery_bottom);
-                    switch (acitivyStates.BatteryState) {
+                    switch (activityStates.BatteryState) {
                         case Normal:
                             battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
                             break;
@@ -683,17 +680,17 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // Batterie Level
                     ViewGroup.LayoutParams battery_bottomParams = findViewById(R.id.battery_bottom).getLayoutParams();
-                    battery_bottomParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (acitivyStates.batteryLevel / 100));
+                    battery_bottomParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (activityStates.batteryLevel / 100));
                     battery_bottom.setLayoutParams(battery_bottomParams);
 
                     View battery_top = findViewById(R.id.battery_top);
                     ViewGroup.LayoutParams battery_topParams = battery_top.getLayoutParams();
-                    battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - acitivyStates.batteryLevel / 100));
+                    battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - activityStates.batteryLevel / 100));
                     battery_top.setLayoutParams(battery_topParams);
 
-                    profileState = acitivyStates.profileState;
+                    profileState = activityStates.profileState;
                     long AppRestartForFailedConnection = prefs.getLong("AppRestartForFailedConnection", System.currentTimeMillis());
-                    if (acitivyStates.profileState == States.restart) {
+                    if (activityStates.profileState == States.restart) {
                         LogIHAB.log("App Restarts because of Connection Issues");
                         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                         if (mBluetoothAdapter.isEnabled())
@@ -704,7 +701,7 @@ public class MainActivity extends AppCompatActivity {
                         MainActivity.this.startActivity(intent);    // Start the launch activity
                         System.exit(0);    // System finishes and automatically relaunches us.
                     }
-                    else if (acitivyStates.profileState == States.connected) {
+                    else if (activityStates.profileState == States.connected) {
                         if (AppRestartForFailedConnection < System.currentTimeMillis()) {
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 10 * 1000);
@@ -744,14 +741,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (controlService != null) {
-            if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal()) {
+            if (requestCode == ActivityRequestCode.PreferencesActivity.ordinal()) {
                 SharedPreferences prefs = context.getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 20 * 1000);
                 editor.commit();
 
             }
-            if (requestCode == ActiviyRequestCode.DEVICE_ADMIN.ordinal()) {
+            if (requestCode == ActivityRequestCode.DEVICE_ADMIN.ordinal()) {
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(MainActivity.this, "You have enabled the Admin Device features", Toast.LENGTH_SHORT).show();
                     checkIsDeviceOwner();
@@ -761,10 +758,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Problem to enable the Admin Device features", Toast.LENGTH_SHORT).show();
                 }
             }
-            else if (requestCode == ActiviyRequestCode.QuestionnaireActivity.ordinal()) { // && resultCode == Activity.RESULT_OK) {
+            else if (requestCode == ActivityRequestCode.QuestionnaireActivity.ordinal()) { // && resultCode == Activity.RESULT_OK) {
                 questionnaireMotivation = QuestionnaireMotivation.manual;
                 controlService.Status().ResetAutomaticQuestionaireTimer();
-            } else if (requestCode == ActiviyRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
+            } else if (requestCode == ActivityRequestCode.PreferencesActivity.ordinal() && resultCode == Activity.RESULT_OK) {
                 if (data.getBooleanExtra("disableDeviceAdmin", false)) {
                     try {
                         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -787,7 +784,7 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                     intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, new ComponentName(this, AdminReceiver.class));
                     intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Device Admin for Kiosk Mode");
-                    startActivityForResult(intent, ActiviyRequestCode.DEVICE_ADMIN.ordinal());
+                    startActivityForResult(intent, ActivityRequestCode.DEVICE_ADMIN.ordinal());
                 }
                 controlService.Status().writePreferencesToLog();
                 if (data.getBooleanExtra("killAppAndService", false)) {

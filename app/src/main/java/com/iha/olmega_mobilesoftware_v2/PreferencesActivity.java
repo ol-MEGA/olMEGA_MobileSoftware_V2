@@ -35,7 +35,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.util.prefs.PreferenceChangeListener;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -158,7 +157,7 @@ public class PreferencesActivity extends PreferenceActivity {
             Preference LinkDevicePref = (Preference) findPreference("LinkDevice");
             LinkDevicePref.setOnPreferenceClickListener(arg0 -> {
                 Intent intent = new Intent(getActivity(), LinkDeviceHelper.class);
-                startActivityForResult(intent, ActiviyRequestCode.LinkDeviceHelper.ordinal());
+                startActivityForResult(intent, ActivityRequestCode.LinkDeviceHelper.ordinal());
                 return true;
             });
 

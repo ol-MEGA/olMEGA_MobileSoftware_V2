@@ -30,7 +30,7 @@ enum StageManagerStates {
 }
 
 
-enum ActiviyRequestCode {
+enum ActivityRequestCode {
     MainActivity,
     HelpActiviy,
     QuestionnaireActivity,
@@ -46,7 +46,7 @@ enum LinkHelperBluetoothStates {
     disconnected,
 }
 
-class AcitivyStates {
+class ActivityStates {
     public boolean isCharging = false;
     public boolean questionaireEnabled = false;
     public boolean isAutomaticQuestionaireActive = false;
