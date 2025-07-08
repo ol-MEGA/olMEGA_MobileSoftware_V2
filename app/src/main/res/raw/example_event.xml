@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<stage feature="StageAudioCapture" id="00">
+    <stage feature="StagePreHighpass" id="10" cutoff_hz="100">
+        <stage feature="StageQuestEvent" blocksize="16000" hopsize="16000" id="10" />
+    </stage>
+</stage>

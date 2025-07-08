@@ -9,6 +9,12 @@ public enum States {
     restart
 }
 
+enum QuestionnaireMotivation {
+    manual,
+    auto,
+    event
+}
+
 enum BatteryStates {
     undefined,
     Normal,
@@ -23,10 +29,6 @@ enum StageManagerStates {
     running
 }
 
-enum QuestionnaireMotivation {
-    manual,
-    auto
-}
 
 enum ActiviyRequestCode {
     MainActivity,
@@ -56,4 +58,5 @@ class AcitivyStates {
     public String InputProfile = "";
     public boolean showCalibrationValuesError = false;
     public boolean lastChargingState = false;
+    public boolean startEventQuestionnaire = false;
 }

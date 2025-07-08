@@ -88,6 +88,10 @@ public class SystemStatus {
                     acitivyStates.showCalibrationValuesError = intent.getBooleanExtra("Value", false);
                     Refresh();
                 }
+                else if (intent.getAction().equals("QuestionnaireEvent") && curentActivity != ActiviyRequestCode.PreferencesActivity) {
+                    acitivyStates.startEventQuestionnaire = intent.getBooleanExtra("Value", false);
+                    Refresh();
+                }
             }
         };
         taskHandler.postDelayed(AutomaticQuestionnaireRunnable, 1000);
@@ -97,6 +101,9 @@ public class SystemStatus {
         IntentFilter filter2 = new IntentFilter("CalibrationValuesError");
         filter2.setPriority(999);
         mContext.registerReceiver(mStageStateReceiver, filter2);
+        IntentFilter filter3 = new IntentFilter("QuestionnaireEvent");
+        filter3.setPriority(999);
+        mContext.registerReceiver(mStageStateReceiver, filter3);
 
         BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
         acitivyStates.batteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -110,11 +117,15 @@ public class SystemStatus {
     boolean isRFCOMM(NodeList nodes) {
         boolean hasRFCOMM = false;
         for (int i = 0; i < nodes.getLength(); i++) {
-            for (int n = 0; n < nodes.item(i).getAttributes().getLength(); n++) {
-                if (nodes.item(i).getAttributes().item(n).getNodeValue().equals("StageRFCOMM"))
-                    return true;
-                else if (hasRFCOMM == false && nodes.item(i).getChildNodes().getLength() > 0)
-                    hasRFCOMM = isRFCOMM(nodes.item(i).getChildNodes());
+            try {
+                for (int n = 0; n < nodes.item(i).getAttributes().getLength(); n++) {
+                    if (nodes.item(i).getAttributes().item(n).getNodeValue().equals("StageRFCOMM"))
+                        return true;
+                    else if (hasRFCOMM == false && nodes.item(i).getChildNodes().getLength() > 0)
+                        hasRFCOMM = isRFCOMM(nodes.item(i).getChildNodes());
+                }
+            } catch (Exception e) {
+                LogIHAB.log("Error while checking for RFCOMM: " + e.getMessage());
             }
         }
         return hasRFCOMM;
@@ -301,7 +312,7 @@ public class SystemStatus {
             if (acitivyStates.isAutomaticQuestionaireActive && raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && raiseAutomaticQuestionaire_TimerEventAt != Long.MAX_VALUE) {
                 String mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
                 String[] mTempTextCountDownRemaining = mCountDownString.split("%");
-                long remaining = (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis()) / 1000;
+                long remaining = (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis()) / 1000; // in seconds
                 long hoursRemaining = remaining / 60 / 60;
                 long minutesRemaining = (remaining - hoursRemaining * 60 * 60) / 60;
                 long secondsRemaining = remaining - hoursRemaining * 60 * 60 - minutesRemaining * 60;

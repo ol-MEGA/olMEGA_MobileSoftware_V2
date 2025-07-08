@@ -98,6 +98,7 @@ public class ControlService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service onStartCommand");
+        startForeground();
         return START_STICKY;
     }
 

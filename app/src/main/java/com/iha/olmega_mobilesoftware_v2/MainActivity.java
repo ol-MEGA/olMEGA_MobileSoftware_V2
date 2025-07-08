@@ -92,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
+    private long eventQuestTimeout = 1 * 60; // 30 minutes
+    private long eventQuestTimer = System.currentTimeMillis() / 1000 - eventQuestTimeout;
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
     private States profileState = States.undefined;
@@ -211,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // Timer enabling long click for user access to preferences menu
         private long durationLongClick = 2 * 1000;
+
         private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
             @Override
             public void onTick(long l) {}
@@ -638,6 +641,21 @@ public class MainActivity extends AppCompatActivity {
                             editor.commit();
                         }
                         findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
+                    }
+                    // start Questionnaire based on (acoustic) event
+                    if (acitivyStates.startEventQuestionnaire) {
+                        // check for timeout of event-based questionnaire
+                        Log.d("EVENT", "Event-based Questionnaire requested");
+                        if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
+                            questionnaireMotivation = QuestionnaireMotivation.event;
+                            eventQuestTimer = System.currentTimeMillis() / 1000; // set time time of event
+                            startQuestionnaire();
+                            Log.d("EVENT", "Event-based Questionnaire started");
+                        } else {
+                            Log.d("EVENT", "timeout active, no Questionnaire started");
+                        }
+
+
                     }
                     findViewById(R.id.Layout_CalibrationValues).setVisibility((acitivyStates.showCalibrationValuesError ? 0 : 1) * 8);
                     findViewById(R.id.charging).setVisibility((acitivyStates.isCharging ? 0 : 1) * 8);

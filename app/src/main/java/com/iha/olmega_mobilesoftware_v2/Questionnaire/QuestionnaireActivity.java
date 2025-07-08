@@ -123,7 +123,7 @@ public class QuestionnaireActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Starts a new questionnaire, motivation can be {"auto", "manual"}
+    // Starts a new questionnaire, motivation can be {"auto", "manual", "event"}
     private void startQuestionnaire(String motivation) {
         FileIO mFileIO = new FileIO();
         XMLReader mXmlReader = null;
