@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
     private Vibrator vibrator;
     private long automaticQuestTimer = Long.MIN_VALUE;
-    private long eventQuestTimeout = 1 * 60; // 30 minutes
+    private long eventQuestTimeout = 1 * 60;
     private long eventQuestTimer = System.currentTimeMillis() / 1000 - eventQuestTimeout;
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
@@ -335,9 +335,18 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!SystemStatus.AFExConfigFolder.exists())
                 SystemStatus.AFExConfigFolder.mkdirs();
-            int[] fileListIn = {R.raw.example_mic_in_speaker_out, R.raw.example_rfcomm_in_audio_out, R.raw.example_standalone, R.raw.rfcomm};
-            String[] fileListOut = {"example_mic_in_speaker_out.xml", "example_rfcomm_in_audio_out.xml", "standalone.xml", "rfcomm.xml"};
-            if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
+            int[] fileListIn = {R.raw.example_mic_in_speaker_out,
+                    R.raw.example_rfcomm_in_audio_out,
+                    R.raw.example_standalone,
+                    R.raw.rfcomm,
+                    R.raw.imfit};
+            String[] fileListOut = {"example_mic_in_speaker_out.xml",
+                    "example_rfcomm_in_audio_out.xml",
+                    "standalone.xml",
+                    "rfcomm.xml",
+                    "imfit.xml"};
+            // always rewrite configurations
+            //if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
                     for (int idx = 0; idx < fileListIn.length; idx++) {
                         File file = new File(SystemStatus.AFExConfigFolder.getAbsolutePath() + File.separator + fileListOut[idx]);
@@ -351,7 +360,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } catch (IOException e) {
                 }
-            }
+            //}
+            /*
             else if (BuildConfig.VERSION_NAME == "2.0beta48") {
                 try {
                     for (int idx = 0; idx < fileListOut.length; idx++) {
@@ -371,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } catch (IOException e) {
                 }
-            }
+            }*/
             new FileIO().scanQuestOptions();
             MainActivity.this.doBindService();
         }

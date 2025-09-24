@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<stage feature="StageReadAudioFile" id="1">
+    <stage feature="StagePreHighpass" id="11" blocksize="400" cutoff_hz="100">
+        <stage feature="StageProcRMS" id="111" blocksize="400" hopsize="200">
+            <stage feature="StageFeatureWrite" id="1111" prefix="RMS" nfeatures="2"/>
+        </stage>
+    </stage>
+    <stage feature="StageProcOctaves" id="12" blocksize="400" hopsize="200" blockout="8000" hopout="8000">
+        <stage feature="StageFeatureWrite" id="121" prefix="OCTAVES" nfeatures="18"/>
+    </stage>
+    <stage feature="StageProcVAD" id="14" blocksize="512" hopsize="512" passthrough="true">
+        <stage feature="StageFeatureWrite" id="141" prefix="VAD" nfeatures="1"/>
+        <stage feature="StageProcSNR" id="142" blocksize="512" hopsize="512"/>
+            <stage feature="StageFeatureWrite" id="1421" prefix="SNR" nfeatures="1"/>
+    </stage>
+    <stage feature="StageProcClassify" id="90" blocksize="15360" hopsize="15360">
+        <stage feature="StageFeatureWrite" id="91" prefix="CLASS" nfeatures="12"/>
+    </stage>
+    <stage feature="StageAudioWrite" id="15" blocksize="4096" hopsize="4096"/>
+</stage>

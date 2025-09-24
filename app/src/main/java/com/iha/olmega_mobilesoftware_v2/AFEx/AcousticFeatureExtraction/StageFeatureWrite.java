@@ -54,7 +54,7 @@ public class StageFeatureWrite extends Stage {
     private int nFeatures;
     private int blockCount;
     private int bufferSize;
-    protected int mySamplingRate; // nedded because subsampling
+    protected int mySamplingRate; // needed because subsampling (?)
 
     private int hopDuration;
     private int[] relTimestamp;
@@ -92,6 +92,7 @@ public class StageFeatureWrite extends Stage {
     @Override
     void start(){
         calibValuesReadingDone = false;
+        passthrough = inStage.passthrough;
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
         //startTime = Stage.startTime;
@@ -124,7 +125,18 @@ public class StageFeatureWrite extends Stage {
             if (hasInQueue()) {
                 float[][] data = receive();
                 if (data != null) {
-                    process(data);
+                    // we never want to write passed through data, as this should take place in its own
+                    // writer instance. if passthrough is enabled, the last channel contains the
+                    // feature data, so this is copied to a new array and then processed/written. the
+                    // array format has to be handled properly in the stage that packages the data, e.g.
+                    // the VAD stage.
+                    if (passthrough) {
+                        float[][] tmp = new float[1][];
+                        tmp[0] = data[data.length - 1].clone();
+                        process(tmp);
+                    } else {
+                        process(data);
+                    }
                 } else {
                     abort = true;
                 }

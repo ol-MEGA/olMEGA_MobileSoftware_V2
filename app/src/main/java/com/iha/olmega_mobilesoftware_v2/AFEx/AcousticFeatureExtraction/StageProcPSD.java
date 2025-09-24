@@ -1,14 +1,10 @@
 package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
 import android.util.Log;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D;
+import org.jtransforms.fft.FloatFFT_1D;
 
 /**
  * Feature extraction: Auto- and cross correlation

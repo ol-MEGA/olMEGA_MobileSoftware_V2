@@ -42,6 +42,7 @@ abstract class Stage extends TreeSet {
 
     // params to set via constructor
     int id, blockSize, hopSize, blockSizeOut, hopSizeOut;
+    boolean passthrough;
 
     public Stage(HashMap parameter) {
         if (!parameter.isEmpty()) {
@@ -68,6 +69,16 @@ abstract class Stage extends TreeSet {
                 hopSizeOut = hopSize;
             else
                 hopSizeOut = Integer.parseInt((String) parameter.get("hopout"));
+
+            // passthrough sends the audio data along with the corresponding corresponding results to enable
+            // conditional processing in attached stages. this needs to be implemented in the specific stage
+            // by setting up the output array accordingly. the feature data needs to be in the last array.
+            // StageFeatureWrite will get that value from the incoming stage and if set, omits everything
+            // but the last array to prevent writing passed through data.
+            if (parameter.get("passthrough") == null)
+                passthrough = false;
+            else
+                passthrough = Boolean.parseBoolean((String) parameter.get("passthrough"));
         }
     }
 

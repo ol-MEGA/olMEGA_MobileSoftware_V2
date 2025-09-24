@@ -11,7 +11,7 @@ import java.util.HashMap;
 
 public class StageQuestEvent extends Stage {
 
-    final static String LOG = "StageQuestEvent";
+    final static String LOG = "StageTestQuestEvent";
 
     int blocks = 0;
 
@@ -24,7 +24,7 @@ public class StageQuestEvent extends Stage {
         // define stage with a blocksize fs
         if (blocks == 5) {
             Log.d(LOG, "GO!!!!!!!!!!!!!");
-            Intent  intent = new Intent("QuestionnaireEvent");
+            Intent intent = new Intent("QuestionnaireEvent");
             intent.setPackage(context.getPackageName());
             intent.putExtra("Value", true);
             context.sendBroadcast(intent);
