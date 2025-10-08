@@ -27,6 +27,24 @@ public class Utilities {
         }
     }
 
+    public static void normaliseToDbFS(float[][] buffer, float dbFS) {
+        float target = (float) Math.pow(10.0, dbFS / 20.0);
+        for (int channel = 0; channel < buffer.length; channel++) {
+            float max = 0f;
+            for (float sample : buffer[channel]) {
+                if (Math.abs(sample) > max) {
+                    max = Math.abs(sample);
+                }
+            }
+            if (max > 0) {
+                float factor = target / max;
+                for (int sample = 0; sample < buffer[channel].length; sample++) {
+                    buffer[channel][sample] *= factor;
+                }
+            }
+        }
+    }
+
     public static int nextpow2(int x) {
 
         return 1 << (32 - Integer.numberOfLeadingZeros(x - 1));
