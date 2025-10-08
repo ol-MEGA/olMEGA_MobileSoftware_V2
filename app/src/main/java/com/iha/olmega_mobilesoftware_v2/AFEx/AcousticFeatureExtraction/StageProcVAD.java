@@ -22,7 +22,7 @@ public class StageProcVAD extends Stage {
     // passthrough sends the audio data along with the corresponding VAD results to enable
     // conditional processing in attached stages. VAD data is a single value for each audio channel
     // in the last channel of the output array, i.e. the first value corresponds to the 1st channel.
-    final static boolean passthrough = false;
+    final static boolean passthrough = true;
 
     public StageProcVAD(HashMap parameter) {
         super(parameter);
@@ -35,8 +35,8 @@ public class StageProcVAD extends Stage {
                 .setSampleRate(SampleRate.SAMPLE_RATE_16K)
                 .setFrameSize(FrameSize.FRAME_SIZE_512)
                 .setMode(Mode.NORMAL)
-                .setSilenceDurationMs(10)
-                .setSpeechDurationMs(50)
+                .setSilenceDurationMs(25)
+                .setSpeechDurationMs(25)
                 .build();
 
         super.start();
@@ -45,8 +45,14 @@ public class StageProcVAD extends Stage {
     @Override
     protected void process(float[][] buffer) {
 
-        // Normalise to [-1, 1], apparently this isn't done in Silero   ...
-        Utilities.normalise(buffer);
+        // copy buffer for normalisation for VAD
+        float[][] bufferNorm = new float[buffer.length][];
+        for (int i = 0; i < buffer.length; i++) {
+            bufferNorm[i] = buffer[i].clone();
+        }
+
+        // Normalise, apparently this isn't done in Silero   ...
+        Utilities.normaliseToDbFS(bufferNorm, -8.0f);
 
         int outchannels = 1;
         if (passthrough) {
@@ -55,12 +61,12 @@ public class StageProcVAD extends Stage {
         float[][] dataOut = new float[outchannels][]; // VAD data
         dataOut[outchannels-1] = new float[1];
         for (int channel = 0; channel < 1; channel++) {
-            boolean isSpeech = vad.isSpeech(buffer[channel]);
+            boolean isSpeech = vad.isSpeech(bufferNorm[channel]);
             //sendMessage("VAD", String.valueOf(isSpeech));
             dataOut[outchannels-1][channel] = isSpeech ? 1.0f : 0.0f;
             if (passthrough) {
                 dataOut[channel] = new float[buffer[channel].length];
-                System.arraycopy(buffer[channel], 0, dataOut[channel], 0, buffer[channel].length);
+                dataOut[channel] = buffer[channel].clone();
             }
         }
 
