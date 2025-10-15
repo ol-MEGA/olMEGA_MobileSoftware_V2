@@ -2,6 +2,7 @@ package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -11,24 +12,106 @@ import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
 
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
+import com.iha.olmega_mobilesoftware_v2.States;
+
 import java.time.Instant;
 import java.util.HashMap;
 
 /**
  * Capture audio using Android's AudioRecorder (USB preferred)
  */
-public class StageUSBCapture extends Stage {
+public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener {
 
     final static String LOG = "StageProducer";
-
+    private USBDeviceMonitor usbMonitor;
     private AudioRecord audioRecord;
     private int buffersize, blocksize_ms, frames;
     private boolean stopRecording = false;
+    private boolean deviceConnected = false;
+    private boolean isStartingOrStopping = false;
+    private final Object lock = new Object();
+    final private String DEVICE_NAME = "Sennheiser XS LAV USB-C";
+
+    /*@Override
+    public void onTargetDeviceConnected() {
+        Log.d(LOG, "USB device connected");
+        sendBroadcast(States.connected);
+        if (!deviceConnected) {
+            deviceConnected = true;
+            start();
+        }
+    }
+
+    @Override
+    public void onTargetDeviceDisconnected() {
+        Log.d(LOG, "USB device disconnected");
+        sendBroadcast(States.usb_no_device);
+        if (deviceConnected) {
+            deviceConnected = false;
+            stop();
+        }
+    }*/
+
+    @Override
+    public void onTargetDeviceConnected() {
+        safeStart();
+    }
+
+    @Override
+    public void onTargetDeviceDisconnected() {
+        safeStop();
+    }
+
+    private void safeStart() {
+        synchronized (lock) {
+            if (isStartingOrStopping) return;
+            isStartingOrStopping = true;
+        }
+
+        try {
+            if (!deviceConnected) {
+                Log.d(LOG, "USB device connected");
+                sendBroadcast(States.connected);
+                deviceConnected = true;
+                start();
+            }
+        } finally {
+            synchronized (lock) {
+                isStartingOrStopping = false;
+            }
+        }
+    }
+
+    private void safeStop() {
+        synchronized (lock) {
+            if (isStartingOrStopping) return;
+            isStartingOrStopping = true;
+        }
+
+        try {
+            if (deviceConnected) {
+                Log.d(LOG, "USB device disconnected");
+                sendBroadcast(States.usb_no_device);
+                deviceConnected = false;
+                stop();
+            }
+        } finally {
+            synchronized (lock) {
+                isStartingOrStopping = false;
+            }
+        }
+    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     public StageUSBCapture(HashMap parameter) {
         super(parameter);
+        usbMonitor = new USBDeviceMonitor(context, DEVICE_NAME, this);
+        usbMonitor.start();
+    }
 
+    @Override
+    public void start() {
         Log.d(LOG, "Setting up audioCapture");
 
         hasInput = false;
@@ -57,11 +140,12 @@ public class StageUSBCapture extends Stage {
                         device.getType() == AudioDeviceInfo.TYPE_USB_HEADSET) {
                     usbDevice = device;
                     Log.d(LOG, "USB device found: " + device.getProductName());
+                    LogIHAB.log("USB device found: " + device.getProductName());
                     break;
                 }
             }
 
-            if (usbDevice != null) {
+            if (usbDevice != null && usbDevice.getProductName().toString().contains(DEVICE_NAME)) {
                 AudioFormat format = new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                         .setSampleRate(samplingrate)
@@ -76,26 +160,26 @@ public class StageUSBCapture extends Stage {
 
                 // Set the USB device after the AudioRecord is built
                 audioRecord.setPreferredDevice(usbDevice);
+                sendBroadcast(States.connected);
+                deviceConnected = true;
+                super.start();
+            } else {
+                sendBroadcast(States.usb_no_device);
+                Log.e(LOG, "No suitable USB audio device found. Looking for: " + DEVICE_NAME);
+
             }
         } catch (Exception e) {
-            Log.e(LOG, "Failed to initialize USB AudioRecord, falling back. Error: " + e.getMessage());
+            sendBroadcast(States.usb_no_device);
+            Log.e(LOG, "Failed to initialize USB AudioRecord. Error: " + e.getMessage());
         }
-
-        if (audioRecord == null) {
-            Log.d(LOG, "Using default audio input.");
-            audioRecord = new AudioRecord(
-                    MediaRecorder.AudioSource.UNPROCESSED,
-                    samplingrate,
-                    channelConfig,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    buffersize
-            );
-        }
-
     }
 
     @Override
     protected void process(float[][] temp) {
+
+        if (!deviceConnected) {
+            return;
+        }
 
         int samplesRead, i = 0;
         short[] buffer = new short[buffersize / 2];
@@ -104,13 +188,23 @@ public class StageUSBCapture extends Stage {
         audioRecord.startRecording();
 
         Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName());
-        // TODO:
-        // sendMessage("AUDIO_DEVICE_SELECTED", (String) audioRecord.getRoutedDevice().getProductName());
         Log.d(LOG, "Started producing");
 
-        //Stage.startTime = Instant.now();
-
         while (!stopRecording && !Thread.currentThread().isInterrupted()) {
+
+            // check if device is sill connected
+            if (!audioRecord.getRoutedDevice().getProductName().toString().contains(DEVICE_NAME)) {
+                sendBroadcast(States.usb_no_device);
+                deviceConnected = false;
+                Log.e(LOG, "USB audio device disconnected");
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    continue;
+                }
+                continue;
+            }
 
             samplesRead = audioRecord.read(buffer, 0, buffer.length);
 
@@ -138,4 +232,37 @@ public class StageUSBCapture extends Stage {
     public void stop() {
         stopRecording = true;
     }
+
+    @Override
+    public void cleanup() {
+        if (usbMonitor != null) {
+            usbMonitor.stop();
+            usbMonitor = null;
+        }
+        super.cleanup();
+    }
+
+    private void sendBroadcast(States state) {
+        switch (state) {
+            case init:
+                LogIHAB.log("USB: initializing");
+                break;
+            case connecting:
+                LogIHAB.log("USB: connecting");
+                break;
+            case connected:
+                LogIHAB.log("USB: connected");
+                break;
+            case usb_no_device:
+                LogIHAB.log("USB: no device found");
+                break;
+            default:
+                LogIHAB.log("USB: " + state.name());
+        }
+        Intent intent = new Intent("StageState");    //action: "msg"
+        intent.setPackage(context.getPackageName());
+        intent.putExtra("currentState", state.ordinal());
+        context.sendBroadcast(intent);
+    }
+
 }

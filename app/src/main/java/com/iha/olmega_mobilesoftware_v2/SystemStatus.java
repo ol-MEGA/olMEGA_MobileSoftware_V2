@@ -227,6 +227,9 @@ public class SystemStatus {
                             }
                         }
                         break;
+                    case usb_no_device:
+                        activityStates.InfoText = mContext.getResources().getString(R.string.noUSB);
+                        break;
                 }
             }
             // Battery State
