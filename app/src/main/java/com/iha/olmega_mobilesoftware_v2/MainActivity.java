@@ -45,12 +45,10 @@ import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.Questionnaire.QuestionnaireActivity;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -315,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkPermission() {
         if (neccessaryPermissionsIdx < neccessaryPermissions.length) {
-            if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.WRITE_EXTERNAL_STORAGE && neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.READ_EXTERNAL_STORAGE)) && (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED)) {
+            if (!(Build.VERSION.SDK_INT <= Build.VERSION_CODES.R && (neccessaryPermissions[neccessaryPermissionsIdx] == Manifest.permission.BLUETOOTH_CONNECT || neccessaryPermissions[neccessaryPermissionsIdx] == Manifest.permission.WRITE_EXTERNAL_STORAGE)) && (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.WRITE_EXTERNAL_STORAGE && neccessaryPermissions[neccessaryPermissionsIdx] != Manifest.permission.READ_EXTERNAL_STORAGE)) && (ContextCompat.checkSelfPermission(MainActivity.this, neccessaryPermissions[neccessaryPermissionsIdx]) == PackageManager.PERMISSION_DENIED)) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{neccessaryPermissions[neccessaryPermissionsIdx]}, 1);
             } else {
                 neccessaryPermissionsIdx++;
@@ -339,12 +337,14 @@ public class MainActivity extends AppCompatActivity {
                     R.raw.example_rfcomm_in_audio_out,
                     R.raw.example_standalone,
                     R.raw.rfcomm,
-                    R.raw.imfit};
+                    R.raw.imfit,
+                    R.raw.imfit_test};
             String[] fileListOut = {"example_mic_in_speaker_out.xml",
                     "example_rfcomm_in_audio_out.xml",
                     "standalone.xml",
                     "rfcomm.xml",
-                    "imfit.xml"};
+                    "imfit.xml",
+                    "imfit_test.xml"};
             // always rewrite configurations
             //if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
@@ -394,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     checkPermission();
                 } else {
-                    Toast.makeText(this, "All Permissions must be granted", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "All Permissions must be granted: " + permissions.toString(), Toast.LENGTH_LONG).show();
                     this.finish();
                 }
                 return;
@@ -479,7 +479,7 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.Action_Wifi).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "Warning: Wifi should be disabled for optimal data transmission!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Warning: Wifi should be disabled!", Toast.LENGTH_LONG).show();
                     }
                 });
             } else
