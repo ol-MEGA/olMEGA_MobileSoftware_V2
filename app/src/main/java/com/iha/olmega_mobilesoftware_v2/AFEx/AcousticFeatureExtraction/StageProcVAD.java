@@ -50,26 +50,23 @@ public class StageProcVAD extends Stage {
         for (int i = 0; i < buffer.length; i++) {
             bufferNorm[i] = buffer[i].clone();
         }
-
-        // Normalise, apparently this isn't done in Silero   ...
-        Utilities.normaliseToDbFS(bufferNorm, -8.0f);
+        // Normalise data to improve VAD performance
+        Utilities.normaliseToDbFS(bufferNorm, -12.0f);
 
         int outchannels = 1;
         if (passthrough) {
             outchannels += buffer.length;
         }
-        float[][] dataOut = new float[outchannels][]; // VAD data
-        dataOut[outchannels-1] = new float[1];
-        for (int channel = 0; channel < 1; channel++) {
-            boolean isSpeech = vad.isSpeech(bufferNorm[channel]);
-            //sendMessage("VAD", String.valueOf(isSpeech));
-            dataOut[outchannels-1][channel] = isSpeech ? 1.0f : 0.0f;
-            if (passthrough) {
+        float[][] dataOut = new float[outchannels][];
+        dataOut[outchannels-1] = new float[1]; // VAD for 1st channel only!
+        boolean isSpeech = vad.isSpeech(bufferNorm[0]);
+        dataOut[outchannels-1][0] = isSpeech ? 1.0f : 0.0f;
+        if (passthrough) {
+            for (int channel = 0; channel < 2; channel++) {
                 dataOut[channel] = new float[buffer[channel].length];
                 dataOut[channel] = buffer[channel].clone();
             }
         }
-
         send(dataOut);
     }
 
