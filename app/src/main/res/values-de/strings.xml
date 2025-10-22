@@ -21,7 +21,7 @@
     <string name="noBluetooth">Sendebox kann nicht gefunden werden.</string>
     <string name="batteryWarning">Bitte laden Sie das Smartphone.</string>
     <string name="batteryCritical">Batteriestand kritisch - Aufnahme unterbrochen.</string>
-    <string name="noUSB">USB Gerät nicht gefunden.</string>
+    <string name="noUSB">Mikrofon nicht verbunden.</string>
 
     <string name="noInternet">Keine Internetverbindung.</string>
 
