@@ -50,7 +50,7 @@ dependencies {
     implementation 'com.github.wendykierp:JTransforms:3.1'
 
     // Silero VAD - https://github.com/gkonovalov/android-vad
-    implementation 'com.github.gkonovalov.android-vad:silero:2.0.9'
+    implementation 'com.github.gkonovalov.android-vad:silero:2.0.10'
 
     // mediapipe Library
     implementation 'com.google.mediapipe:tasks-audio:0.10.26.1'
