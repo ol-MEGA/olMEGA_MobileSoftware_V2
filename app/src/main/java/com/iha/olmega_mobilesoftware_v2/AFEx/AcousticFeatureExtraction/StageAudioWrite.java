@@ -6,6 +6,8 @@ import com.iha.olmega_mobilesoftware_v2.AFEx.Tools.AudioFileIO;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -34,6 +36,14 @@ public class StageAudioWrite extends Stage {
 
     @Override
     void start() {
+        io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
+
+        stream = io.openDataOutStream(
+                samplingrate,
+                channels,
+                16,
+                true);
+
         super.start();
     }
 
@@ -65,8 +75,24 @@ public class StageAudioWrite extends Stage {
         Log.d(LOG, id + ": Stopped consuming");
     }
 
-
     @Override
+    protected void process(float[][] data) {
+
+        ByteBuffer buffer = ByteBuffer.allocate(channels * data[0].length * 2);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        for (int i = 0; i < data[0].length; i++) {
+            buffer.putShort((short) (data[0][i] * 32767));
+            buffer.putShort((short) (data[1][i] * 32767));
+        }
+
+        try {
+            stream.write(buffer.array());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*@Override
     protected void process(float[][] buffer) {
         if (io == null && Stage.startTime != null) {
             io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
@@ -107,6 +133,6 @@ public class StageAudioWrite extends Stage {
                 }
             }
         }
-    }
+    }*/
 
 }
