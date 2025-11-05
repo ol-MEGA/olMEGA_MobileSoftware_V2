@@ -27,8 +27,8 @@ abstract class Stage extends TreeSet {
     final int timeout = 2000; // in ms, wait this long to receive data before stopping a stage.
 
     static Instant startTime = null;
-    static int samplingrate;
-    static int channels;
+    static int samplingrate = 16000;
+    static int channels = 1;
 
     boolean hasInput = true; // default mode, use false to bypass receive() & rebuffer()
 
@@ -120,7 +120,6 @@ abstract class Stage extends TreeSet {
 
         boolean abort = false;
         int samples = 0;
-        int channels = 2;
         float[][] buffer = new float[channels][blockSize];
 
         Log.d(LOG, id + ": Start processing");

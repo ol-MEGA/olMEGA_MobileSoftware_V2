@@ -62,7 +62,7 @@ public class StageProcVAD extends Stage {
         boolean isSpeech = vad.isSpeech(bufferNorm[0]);
         dataOut[outchannels-1][0] = isSpeech ? 1.0f : 0.0f;
         if (passthrough) {
-            for (int channel = 0; channel < 2; channel++) {
+            for (int channel = 0; channel < channels; channel++) {
                 dataOut[channel] = new float[buffer[channel].length];
                 dataOut[channel] = buffer[channel].clone();
             }

@@ -35,7 +35,7 @@ public class StagePreHighpass extends Stage {
 
         float[][] dataOut = new float[buffer.length][buffer[0].length];
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < channels; i++) {
             System.arraycopy(buffer[i], 0, dataOut[i], 0, buffer[i].length);
             filterHP[i].filter(dataOut[i]);
         }

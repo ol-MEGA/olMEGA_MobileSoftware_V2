@@ -81,8 +81,9 @@ public class StageAudioWrite extends Stage {
         ByteBuffer buffer = ByteBuffer.allocate(channels * data[0].length * 2);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         for (int i = 0; i < data[0].length; i++) {
-            buffer.putShort((short) (data[0][i] * 32767));
-            buffer.putShort((short) (data[1][i] * 32767));
+            for (int ch = 0; ch < channels; ch++) {
+                buffer.putShort((short) (data[ch][i] * 32767));
+            }
         }
 
         try {

@@ -22,8 +22,8 @@ public class StageManager {
     }
 
     public StageManager(Context context, File features) {
-        Stage.samplingrate = 16000;
-        Stage.channels = 2;
+        //Stage.samplingrate = 16000; // set in Stage
+        //Stage.channels = 2; // set in Stage
         Stage.context = context;
         Stage.WriteDataToStorage = true;
         // build processing tree

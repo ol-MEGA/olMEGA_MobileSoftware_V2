@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.HashMap;
 
 /**
- * Read audio file for testing and debugging. Expects 16 kHz, stereo wav file.
+ * Read audio file for testing and debugging. Expects 16 kHz, wav file, set channels accordingly.
  */
 
 public class StageReadAudioFile extends Stage {
@@ -20,6 +20,7 @@ public class StageReadAudioFile extends Stage {
 
     private int channels, frames;
     InputStream stream;
+    private int wav_channels;
     private boolean stopProducing = false;
 
 
@@ -28,7 +29,8 @@ public class StageReadAudioFile extends Stage {
 
         hasInput = false;
 
-        channels = 2;
+        channels = 1;
+        wav_channels = 1;
         frames = 1024;
     }
 
@@ -37,9 +39,18 @@ public class StageReadAudioFile extends Stage {
 
         AssetManager assetManager = context.getAssets();
         try {
-            stream = assetManager.open("cache_20250904_111131920_kueche.wav");
-            // skip wav header (44 bytes)
-            stream.skip(44);
+            stream = assetManager.open("amplitude_sweep_1kHz_-80dB_-3dBFS.wav");
+            byte[] header = new byte[44];
+            int read = stream.read(header, 0, 44);
+            if (read < 44) throw new IOException("Invalid WAV header (too short)");
+            ByteBuffer bb = ByteBuffer.wrap(header);
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+            bb.position(22);
+            wav_channels = bb.getShort();
+            int wav_samplerate = bb.getInt();
+            if (wav_samplerate != samplingrate) {
+                throw new IOException("Sampling rates do no match: " + wav_samplerate + " vs. " + samplingrate);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +63,7 @@ public class StageReadAudioFile extends Stage {
 
 
         int bytesRead, idx = 0;
-        byte[] byteArray = new byte[frames * channels * 2];
+        byte[] byteArray = new byte[frames * wav_channels * 2];
         float[][] dataOut = new float[channels][frames];
 
         Log.d(LOG, "Started producing");
@@ -71,9 +82,23 @@ public class StageReadAudioFile extends Stage {
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.position(0);
 
-                for (int k = 0; k < bytesRead / 4; k++) {
-                    dataOut[0][k] = (float) buffer.getShort() / 32768.0f;
-                    dataOut[1][k] = (float) buffer.getShort() / 32768.0f;
+
+                if (channels == 1 && wav_channels == 1) {
+                    for (int k = 0; k < bytesRead / 2; k++) {
+                        dataOut[0][k] = (float) buffer.getShort() / 32768.0f;
+                    }
+                } else if (channels == 1 && wav_channels == 2) {
+                    for (int k = 0; k < bytesRead / 4; k++) {
+                        dataOut[0][k] = (float) buffer.getShort() / 32768.0f;
+                        buffer.getShort(); // skip second channel
+                    }
+                } else if (channels == 2 && wav_channels == 2) {
+                    for (int k = 0; k < bytesRead / 4; k++) {
+                        dataOut[0][k] = (float) buffer.getShort() / 32768.0f;
+                        dataOut[1][k] = (float) buffer.getShort() / 32768.0f;
+                    }
+                } else {
+                    throw new IOException("Unsupported channel configuration: requested " + channels + ", wav file has " + wav_channels);
                 }
 
                 if (Stage.startTime == null)

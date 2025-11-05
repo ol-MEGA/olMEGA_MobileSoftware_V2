@@ -3,18 +3,23 @@ package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
+import androidx.core.app.ActivityCompat;
 
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.States;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.HashMap;
 
@@ -27,43 +32,25 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
     private USBDeviceMonitor usbMonitor;
     private AudioRecord audioRecord;
     private int buffersize, blocksize_ms, frames;
+    boolean startup;
     private boolean stopRecording = false;
     private boolean deviceConnected = false;
     private boolean isStartingOrStopping = false;
     private final Object lock = new Object();
     final private String DEVICE_NAME = "Sennheiser XS LAV USB-C";
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    /*@Override
+    @Override
     public void onTargetDeviceConnected() {
-        Log.d(LOG, "USB device connected");
-        sendBroadcast(States.connected);
-        if (!deviceConnected) {
-            deviceConnected = true;
-            start();
-        }
+        syncStart();
     }
 
     @Override
     public void onTargetDeviceDisconnected() {
-        Log.d(LOG, "USB device disconnected");
-        sendBroadcast(States.usb_no_device);
-        if (deviceConnected) {
-            deviceConnected = false;
-            stop();
-        }
-    }*/
-
-    @Override
-    public void onTargetDeviceConnected() {
-        safeStart();
+        syncStop();
     }
 
-    @Override
-    public void onTargetDeviceDisconnected() {
-        safeStop();
-    }
-
-    private void safeStart() {
+    private void syncStart() {
         synchronized (lock) {
             if (isStartingOrStopping) return;
             isStartingOrStopping = true;
@@ -73,6 +60,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
             if (!deviceConnected) {
                 Log.d(LOG, "USB device connected");
                 sendBroadcast(States.connected);
+                Log.d(LOG, "BROADCAST 1");
                 deviceConnected = true;
                 start();
             }
@@ -83,7 +71,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         }
     }
 
-    private void safeStop() {
+    private void syncStop() {
         synchronized (lock) {
             if (isStartingOrStopping) return;
             isStartingOrStopping = true;
@@ -108,6 +96,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         super(parameter);
         usbMonitor = new USBDeviceMonitor(context, DEVICE_NAME, this);
         usbMonitor.start();
+        startup = true;
     }
 
     @Override
@@ -119,7 +108,9 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         blocksize_ms = 25;
         frames = blocksize_ms * samplingrate / 100;
 
-        int channelConfig = AudioFormat.CHANNEL_IN_STEREO;
+        int channelConfig = (channels == 1)
+                ? AudioFormat.CHANNEL_IN_MONO
+                : AudioFormat.CHANNEL_IN_STEREO;
 
         buffersize = AudioRecord.getMinBufferSize(
                 samplingrate,
@@ -152,8 +143,18 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                         .setChannelMask(channelConfig)
                         .build();
 
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 audioRecord = new AudioRecord.Builder()
-                        .setAudioSource(MediaRecorder.AudioSource.UNPROCESSED)
+                        .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
                         .setAudioFormat(format)
                         .setBufferSizeInBytes(buffersize)
                         .build();
@@ -161,6 +162,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                 // Set the USB device after the AudioRecord is built
                 audioRecord.setPreferredDevice(usbDevice);
                 sendBroadcast(States.connected);
+                Log.d(LOG, "BROADCAST 2");
                 deviceConnected = true;
                 super.start();
             } else {
@@ -171,6 +173,11 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         } catch (Exception e) {
             sendBroadcast(States.usb_no_device);
             Log.e(LOG, "Failed to initialize USB AudioRecord. Error: " + e.getMessage());
+            if (startup) {
+                startup = false;
+                mainHandler.postDelayed(() -> syncStart(), 500);
+                mainHandler.postDelayed(() -> syncStart(), 1500);
+            }
         }
     }
 
@@ -181,7 +188,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
             return;
         }
 
-        int samplesRead, i = 0;
+        int samplesRead, framesRead, i = 0;
         short[] buffer = new short[buffersize / 2];
         float[][] dataOut = new float[channels][frames];
 
@@ -189,6 +196,8 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
 
         Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName());
         Log.d(LOG, "Started producing");
+        sendBroadcast(States.connected);
+        Log.d(LOG, "BROADCAST 3");
 
         while (!stopRecording && !Thread.currentThread().isInterrupted()) {
 
@@ -207,11 +216,17 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
             }
 
             samplesRead = audioRecord.read(buffer, 0, buffer.length);
+            framesRead = samplesRead / channels;
 
-            for (int k = 0; k < samplesRead / 2; k++) {
+            for (int k = 0; k < framesRead; k++) {
 
-                dataOut[0][i] = (float) buffer[k * 2] / Short.MAX_VALUE;
-                dataOut[1][i] = (float) buffer[k * 2 + 1] / Short.MAX_VALUE;
+                if (channels == 1) {
+                    dataOut[0][i] = buffer[k] / (float) Short.MAX_VALUE;
+                } else {
+                    dataOut[0][i] = buffer[k * 2] / (float) Short.MAX_VALUE;
+                    dataOut[1][i] = buffer[k * 2 + 1] / (float) Short.MAX_VALUE;
+                }
+
                 i++;
 
                 if (i >= frames) {
