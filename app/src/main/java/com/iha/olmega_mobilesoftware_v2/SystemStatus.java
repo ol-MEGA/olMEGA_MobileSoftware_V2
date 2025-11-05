@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction.StageManager;
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
@@ -176,7 +177,7 @@ public class SystemStatus {
                         if (isRFCOMM(doc.getChildNodes()))
                             activityStates.profileState = States.undefined;
                         else
-                            activityStates.profileState = States.connected;
+                            activityStates.profileState = States.undefined;
                     } catch (Exception e) {
                         StringWriter sw = new StringWriter();
                         e.printStackTrace(new PrintWriter(sw));
@@ -214,6 +215,7 @@ public class SystemStatus {
                         break;
                     case connected:
                         LogIHAB.log("StateRunning");
+                        Log.d("STATUS: ", "CONNECTED");
                         activityStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
                         if (preferences.useQuestionnaire() && !(activityStates.isCharging == true && Preferences().usbCutsDataStorage() == true)) {
                             activityStates.questionaireEnabled = true;

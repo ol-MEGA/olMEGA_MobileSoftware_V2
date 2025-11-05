@@ -69,10 +69,11 @@ public class USBDeviceMonitor {
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         AudioDeviceInfo[] inputs = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
         boolean found = false;
-
+        Log.d(LOG, "--------------> Found USB device!");
         for (AudioDeviceInfo device : inputs) {
             if (device.getProductName().toString().contains(targetDeviceName)) {
                 found = true;
+
                 break;
             }
         }
