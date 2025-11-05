@@ -17,10 +17,17 @@ public class StageProcOctaves extends Stage {
 
     private static final String LOG = "StageProcOctaves";
     private final Octaves oct;
+    private boolean initialized;
 
     public StageProcOctaves(HashMap parameter) {
         super(parameter);
         oct = new Octaves();
+    }
+
+    @Override
+    void start() {
+        initialized = false;
+        super.start();
     }
 
     @Override
@@ -44,16 +51,16 @@ public class StageProcOctaves extends Stage {
         private final int nfft;
         private final FloatFFT_1D fft;
         private final float[] window;
-        private final float win_energy;
+        final float scale;
         private final float alpha;
         private final int blocks_tau;
         private int blockCounter = 0;
 
         // buffer
-        private final float[][] data;       // [ch][2*N] FFT Input
-        private final float[][] mag2;       // [ch][N/2+1] |X[k]|**2
-        private final float[][] p_temp;     // [ch][bands] smoothed power
-        private final float[][] out_rms;    // [ch][bands]
+        private final float[][] data;       // [channels][2*N] FFT Input
+        private final float[][] mag;       // [channels][N/2+1] |X[k]|**2
+        private final float[][] p_temp;     // [chanels][bands] smoothed power
+        private final float[][] out_rms;    // [channels][bands]
         private final int[][] BINS;         // [band][indices]
 
         Octaves() {
@@ -63,9 +70,9 @@ public class StageProcOctaves extends Stage {
 
             // Hann Window & energy
             window = Utilities.hann(blockSize);
-            float we = 0;
-            for (float v : window) we += v * v;
-            win_energy = we;
+            float win_energy = 0f;
+            for (float v : window) win_energy += v * v;
+            scale = 1f / (nfft * win_energy); // scaling (Parceval & Hann)
 
             // params for exp. smoothing
             alpha = (float) Math.exp(-hopSize / (samplingrate * tau));
@@ -73,7 +80,7 @@ public class StageProcOctaves extends Stage {
 
             int bins = nfft / 2 + 1;
             data = new float[channels][2 * nfft];
-            mag2 = new float[channels][bins];
+            mag = new float[channels][bins];
             p_temp = new float[channels][F_CENTER.length];
             out_rms = new float[channels][F_CENTER.length];
 
@@ -100,40 +107,34 @@ public class StageProcOctaves extends Stage {
                     float p = re * re + im * im;
 
                     if (k > 0 && k < nfft / 2) p *= 2f;
-                    mag2[ch][k] = p;
+                    mag[ch][k] = p;
                 }
             }
-
-            final float scale = 1f / (nfft * win_energy); // scaling (Parceval & Hann)
 
             for (int ch = 0; ch < channels; ch++) {
                 for (int b = 0; b < F_CENTER.length; b++) {
                     float sum = 0f;
                     int[] idx = BINS[b];
                     for (int k : idx) {
-                        if (k < mag2[ch].length)
-                            sum += mag2[ch][k];
+                        if (k < mag[ch].length)
+                            sum += mag[ch][k];
                     }
 
-                    float rms2 = scale * sum;
+                    float rms = scale * sum;
                     // recursive averaging & store data for next average
-                    if (blockCounter == 0 && p_temp[ch][b] == 0f)
-                        p_temp[ch][b] = (1 - alpha) * rms2;
+                    if (!initialized)
+                        p_temp[ch][b] = (1 - alpha) * rms;
                     else
-                        p_temp[ch][b] = alpha * p_temp[ch][b] + (1 - alpha) * rms2;
+                        p_temp[ch][b] = alpha * p_temp[ch][b] + (1 - alpha) * rms;
 
                     out_rms[ch][b] = (float) Math.sqrt(Math.max(0f, p_temp[ch][b]));
                 }
             }
 
+            initialized = true;
+
             blockCounter++;
             if (blockCounter >= blocks_tau) {
-                // TODO: remove debugging output:
-                float[] out = new float[F_CENTER.length];
-                for (int i = 0; i < F_CENTER.length; i++) {
-                    out[i] =  20.0f * (float) Math.log10(out_rms[0][i] + 1e-12);
-                }
-                Log.d(LOG, Arrays.toString(out));
                 send(out_rms);
                 blockCounter = 0;
             }
