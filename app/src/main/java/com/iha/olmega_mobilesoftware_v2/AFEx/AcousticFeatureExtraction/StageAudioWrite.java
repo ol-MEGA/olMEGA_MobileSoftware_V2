@@ -32,25 +32,31 @@ public class StageAudioWrite extends Stage {
 
     public StageAudioWrite(HashMap parameter) {
         super(parameter);
+        Log.d(LOG, "----------> " + id + ": Constructor");
     }
 
     @Override
     void start() {
-        io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
+        try {
+            Log.d(LOG, "----------> " + timeFormat.format(Stage.startTime));
+            io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        super.start();
+    }
+
+    void rebuffer() {
+
+        // we do not want rebuffering in a writer stage, just get the data and and pass it on.
+
+        Log.d(LOG, "----------> " + id + ": Start");
 
         stream = io.openDataOutStream(
                 samplingrate,
                 channels,
                 16,
                 true);
-
-        super.start();
-    }
-
-
-    void rebuffer() {
-
-        // we do not want rebuffering in a writer stage, just get the data and and pass it on.
 
         boolean abort = false;
 

@@ -102,6 +102,9 @@ abstract class Stage extends TreeSet {
         thread.start();
 
         // call start() of attached consumer
+        // TODO: this is a problem, since a producing stage can take too long to initialise which
+        // may lead to stageTime not being set which results in very bogus null pointer exceptions...
+        // do this in the producing Stage instead....
         for (Stage consumer : consumerSet) {
             consumer.start();
         }

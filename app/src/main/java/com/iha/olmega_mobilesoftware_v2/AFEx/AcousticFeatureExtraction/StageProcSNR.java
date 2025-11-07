@@ -122,13 +122,17 @@ public class StageProcSNR extends Stage {
             send(tmp_out);
         }
 
-        private float updateSoftVAD(float vadRaw) {
+        private synchronized float updateSoftVAD(float vadRaw) {
             if (!ENABLE_SOFT_VAD) return vadRaw;
             vadHistory.add(vadRaw);
             if (vadHistory.size() > VAD_SMOOTH_WINDOW) vadHistory.removeFirst();
             float sum = 0f;
-            for (float v : vadHistory) sum += v;
-            return sum / vadHistory.size();
+            // Use size() once to avoid concurrent modification issues
+            int size = vadHistory.size();
+            for (int i = 0; i < size; i++) {
+                sum += vadHistory.get(i);
+            }
+            return sum / size;
         }
 
         private void updateVADBuffer(boolean isSpeech) {

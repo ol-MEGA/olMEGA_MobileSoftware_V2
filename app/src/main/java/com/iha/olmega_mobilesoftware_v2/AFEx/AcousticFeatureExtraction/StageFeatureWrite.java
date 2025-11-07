@@ -79,8 +79,7 @@ public class StageFeatureWrite extends Stage {
 
     public StageFeatureWrite(HashMap parameter) {
         super(parameter);
-
-        feature = (String) parameter.get("prefix");
+        if (id==151) Log.d(LOG, "--------------------->: init1");        feature = (String) parameter.get("prefix");
 
         if (parameter.get("udp") == null)
             isUdp = 0;
@@ -90,7 +89,7 @@ public class StageFeatureWrite extends Stage {
     }
 
     @Override
-    void start(){
+    void start() {
         calibValuesReadingDone = false;
         passthrough = inStage.passthrough;
         inStage_hopSizeOut = inStage.hopSizeOut;
@@ -102,7 +101,7 @@ public class StageFeatureWrite extends Stage {
         super.start();
     }
 
-    void startWithoutThread(){
+    void startWithoutThread() {
         calibValuesReadingDone = false;
         inStage_hopSizeOut = inStage.hopSizeOut;
         inStage_blockSizeOut = inStage.blockSizeOut;
@@ -151,6 +150,7 @@ public class StageFeatureWrite extends Stage {
     }
 
     private void openFeatureFile() {
+
         File directory = new File(AudioFileIO.FEATURE_FOLDER);
         if (!directory.exists()) {
             directory.mkdir();

@@ -60,7 +60,6 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
             if (!deviceConnected) {
                 Log.d(LOG, "USB device connected");
                 sendBroadcast(States.connected);
-                Log.d(LOG, "BROADCAST 1");
                 deviceConnected = true;
                 start();
             }
@@ -120,11 +119,12 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
 
         Log.d(LOG, "Buffersize: " + buffersize);
 
+        AudioDeviceInfo usbDevice = null;
+
         try {
             // Try to find a USB device
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             AudioDeviceInfo[] inputDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
-            AudioDeviceInfo usbDevice = null;
 
             for (AudioDeviceInfo device : inputDevices) {
                 if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE ||
@@ -162,7 +162,6 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                 // Set the USB device after the AudioRecord is built
                 audioRecord.setPreferredDevice(usbDevice);
                 sendBroadcast(States.connected);
-                Log.d(LOG, "BROADCAST 2");
                 deviceConnected = true;
                 super.start();
             } else {
@@ -171,12 +170,17 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
 
             }
         } catch (Exception e) {
-            sendBroadcast(States.usb_no_device);
-            Log.e(LOG, "Failed to initialize USB AudioRecord. Error: " + e.getMessage());
-            if (startup) {
-                startup = false;
-                mainHandler.postDelayed(() -> syncStart(), 500);
-                mainHandler.postDelayed(() -> syncStart(), 1500);
+           if (usbDevice != null && usbDevice.getProductName().toString().contains(DEVICE_NAME) && e.getMessage().contains("temporal")) {
+                Log.d(LOG, "---------------> USB device present, but : " + e.getMessage());
+                sendBroadcast(States.connected);
+                deviceConnected = true;
+            } else {
+                sendBroadcast(States.usb_no_device);
+                Log.e(LOG, "Failed to initialize USB AudioRecord. Error: " + e.getMessage());
+                if (startup) {
+                    startup = false;
+                    mainHandler.postDelayed(() -> syncStart(), 500);
+                }
             }
         }
     }
@@ -197,23 +201,27 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName());
         Log.d(LOG, "Started producing");
         sendBroadcast(States.connected);
-        Log.d(LOG, "BROADCAST 3");
+
+        // start all consumers!
+//        for (Stage consumer : consumerSet) {
+//            consumer.start();
+//        }
 
         while (!stopRecording && !Thread.currentThread().isInterrupted()) {
 
             // check if device is sill connected
-            if (!audioRecord.getRoutedDevice().getProductName().toString().contains(DEVICE_NAME)) {
-                sendBroadcast(States.usb_no_device);
-                deviceConnected = false;
-                Log.e(LOG, "USB audio device disconnected");
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    continue;
-                }
-                continue;
-            }
+//            if (!audioRecord.getRoutedDevice().getProductName().toString().contains(DEVICE_NAME)) {
+//                sendBroadcast(States.usb_no_device);
+//                deviceConnected = false;
+//                Log.e(LOG, "USB audio device disconnected");
+//                try {
+//                    Thread.sleep(250);
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                    continue;
+//                }
+//                continue;
+//            }
 
             samplesRead = audioRecord.read(buffer, 0, buffer.length);
             framesRead = samplesRead / channels;
@@ -242,6 +250,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         Log.d(LOG, "Stopped producing");
         audioRecord.stop();
         stopRecording = false;
+        Stage.startTime = null;
     }
 
     public void stop() {
