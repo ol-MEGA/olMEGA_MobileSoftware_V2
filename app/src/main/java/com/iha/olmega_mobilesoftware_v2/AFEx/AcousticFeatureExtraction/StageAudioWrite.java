@@ -37,12 +37,6 @@ public class StageAudioWrite extends Stage {
 
     @Override
     void start() {
-        try {
-            Log.d(LOG, "----------> " + timeFormat.format(Stage.startTime));
-            io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         super.start();
     }
 
@@ -52,11 +46,6 @@ public class StageAudioWrite extends Stage {
 
         Log.d(LOG, "----------> " + id + ": Start");
 
-        stream = io.openDataOutStream(
-                samplingrate,
-                channels,
-                16,
-                true);
 
         boolean abort = false;
 
@@ -93,6 +82,19 @@ public class StageAudioWrite extends Stage {
         }
 
         try {
+            if (stream == null) {
+                try {
+                    Log.d(LOG, "----------> " + timeFormat.format(Stage.startTime));
+                    io = new AudioFileIO("cache_" + timeFormat.format(Stage.startTime));
+                    stream = io.openDataOutStream(
+                            samplingrate,
+                            channels,
+                            16,
+                            true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             stream.write(buffer.array());
         } catch (IOException e) {
             e.printStackTrace();
