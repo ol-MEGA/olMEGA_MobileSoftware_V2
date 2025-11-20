@@ -1,8 +1,13 @@
 package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
+import android.content.Intent;
 import android.util.Log;
+
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Feature extraction: Estimate SNR based on segments with and without voice.
@@ -11,24 +16,24 @@ import java.util.LinkedList;
 public class StageProcSNR extends Stage {
 
     final static String LOG = "StageProcSNR";
+
     private SNR snr;
 
-    // === Feature flags ===
     private boolean ENABLE_SMOOTHING = true;
-    private boolean ENABLE_SOFT_VAD = true;
-    private boolean ENABLE_LOOKBACK = false;
-    private boolean ENABLE_NOISE_SMOOTH = true;
+    private boolean ENABLE_LOOKBACK = true;
 
-    private float TAU_SPEECH = 0.05f;   // 50 ms
-    private float TAU_NOISE  = 0.25f;    // 250 ms
+    private float TAU_SPEECH = 0.05f;
+    private float TAU_NOISE  = 0.05f;
 
     private int LOOKBACK_FRAMES = 2;
-    private int VAD_SMOOTH_WINDOW = 3;
-    private LinkedList<Float> vadHistory = new LinkedList<>();
 
-    public StageProcSNR(HashMap parameter) {
-        super(parameter);
-    }
+    // Event Parameter
+    private float EVENT_WINDOW_SEC = 600f;
+    private float EVENT_RMS_THRESHOLD = 0.02f;
+    private float EVENT_SNR_THRESHOLD = 15f;
+    private float EVENT_VAD_RATIO = 0.3f;
+
+    public StageProcSNR(HashMap parameter) { super(parameter); }
 
     @Override
     void start() {
@@ -60,9 +65,11 @@ public class StageProcSNR extends Stage {
 
     private class SNR {
 
+        private float last_event = 0f; // time since last event in s
+        private float event_interval = 2; // check for event every interval s
         private float[][] snr_value = new float[1][1];
-        private float rms_speech = 0.0f;
-        private float rms_noise = 0.0f;
+        private float rms_speech = 0f;
+        private float rms_noise = 0f;
 
         private LinkedList<Boolean> vadBuffer = new LinkedList<>();
 
@@ -70,16 +77,14 @@ public class StageProcSNR extends Stage {
         private final float ALPHA_SPEECH;
         private final float ALPHA_NOISE;
 
+        private EventDetection eventDetection;
+
         SNR() {
-            snr_value[0][0] = 0.0f;
-
             FRAME_TIME = (float) blockSize / (float) samplingrate;
-
             ALPHA_SPEECH = (float) Math.exp(-FRAME_TIME / TAU_SPEECH);
             ALPHA_NOISE  = (float) Math.exp(-FRAME_TIME / TAU_NOISE);
 
-            Log.d(LOG, String.format("SNR stage initialized with frame_time=%.3f s, α_s=%.4f, α_n=%.4f",
-                    FRAME_TIME, ALPHA_SPEECH, ALPHA_NOISE));
+            eventDetection = new EventDetection(FRAME_TIME);
         }
 
         void calculate(float[][] input) {
@@ -87,52 +92,53 @@ public class StageProcSNR extends Stage {
             float vadRaw = input[input.length - 1][0];
             boolean isSpeech = vadRaw >= 0.5f;
 
-            // optional soft-VAD
-            float vadSoft = updateSoftVAD(vadRaw);
-
-            // optional lookback correction
-            if (ENABLE_LOOKBACK) updateVADBuffer(isSpeech);
-            if (ENABLE_LOOKBACK && shouldMarkLookback()) {
-                isSpeech = true;
+            // Lookback
+            if (ENABLE_LOOKBACK) {
+                updateVADBuffer(isSpeech);
+                if (shouldMarkLookback())
+                    isSpeech = true;
             }
 
             float newRMS = rms(input[0]);
 
+            // --- Glättung ---
             if (ENABLE_SMOOTHING) {
                 if (isSpeech) {
                     rms_speech = ALPHA_SPEECH * rms_speech + (1 - ALPHA_SPEECH) * newRMS;
                 } else {
-                    if (ENABLE_NOISE_SMOOTH) {
-                        rms_noise = ALPHA_NOISE * rms_noise + (1 - ALPHA_NOISE) * newRMS;
-                    } else {
-                        rms_noise = newRMS;
-                    }
+                    rms_noise = ALPHA_NOISE * rms_noise + (1 - ALPHA_NOISE) * newRMS;
                 }
             } else {
                 if (isSpeech) rms_speech = newRMS;
                 else rms_noise = newRMS;
             }
 
-            snr_value[0][0] = rms_speech / (rms_noise + 1e-6f);
-
-            float[][] tmp_out = new float[1][3];
-            tmp_out[0][0] = snr_value[0][0];
-            tmp_out[0][1] = rms_speech;
-            tmp_out[0][2] = rms_noise;
-            send(tmp_out);
-        }
-
-        private synchronized float updateSoftVAD(float vadRaw) {
-            if (!ENABLE_SOFT_VAD) return vadRaw;
-            vadHistory.add(vadRaw);
-            if (vadHistory.size() > VAD_SMOOTH_WINDOW) vadHistory.removeFirst();
-            float sum = 0f;
-            // Use size() once to avoid concurrent modification issues
-            int size = vadHistory.size();
-            for (int i = 0; i < size; i++) {
-                sum += vadHistory.get(i);
+            if (isSpeech) {
+                snr_value[0][0] = rms_speech / Math.max(rms_noise, 1e-9f);
             }
-            return sum / size;
+
+            eventDetection.update(newRMS, snr_value[0][0], isSpeech);
+
+            // check for event every event_interval
+            last_event += FRAME_TIME;
+            if (last_event >= event_interval) {
+                if (eventDetection.event()) {
+                    Intent intent = new Intent("QuestionnaireEvent");
+                    intent.setPackage(context.getPackageName());
+                    intent.putExtra("Value", true);
+                    context.sendBroadcast(intent);
+
+                    Log.i(LOG, "EVENT TRIGGERED!");
+                }
+                // reset
+                last_event = 0f;
+            }
+
+            float[][] out = new float[1][3];
+            out[0][0] = snr_value[0][0];
+            out[0][1] = rms_speech;
+            out[0][2] = rms_noise;
+            send(out);
         }
 
         private void updateVADBuffer(boolean isSpeech) {
@@ -143,20 +149,78 @@ public class StageProcSNR extends Stage {
 
         private boolean shouldMarkLookback() {
             if (vadBuffer.size() < LOOKBACK_FRAMES + 1) return false;
-            boolean last = vadBuffer.getLast();
-            if (!last) return false;
-            int trueCount = 0;
-            for (int i = vadBuffer.size() - 1; i >= Math.max(0, vadBuffer.size() - 1 - LOOKBACK_FRAMES); i--) {
-                if (vadBuffer.get(i)) trueCount++;
+            if (!vadBuffer.getLast()) return false;
+
+            for (int i = vadBuffer.size() - 2;
+                 i >= vadBuffer.size() - 1 - LOOKBACK_FRAMES; i--) {
+                if (i >= 0 && vadBuffer.get(i)) return true;
             }
-            return trueCount > 0;
+            return false;
+        }
+    }
+
+    class EventDetection {
+
+        private float FRAMES;
+
+        private ArrayDeque<Float> win_rms = new ArrayDeque<>();
+        private ArrayDeque<Float> win_snr_db = new ArrayDeque<>();
+        private ArrayDeque<Float> win_vad = new ArrayDeque<>();
+
+        EventDetection(float frameTime) {
+            this.FRAMES = (int) (EVENT_WINDOW_SEC / frameTime);
+        }
+
+        void update(float rms, float snr, boolean isSpeech) {
+
+            // RMS window
+            float rms_db = 20f * (float) Math.log10(Math.max(1e-9f, rms));
+            win_rms.addLast(rms_db);
+            if (win_rms.size() > FRAMES) win_rms.removeFirst();
+
+            // SNR window
+            float snr_db = 20f * (float) Math.log10(Math.max(1e-9f, snr));
+            win_snr_db.addLast(snr_db);
+            if (win_snr_db.size() > FRAMES) win_snr_db.removeFirst();
+
+            // VAD window
+            win_vad.addLast(isSpeech ? 1f : 0f);
+            if (win_vad.size() > FRAMES) win_vad.removeFirst();
+        }
+
+        boolean event() {
+            // Quantiles
+            float rms_q05 = getQuantile(win_rms, 0.05f);
+            float snr_q95 = getQuantile(win_snr_db, 0.95f);
+
+            // VAD-Ratio
+            float sum_vad = 0;
+            for (float v : win_vad) sum_vad += v;
+            float ratio_vad = sum_vad / win_vad.size();
+
+            Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + rms_q05 + " VAD: " + ratio_vad);
+
+            return (rms_q05 >= EVENT_RMS_THRESHOLD) &&
+                    (snr_q95 <= EVENT_SNR_THRESHOLD) &&
+                    (ratio_vad >= EVENT_VAD_RATIO);
+        }
+
+        private float getQuantile(ArrayDeque<Float> win, float q) {
+            if (win.isEmpty()) return 0f;
+
+            ArrayList<Float> sorted = new ArrayList<>(win);
+            Collections.sort(sorted);
+
+            int idx = Math.max(0, Math.min(sorted.size() - 1,
+                    (int) (q * (sorted.size() - 1))));
+
+            return sorted.get(idx);
         }
     }
 
     protected float rms(float[] data) {
-        float temp = 0;
-        for (float sample : data) temp += sample * sample;
-        temp /= data.length;
-        return (float) Math.sqrt(temp);
+        float sum = 0;
+        for (float s : data) sum += s * s;
+        return (float) Math.sqrt(sum / data.length);
     }
 }
