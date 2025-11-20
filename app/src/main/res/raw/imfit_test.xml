@@ -4,7 +4,7 @@
         <stage feature="StageProcRMS" id="111" blocksize="400" hopsize="200">
             <stage feature="StageFeatureWrite" id="1111" prefix="RMS"/>
         </stage>
-        <stage feature="StageProcRMSsmooth" id="15" blocksize="400" hopsize="200">
+        <stage feature="StageProcRMSsmooth" id="15" blocksize="400" hopsize="200" blockout="2000" hopout="2000">
             <stage feature="StageFeatureWrite" id="151" prefix="RMSs"/>
         </stage>
     </stage>
@@ -20,6 +20,5 @@
     <stage feature="StageProcRMS" id="15" blocksize="400" hopsize="200">
         <stage feature="StageFeatureWrite" id="151" prefix="RMSu"/>
     </stage>
-
     <stage feature="StageAudioWrite" id="99" blocksize="4096" hopsize="4096"/>
 </stage>
