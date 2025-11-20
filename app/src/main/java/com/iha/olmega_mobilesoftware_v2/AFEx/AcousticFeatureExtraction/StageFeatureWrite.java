@@ -79,7 +79,8 @@ public class StageFeatureWrite extends Stage {
 
     public StageFeatureWrite(HashMap parameter) {
         super(parameter);
-        if (id==151) Log.d(LOG, "--------------------->: init1");        feature = (String) parameter.get("prefix");
+
+        feature = (String) parameter.get("prefix");
 
         if (parameter.get("udp") == null)
             isUdp = 0;
@@ -179,6 +180,7 @@ public class StageFeatureWrite extends Stage {
                     }
                     calibValuesReadingDone = true;
                 }
+
                 featureFile = new File(directory + "/" + feature + "_" + timestamp + EXTENSION);
                 LogIHAB.log("openFeatureFile: " + feature + "_" + timestamp + EXTENSION);
                 //featureFile = new File(directory + "/" + feature + "_" + timeFormat.format(Instant.now()) + EXTENSION);
