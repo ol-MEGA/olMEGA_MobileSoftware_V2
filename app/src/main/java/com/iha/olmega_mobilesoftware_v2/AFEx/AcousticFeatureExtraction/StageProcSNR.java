@@ -24,6 +24,7 @@ public class StageProcSNR extends Stage {
 
     private float TAU_SPEECH = 0.05f;
     private float TAU_NOISE  = 0.05f;
+    private float TAU_SPEECH_WRITE = 0.125f; // to ensure privacy when writing speech RMS.
 
     private int LOOKBACK_FRAMES = 2;
 
@@ -75,6 +76,7 @@ public class StageProcSNR extends Stage {
 
         private final float FRAME_TIME;
         private final float ALPHA_SPEECH;
+        private final float ALPHA_SPEECH_WRITE;
         private final float ALPHA_NOISE;
 
         private EventDetection eventDetection;
@@ -82,6 +84,7 @@ public class StageProcSNR extends Stage {
         SNR() {
             FRAME_TIME = (float) blockSize / (float) samplingrate;
             ALPHA_SPEECH = (float) Math.exp(-FRAME_TIME / TAU_SPEECH);
+            ALPHA_SPEECH_WRITE = (float) Math.exp(-FRAME_TIME / TAU_SPEECH_WRITE);
             ALPHA_NOISE  = (float) Math.exp(-FRAME_TIME / TAU_NOISE);
 
             eventDetection = new EventDetection(FRAME_TIME);
@@ -136,7 +139,7 @@ public class StageProcSNR extends Stage {
 
             float[][] out = new float[1][3];
             out[0][0] = snr_value[0][0];
-            out[0][1] = rms_speech;
+            out[0][1] = ALPHA_SPEECH_WRITE * rms_speech + (1 - ALPHA_SPEECH_WRITE) * newRMS;
             out[0][2] = rms_noise;
             send(out);
         }
