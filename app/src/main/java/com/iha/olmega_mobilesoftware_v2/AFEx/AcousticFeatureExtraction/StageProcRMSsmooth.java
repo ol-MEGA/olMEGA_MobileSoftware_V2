@@ -1,5 +1,7 @@
 package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 
+import android.util.Log;
+
 import java.util.HashMap;
 
 /**
