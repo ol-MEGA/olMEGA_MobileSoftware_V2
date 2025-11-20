@@ -21,12 +21,13 @@ public class StageProcClassify extends Stage {
     final static String LOG = "StageProcClassify";
     private final AudioClassifier audioClassifier;
     final private AudioData audioData;
+    final static String model = "yamnet.tflite";
 
     public StageProcClassify(HashMap parameter) {
         super(parameter);
 
         BaseOptions baseOptions =
-                BaseOptions.builder().setModelAssetPath("yamnet.tflite").build();
+                BaseOptions.builder().setModelAssetPath(model).build();
 
         AudioClassifier.AudioClassifierOptions options =
             AudioClassifier.AudioClassifierOptions.builder()
