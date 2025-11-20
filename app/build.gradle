@@ -30,6 +30,9 @@ android {
     //    }
     //}
     namespace 'com.iha.olmega_mobilesoftware_v2'
+    buildFeatures {
+        buildConfig true
+    }
     //sourceSets {
     //    main {
     //        assets {
