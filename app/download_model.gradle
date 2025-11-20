@@ -20,4 +20,13 @@ task downloadYamnetModel(type: Download) {
     overwrite false
 }
 
+/*
+task downloadYamnetPlusModel(type: Download) {
+    src 'https://huggingface.co/hzhongresearch/yamnetp_ahead_ds/resolve/main/yamnetp_ahead_ds_lr0.00001.tflite'
+    dest project.ext.ASSET_DIR + '/yamnetp_ahead_ds_lr0.00001.tflite'
+    overwrite false
+}
+*/
+
 preBuild.dependsOn downloadYamnetModel
+// preBuild.dependsOn downloadYamnetPlusModel
