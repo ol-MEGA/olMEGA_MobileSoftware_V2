@@ -19,7 +19,6 @@ import androidx.core.app.ActivityCompat;
 import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
 import com.iha.olmega_mobilesoftware_v2.States;
 
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.HashMap;
 
@@ -153,14 +152,35 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                     // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
-                audioRecord = new AudioRecord.Builder()
-                        .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
-                        .setAudioFormat(format)
-                        .setBufferSizeInBytes(buffersize)
-                        .build();
+                // just in case that audio record has not been terminated properly. Note that process()
+                // sometimes throws an IllegalStateException when the USB device is removed...
+                if (audioRecord != null) {
+                    try {
+//                        audioRecord.stop();
+//                        audioRecord.release();
+                    } catch (Exception e) {
+                        Log.e(LOG, "Failed to stop/release audio record: " + e.getMessage());
+                    }
+                }
+
+                try {
+                    audioRecord = new AudioRecord.Builder()
+                            .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
+                            .setAudioFormat(format)
+                            .setBufferSizeInBytes(buffersize)
+                            .build();
+                } catch (Exception e) {
+                    Log.e(LOG, "Failed to create AudioRecord: " + e.getMessage());
+                }
 
                 // Set the USB device after the AudioRecord is built
-                audioRecord.setPreferredDevice(usbDevice);
+                try {
+                    audioRecord.setPreferredDevice(usbDevice);
+                } catch (Exception e) {
+                    Log.e(LOG, "Failed to set preferred device: " + e.getMessage());
+                }
+                // check for routed device
+                Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName().toString());
                 sendBroadcast(States.connected);
                 deviceConnected = true;
                 super.start();
@@ -176,11 +196,12 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                 deviceConnected = true;
             } else {
                 sendBroadcast(States.usb_no_device);
-                Log.e(LOG, "Failed to initialize USB AudioRecord. Error: " + e.getMessage());
-                if (startup) {
-                    startup = false;
-                    mainHandler.postDelayed(() -> syncStart(), 500);
-                }
+                Log.e(LOG, "Failed to initialize USB AudioRecord: " + e.getMessage());
+                deviceConnected = false;
+                //if (startup) {
+                    //startup = false;
+                    //mainHandler.postDelayed(() -> syncStart(), 500);
+                //}
             }
         }
     }
@@ -199,13 +220,12 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         audioRecord.startRecording();
 
         Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName());
+        if (!audioRecord.getRoutedDevice().getProductName().toString().contains(DEVICE_NAME)) {
+            stopRecording = true;
+            sendBroadcast(States.usb_no_device);
+        }
         Log.d(LOG, "Started producing");
         sendBroadcast(States.connected);
-
-        // start all consumers!
-//        for (Stage consumer : consumerSet) {
-//            consumer.start();
-//        }
 
         while (!stopRecording && !Thread.currentThread().isInterrupted()) {
 
@@ -249,6 +269,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
 
         Log.d(LOG, "Stopped producing");
         audioRecord.stop();
+        audioRecord.release();
         stopRecording = false;
         Stage.startTime = null;
     }
