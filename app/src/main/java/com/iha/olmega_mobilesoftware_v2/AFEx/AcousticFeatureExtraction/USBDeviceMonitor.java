@@ -85,7 +85,7 @@ public class USBDeviceMonitor {
         if (found && !deviceConnected) {
             deviceConnected = true;
             Log.d(LOG, "Target USB device connected");
-            mainHandler.postDelayed(() -> listener.onTargetDeviceConnected(), 800);
+            mainHandler.postDelayed(() -> listener.onTargetDeviceConnected(), 200);
         } else if (!found && deviceConnected) {
             handleDisconnect();
         } else if (!found && fromBroadcast) {
