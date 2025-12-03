@@ -136,8 +136,11 @@ public class SystemStatus {
             boolean WriteDataToStorage = true;
 
             activityStates.isCharging = (BatteryManagerStatus == BatteryManager.BATTERY_STATUS_CHARGING || BatteryManagerStatus == BatteryManager.BATTERY_STATUS_FULL);
-            if (activityStates.lastChargingState != activityStates.isCharging && activityStates.isCharging)
+            boolean isCharging = false;
+            if (activityStates.lastChargingState != activityStates.isCharging && activityStates.isCharging) {
                 LogIHAB.log("StateCharging");
+                isCharging = true;
+            }
             activityStates.BatteryState = (activityStates.batteryLevel <= batteryStates[1] ? BatteryStates.Critical : activityStates.batteryLevel >= batteryStates[1] && activityStates.batteryLevel <= batteryStates[0] ? BatteryStates.Warning : BatteryStates.Normal);
             // Charging State
             if (curentActivity != ActivityRequestCode.MainActivity && curentActivity != ActivityRequestCode.HelpActiviy)
@@ -215,7 +218,6 @@ public class SystemStatus {
                         break;
                     case connected:
                         LogIHAB.log("StateRunning");
-                        Log.d("STATUS: ", "CONNECTED");
                         activityStates.InfoText = mContext.getResources().getString(R.string.infoConnected);
                         if (preferences.useQuestionnaire() && !(activityStates.isCharging == true && Preferences().usbCutsDataStorage() == true)) {
                             activityStates.questionaireEnabled = true;
@@ -230,7 +232,8 @@ public class SystemStatus {
                         }
                         break;
                     case usb_no_device:
-                        activityStates.InfoText = mContext.getResources().getString(R.string.noUSB);
+                        if (!isCharging)
+                            activityStates.InfoText = mContext.getResources().getString(R.string.noUSB);
                         break;
                 }
             }
