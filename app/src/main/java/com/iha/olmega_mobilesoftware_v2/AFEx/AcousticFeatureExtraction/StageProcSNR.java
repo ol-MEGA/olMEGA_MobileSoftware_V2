@@ -3,6 +3,8 @@ package com.iha.olmega_mobilesoftware_v2.AFEx.AcousticFeatureExtraction;
 import android.content.Intent;
 import android.util.Log;
 
+import com.iha.olmega_mobilesoftware_v2.Core.LogIHAB;
+
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,10 +31,10 @@ public class StageProcSNR extends Stage {
     private int LOOKBACK_FRAMES = 2;
 
     // Event Parameter
-    private float EVENT_WINDOW_SEC = 600f;
-    private float EVENT_RMS_THRESHOLD = 0.02f;
-    private float EVENT_SNR_THRESHOLD = 15f;
-    private float EVENT_VAD_RATIO = 0.3f;
+    private float EVENT_WINDOW_SEC = 600f; // seconds
+    private float EVENT_RMS_THRESHOLD = -40.0f; // dB FS
+    private float EVENT_SNR_THRESHOLD = 15f; // dB SNR
+    private float EVENT_VAD_RATIO = 0.7f;
 
     public StageProcSNR(HashMap parameter) { super(parameter); }
 
@@ -130,7 +132,7 @@ public class StageProcSNR extends Stage {
                     intent.setPackage(context.getPackageName());
                     intent.putExtra("Value", true);
                     context.sendBroadcast(intent);
-
+                    LogIHAB.log("Event: Questionnaire triggered.");
                     Log.i(LOG, "EVENT TRIGGERED!");
                 }
                 // reset
@@ -166,7 +168,7 @@ public class StageProcSNR extends Stage {
 
         private float FRAMES;
 
-        private ArrayDeque<Float> win_rms = new ArrayDeque<>();
+        private ArrayDeque<Float> win_rms_db = new ArrayDeque<>();
         private ArrayDeque<Float> win_snr_db = new ArrayDeque<>();
         private ArrayDeque<Float> win_vad = new ArrayDeque<>();
 
@@ -178,8 +180,8 @@ public class StageProcSNR extends Stage {
 
             // RMS window
             float rms_db = 20f * (float) Math.log10(Math.max(1e-9f, rms));
-            win_rms.addLast(rms_db);
-            if (win_rms.size() > FRAMES) win_rms.removeFirst();
+            win_rms_db.addLast(rms_db);
+            if (win_rms_db.size() > FRAMES) win_rms_db.removeFirst();
 
             // SNR window
             float snr_db = 20f * (float) Math.log10(Math.max(1e-9f, snr));
@@ -193,7 +195,7 @@ public class StageProcSNR extends Stage {
 
         boolean event() {
             // Quantiles
-            float rms_q05 = getQuantile(win_rms, 0.05f);
+            float rms_q05 = getQuantile(win_rms_db, 0.05f);
             float snr_q95 = getQuantile(win_snr_db, 0.95f);
 
             // VAD-Ratio
@@ -201,7 +203,7 @@ public class StageProcSNR extends Stage {
             for (float v : win_vad) sum_vad += v;
             float ratio_vad = sum_vad / win_vad.size();
 
-            Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + rms_q05 + " VAD: " + ratio_vad);
+            //Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + rms_q05 + " VAD: " + ratio_vad);
 
             return (rms_q05 >= EVENT_RMS_THRESHOLD) &&
                     (snr_q95 <= EVENT_SNR_THRESHOLD) &&
