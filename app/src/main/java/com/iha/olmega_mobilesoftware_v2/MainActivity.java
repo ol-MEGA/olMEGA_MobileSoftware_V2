@@ -85,10 +85,13 @@ public class MainActivity extends AppCompatActivity {
     private int neccessaryPermissionsIdx = 0;
     private boolean isLocked = false;
     private QuestionnaireMotivation questionnaireMotivation = QuestionnaireMotivation.manual;
-    private Vibrator vibrator;
+    private Vibrator vibratorQuest;
+    private Vibrator vibratorUSB;
+    private boolean vibratorActive = true;
     private long automaticQuestTimer = Long.MIN_VALUE;
-    private long eventQuestTimeout = 1 * 60;
+    private long eventQuestTimeout = 60 * 60; // seconds, i.e. 1h.
     private long eventQuestTimer = System.currentTimeMillis() / 1000 - eventQuestTimeout;
+    private long deviceNotFoundTimer = 30;
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
     private States profileState = States.undefined;
@@ -263,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
                     if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
-                        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                        vibratorQuest.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                         LogIHAB.log("Vibration: 500");
                     }
                     TextView tempView = findViewById(R.id.InfoTextView);
@@ -288,7 +291,8 @@ public class MainActivity extends AppCompatActivity {
             AppClosed = false;
         }
         checkPermission();
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        vibratorQuest = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        vibratorUSB = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         // create necessary files
         if (!com.iha.olmega_mobilesoftware_v2.Preferences.UdaterSettings.exists()) {
             try {
@@ -655,11 +659,14 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("EVENT", "Event-based Questionnaire requested");
                         if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
                             questionnaireMotivation = QuestionnaireMotivation.event;
-                            eventQuestTimer = System.currentTimeMillis() / 1000; // set time time of event
+                            eventQuestTimer = System.currentTimeMillis() / 1000; // set time of event
                             startQuestionnaire();
                             Log.d("EVENT", "Event-based Questionnaire started");
+                            LogIHAB.log("Event-based Questionnaire started");
+
                         } else {
                             Log.d("EVENT", "timeout active, no Questionnaire started");
+                            LogIHAB.log("Event-based Questionnaire triggered wit timeout active");
                         }
 
 
@@ -723,6 +730,40 @@ public class MainActivity extends AppCompatActivity {
                         if (profileState == States.connecting && controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() > 0 && System.currentTimeMillis() - AppRestartForFailedConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
                             InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
                         findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
+                    }
+                    if (activityStates.profileState == States.usb_no_device && !activityStates.isCharging) {
+                        if (vibratorActive) {
+                            long[] pattern = new long[]{
+                                    0,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                                    400,
+                                    300,
+                            };
+                            vibratorUSB.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                            // only once, until connected
+                            vibratorActive = false;
+                        }
+                    }
+                    if (activityStates.profileState == States.connected) {
+                        vibratorUSB.cancel();
+                        vibratorActive = true;
                     }
                 }
 
