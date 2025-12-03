@@ -31,10 +31,15 @@ public class USBDeviceMonitor {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
                 Log.d(LOG, "USB_DEVICE_ATTACHED");
-                //checkDevices(true);
-                mainHandler.postDelayed(() -> checkDevices(true), 500);
+
+                mainHandler.postDelayed(() -> {
+                    Log.d(LOG, "USB system initialized, checking devices...");
+                    checkDevices(true);
+                }, 300);
+
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 Log.d(LOG, "USB_DEVICE_DETACHED");
                 handleDisconnect();
@@ -73,7 +78,6 @@ public class USBDeviceMonitor {
         for (AudioDeviceInfo device : inputs) {
             if (device.getProductName().toString().contains(targetDeviceName)) {
                 found = true;
-
                 break;
             }
         }
@@ -81,10 +85,10 @@ public class USBDeviceMonitor {
         if (found && !deviceConnected) {
             deviceConnected = true;
             Log.d(LOG, "Target USB device connected");
-            mainHandler.post(() -> listener.onTargetDeviceConnected());
+            mainHandler.postDelayed(() -> listener.onTargetDeviceConnected(), 800);
         } else if (!found && deviceConnected) {
             handleDisconnect();
-        } else if (fromBroadcast) {
+        } else if (!found && fromBroadcast) {
             Log.d(LOG, "Broadcast received but no matching device found");
         }
     }
