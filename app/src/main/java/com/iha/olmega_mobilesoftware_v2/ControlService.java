@@ -61,7 +61,36 @@ public class ControlService extends Service {
         displayFilter.addAction(Intent.ACTION_SCREEN_ON);
         displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mDisplayReceiver, displayFilter);
+
+        // Register receiver for StageState broadcasts coming from StageUSBCapture
+        IntentFilter stageFilter = new IntentFilter();
+        stageFilter.addAction("StageState");
+        registerReceiver(mStageStateReceiver, stageFilter);
     }
+
+    // BroadcastReceiver to react to StageUSBCapture state changes
+    private final BroadcastReceiver mStageStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            int stateOrdinal = intent.getIntExtra("currentState", -1);
+            if (stateOrdinal < 0) return;
+            try {
+                // If connected, try to bring MainActivity to front so AudioRecord can initialize properly
+                if (stateOrdinal == com.iha.olmega_mobilesoftware_v2.States.connected.ordinal()) {
+                    LogIHAB.log("StageState: connected received in Service - bringing MainActivity to front");
+                    // try to move existing task to front or start activity
+                    boolean running = startMainActivity(true);
+                    if (!running) {
+                        // startMainActivity(true) started the activity; otherwise explicit fallback
+                        // nothing more to do here
+                    }
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Failed handling StageState broadcast: " + e.getMessage());
+            }
+        }
+    };
 
     public void startForeground(){
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -107,6 +136,9 @@ public class ControlService extends Service {
         //Log.d(TAG, "Service destroyed");
         Status().onDestroy();
         unregisterReceiver(mDisplayReceiver);
+        try {
+            unregisterReceiver(mStageStateReceiver);
+        } catch (Exception ignored) {}
         super.onDestroy();
     }
 
@@ -127,18 +159,36 @@ public class ControlService extends Service {
     public boolean startMainActivity(boolean forceStartActivity) {
         boolean isActivityRunning = false;
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
-        for (int iActivity = 0; iActivity < runningTaskInfo.size(); iActivity++) {
-            ComponentName componentInfo = runningTaskInfo.get(iActivity).topActivity;
-            if (componentInfo.getPackageName().equals(getPackageName())) {
-                isActivityRunning = true;
+        try {
+            // Try to find existing AppTask and move it to front (preferred)
+            List<ActivityManager.AppTask> appTasks = manager.getAppTasks();
+            if (appTasks != null) {
+                for (ActivityManager.AppTask t : appTasks) {
+                    ActivityManager.RecentTaskInfo info = t.getTaskInfo();
+                    if (info != null && info.baseIntent != null && info.baseIntent.getComponent() != null) {
+                        if (MainActivity.class.getName().equals(info.baseIntent.getComponent().getClassName())) {
+                            // Move existing task to front
+                            try {
+                                t.moveToFront();
+                                isActivityRunning = true;
+                                break;
+                            } catch (Exception e) {
+                                Log.w(TAG, "moveToFront failed: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
             }
+        } catch (Exception e) {
+            Log.w(TAG, "getAppTasks failed: " + e.getMessage());
         }
-        if (isActivityRunning == false && (forceStartActivity || (systemStatus.Preferences().autoStartActivity() && systemStatus.Preferences().isInKioskMode && !systemStatus.Preferences().isAdmin()))) {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
-        return isActivityRunning;
-    }
-}
+
+        // If not running, decide whether to start it
+        if (!isActivityRunning && (forceStartActivity || (systemStatus.Preferences().autoStartActivity() && systemStatus.Preferences().isInKioskMode && !systemStatus.Preferences().isAdmin()))) {
+             Intent intent = new Intent(this, MainActivity.class);
+             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+             startActivity(intent);
+         }
+         return isActivityRunning;
+     }
+ }

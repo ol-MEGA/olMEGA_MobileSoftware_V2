@@ -466,6 +466,15 @@ public class MainActivity extends AppCompatActivity {
                 if (controlService != null) {
                     controlService.Status().setActiveActivity(ActivityRequestCode.MainActivity);
                     isLocked = false;
+                    // Notify waiting stages/services that MainActivity is now foreground and service ready
+                    try {
+                        Intent fg = new Intent("AppForeground");
+                        fg.setPackage(getPackageName());
+                        sendBroadcast(fg);
+                        Log.d(TAG, "AppForeground broadcast sent from onResume (after service ready)");
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed to send AppForeground broadcast: " + e.getMessage());
+                    }
                 }
                 else
                     lockUntilResumeComplete.postDelayed(this, 10);
@@ -631,140 +640,8 @@ public class MainActivity extends AppCompatActivity {
             controlService.Status().writePreferencesToLog();
             controlService.Status().setSystemStatusListener(new SystemStatus.SystemStatusListener() {
                 public void setAcitivyStates(ActivityStates activityStates) {
-                    SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
-                    TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
-                    if (controlService.Status().Preferences().allowSilentAlarm() == false && findViewById(R.id.disableVibration).getVisibility() != View.GONE) {
-                        findViewById(R.id.disableVibration).setVisibility(View.GONE);
-                        if (controlService.Status().Preferences().silentAlarmActive == true) {
-                            controlService.Status().Preferences().silentAlarmActive = false;
-                            updateDisableVibration();
-                        }
-                    }
-                    if (activityStates.isCharging && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
-                        if (QuestionnaireActivity.thisAppCompatActivity != null)
-                            QuestionnaireActivity.thisAppCompatActivity.finish();
-                        findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.gray_400, getTheme()));
-                    }
-                    else {
-                        if (activityStates.isCharging == false && activityStates.lastChargingState == true && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage())) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
-                            editor.commit();
-                        }
-                        findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
-                    }
-                    // start Questionnaire based on (acoustic) event
-                    if (activityStates.startEventQuestionnaire) {
-                        // check for timeout of event-based questionnaire
-                        Log.d("EVENT", "Event-based Questionnaire requested");
-                        if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
-                            questionnaireMotivation = QuestionnaireMotivation.event;
-                            eventQuestTimer = System.currentTimeMillis() / 1000; // set time of event
-                            startQuestionnaire();
-                            Log.d("EVENT", "Event-based Questionnaire started");
-                            LogIHAB.log("Event-based Questionnaire started");
-
-                        } else {
-                            Log.d("EVENT", "timeout active, no Questionnaire started");
-                            LogIHAB.log("Event-based Questionnaire triggered wit timeout active");
-                        }
-
-
-                    }
-                    findViewById(R.id.Layout_CalibrationValues).setVisibility((activityStates.showCalibrationValuesError ? 0 : 1) * 8);
-                    findViewById(R.id.charging).setVisibility((activityStates.isCharging ? 0 : 1) * 8);
-                    InfoTextView.setText(activityStates.InfoText);
-                    questionaireEnabled = activityStates.questionaireEnabled;
-                    if (questionaireEnabled && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
-                        findViewById(R.id.disableVibration).setVisibility(View.VISIBLE);
-                    if (controlService.Status().Preferences().isAdmin())
-                        findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
-                    else if (controlService.Status().Preferences().configHasErrors)
-                        findViewById(R.id.logo).setBackgroundResource(R.color.design_default_color_error);
-                    else
-                        findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
-                    View battery_bottom = findViewById(R.id.battery_bottom);
-                    switch (activityStates.BatteryState) {
-                        case Normal:
-                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
-                            break;
-                        case Warning:
-                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
-                            break;
-                        case Critical:
-                            battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
-                            break;
-                    }
-                    // Batterie Level
-                    ViewGroup.LayoutParams battery_bottomParams = findViewById(R.id.battery_bottom).getLayoutParams();
-                    battery_bottomParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (activityStates.batteryLevel / 100));
-                    battery_bottom.setLayoutParams(battery_bottomParams);
-
-                    View battery_top = findViewById(R.id.battery_top);
-                    ViewGroup.LayoutParams battery_topParams = battery_top.getLayoutParams();
-                    battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - activityStates.batteryLevel / 100));
-                    battery_top.setLayoutParams(battery_topParams);
-
-                    profileState = activityStates.profileState;
-                    long AppRestartForFailedConnection = prefs.getLong("AppRestartForFailedConnection", System.currentTimeMillis());
-                    if (activityStates.profileState == States.restart) {
-                        LogIHAB.log("App Restarts because of Connection Issues");
-                        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                        if (mBluetoothAdapter.isEnabled())
-                            mBluetoothAdapter.disable();
-                        final PackageManager pm = MainActivity.this.getPackageManager();
-                        final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
-                        MainActivity.this.finishAffinity(); // Finishes all activities.
-                        MainActivity.this.startActivity(intent);    // Start the launch activity
-                        System.exit(0);    // System finishes and automatically relaunches us.
-                    }
-                    else if (activityStates.profileState == States.connected) {
-                        if (AppRestartForFailedConnection < System.currentTimeMillis()) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 10 * 1000);
-                            editor.commit();
-                        }
-                        findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
-                    }
-                    else {
-                        if (profileState == States.connecting && controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() > 0 && System.currentTimeMillis() - AppRestartForFailedConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
-                            InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
-                        findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
-                    }
-                    if (activityStates.profileState == States.usb_no_device && !activityStates.isCharging) {
-                        if (vibratorActive) {
-                            long[] pattern = new long[]{
-                                    0,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                                    400,
-                                    300,
-                            };
-                            vibratorUSB.vibrate(VibrationEffect.createWaveform(pattern, -1));
-                            // only once, until connected
-                            vibratorActive = false;
-                        }
-                    }
-                    if (activityStates.profileState == States.connected) {
-                        vibratorUSB.cancel();
-                        vibratorActive = true;
-                    }
+                    // Delegate to MainActivity method which runs on UI thread
+                    applyActivityStates(activityStates);
                 }
 
                 public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
@@ -787,6 +664,156 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+
+    // Central method to apply activity state updates to the UI. Safe to call from any thread.
+    private void applyActivityStates(final ActivityStates activityStates) {
+        if (activityStates == null) return;
+        runOnUiThread(() -> {
+            try {
+                SharedPreferences prefs = getSharedPreferences("olMEGA_MobileSoftware_V2", Context.MODE_PRIVATE );
+                TextView InfoTextView = (TextView) findViewById(R.id.InfoTextView);
+                if (controlService != null && controlService.Status() != null) {
+                    if (controlService.Status().Preferences().allowSilentAlarm() == false && findViewById(R.id.disableVibration).getVisibility() != View.GONE) {
+                        findViewById(R.id.disableVibration).setVisibility(View.GONE);
+                        if (controlService.Status().Preferences().silentAlarmActive == true) {
+                            controlService.Status().Preferences().silentAlarmActive = false;
+                            updateDisableVibration();
+                        }
+                    }
+                }
+                if (activityStates.isCharging && (controlService != null && controlService.Status().Preferences().usbCutsConnection() || (controlService != null && controlService.Status().Preferences().usbCutsDataStorage()))) {
+                    if (QuestionnaireActivity.thisAppCompatActivity != null)
+                        QuestionnaireActivity.thisAppCompatActivity.finish();
+                    findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.gray_400, getTheme()));
+                }
+                else {
+                    if (activityStates.isCharging == false && activityStates.lastChargingState == true && (controlService != null && (controlService.Status().Preferences().usbCutsConnection() || controlService.Status().Preferences().usbCutsDataStorage()))) {
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis());
+                        editor.commit();
+                    }
+                    findViewById(R.id.MainWindow).setBackgroundColor(getResources().getColor(R.color.BackgroundColor, getTheme()));
+                }
+                // start Questionnaire based on (acoustic) event
+                if (activityStates.startEventQuestionnaire) {
+                    // check for timeout of event-based questionnaire
+                    Log.d("EVENT", "Event-based Questionnaire requested");
+                    if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
+                        questionnaireMotivation = QuestionnaireMotivation.event;
+                        eventQuestTimer = System.currentTimeMillis() / 1000; // set time of event
+                        startQuestionnaire();
+                        Log.d("EVENT", "Event-based Questionnaire started");
+                        LogIHAB.log("Event-based Questionnaire started");
+
+                    } else {
+                        Log.d("EVENT", "timeout active, no Questionnaire started");
+                        LogIHAB.log("Event-based Questionnaire triggered wit timeout active");
+                    }
+
+
+                }
+                findViewById(R.id.Layout_CalibrationValues).setVisibility((activityStates.showCalibrationValuesError ? 0 : 1) * 8);
+                findViewById(R.id.charging).setVisibility((activityStates.isCharging ? 0 : 1) * 8);
+                InfoTextView.setText(activityStates.InfoText);
+                questionaireEnabled = activityStates.questionaireEnabled;
+                if (questionaireEnabled && controlService != null && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
+                    findViewById(R.id.disableVibration).setVisibility(View.VISIBLE);
+                if (controlService != null && controlService.Status().Preferences().isAdmin())
+                    findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
+                else if (controlService != null && controlService.Status().Preferences().configHasErrors)
+                    findViewById(R.id.logo).setBackgroundResource(R.color.design_default_color_error);
+                else
+                    findViewById(R.id.logo).setBackgroundResource(R.color.lighterGray);
+                View battery_bottom = findViewById(R.id.battery_bottom);
+                switch (activityStates.BatteryState) {
+                    case Normal:
+                        battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryGreen));
+                        break;
+                    case Warning:
+                        battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.BatteryYellow));
+                        break;
+                    case Critical:
+                        battery_bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.JadeRed));
+                        break;
+                }
+                // Batterie Level
+                ViewGroup.LayoutParams battery_bottomParams = findViewById(R.id.battery_bottom).getLayoutParams();
+                battery_bottomParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (activityStates.batteryLevel / 100));
+                battery_bottom.setLayoutParams(battery_bottomParams);
+
+                View battery_top = findViewById(R.id.battery_top);
+                ViewGroup.LayoutParams battery_topParams = battery_top.getLayoutParams();
+                battery_topParams.height = (int) (findViewById(R.id.BatterieView).getHeight() * (1 - activityStates.batteryLevel / 100));
+                battery_top.setLayoutParams(battery_topParams);
+
+                profileState = activityStates.profileState;
+                long AppRestartForFailedConnection = prefs.getLong("AppRestartForFailedConnection", System.currentTimeMillis());
+                if (activityStates.profileState == States.restart) {
+                    LogIHAB.log("App Restarts because of Connection Issues");
+                    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                    if (mBluetoothAdapter.isEnabled())
+                        mBluetoothAdapter.disable();
+                    final PackageManager pm = MainActivity.this.getPackageManager();
+                    final Intent intent = pm.getLaunchIntentForPackage(MainActivity.this.getPackageName());
+                    MainActivity.this.finishAffinity(); // Finishes all activities.
+                    MainActivity.this.startActivity(intent);    // Start the launch activity
+                    System.exit(0);    // System finishes and automatically relaunches us.
+                }
+                else if (activityStates.profileState == States.connected) {
+                    if (AppRestartForFailedConnection < System.currentTimeMillis()) {
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putLong("AppRestartForFailedConnection", System.currentTimeMillis() + 10 * 1000);
+                        editor.commit();
+                    }
+                    findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.PhantomDarkBlue, null)));
+                }
+                else {
+                    if (profileState == States.connecting && controlService != null && controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() > 0 && System.currentTimeMillis() - AppRestartForFailedConnection >= Math.max(1, controlService.Status().Preferences().timeoutForTransmitterNotFoundMessage() * 1000 * 60) && !InfoTextView.getText().toString().contains(context.getResources().getText(R.string.TransmitterNotFound)))
+                        InfoTextView.setText(InfoTextView.getText() + "\n\n" + context.getResources().getText(R.string.TransmitterNotFound));
+                    findViewById(R.id.Action_Record).setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(), R.color.JadeGray, null)));
+                }
+                if (activityStates.profileState == States.usb_no_device && !activityStates.isCharging) {
+                    if (vibratorActive) {
+                        long[] pattern = new long[]{
+                                0,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                                400,
+                                300,
+                        };
+                        vibratorUSB.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                        // only once, until connected
+                        vibratorActive = false;
+
+                    }
+                }
+                if (activityStates.profileState == States.connected) {
+                    if (vibratorUSB != null) {
+                        vibratorUSB.cancel();
+                    }
+                    vibratorActive = true;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "applyActivityStates failed: " + e.getMessage());
+            }
+        });
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

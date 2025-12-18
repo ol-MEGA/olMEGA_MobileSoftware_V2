@@ -41,8 +41,8 @@ public class StageManager {
         // Start time is set here, will get overwritten in 1st Stage, e.g. StageAudioCapture.
         //Stage.startTime = Instant.now();
 
-        mainStage.start();
         isRunning = true;
+        mainStage.start();
 
     }
 

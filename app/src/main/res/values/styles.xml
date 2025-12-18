@@ -32,5 +32,12 @@
         <item name="exampleColor">@color/light_blue_400</item>
     </style>
 
+    <!-- Minimal transparent theme used by TransparentWakeActivity -->
+    <style name="Theme.TransparentWake" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+    </style>
 
 </resources>
