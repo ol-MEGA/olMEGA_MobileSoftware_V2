@@ -1,6 +1,5 @@
 package com.iha.olmega_mobilesoftware_v2.AFEx.Tools;
 
-import android.os.Environment;
 import android.util.Log;
 
 import com.iha.olmega_mobilesoftware_v2.Core.FileIO;
@@ -22,11 +21,14 @@ public class AudioFileIO {
     public static final String MAIN_FOLDER = FileIO.getFolderPath();
     public static final String CACHE_FOLDER = MAIN_FOLDER + File.separator + "cache";
     public static final String FEATURE_FOLDER = MAIN_FOLDER + File.separator + "features";
+    public static final String ID_FOLDER = MAIN_FOLDER + File.separator + "speakerid";
     public static final String CACHE_WAVE = "wav";
     public static final String CACHE_RAW = "raw";
     public static final String STAGE_CONFIG = "features.xml";
 
     public String filename;
+    // Optional override for the cache/base folder (allows writing to other folders like "speakerid")
+    private String baseFolderPath = null;
 
     int samplerate = 0;
     int channels = 0;
@@ -40,6 +42,15 @@ public class AudioFileIO {
         this.filename = filename;
     }
 
+    /**
+     * Allow specifying a custom base folder (absolute path) where files will be written.
+     * If baseFolder is null, the default cache folder is used.
+     */
+    public AudioFileIO(String filename, String baseFolder) {
+        this.filename = filename;
+        this.baseFolderPath = baseFolder;
+    }
+
     // main folder
     public static String getMainPath() {
         File directory = new File(MAIN_FOLDER);
@@ -49,11 +60,19 @@ public class AudioFileIO {
         return directory.getAbsolutePath();
     }
 
+    // speaker-id folder
+    public static String getSpeakerIdPath() {
+        File dir = new File(ID_FOLDER);
+        if (!dir.exists()) dir.mkdirs();
+        return dir.getAbsolutePath();
+    }
+
     // cache folder
     public String getCachePath() {
-        File baseDirectory = new File(CACHE_FOLDER);
+        String folder = (baseFolderPath != null && !baseFolderPath.isEmpty()) ? baseFolderPath : CACHE_FOLDER;
+        File baseDirectory = new File(folder);
         if (!baseDirectory.exists()) {
-            baseDirectory.mkdir();
+            baseDirectory.mkdirs();
         }
         return baseDirectory.getAbsolutePath();
     }
@@ -201,7 +220,7 @@ public class AudioFileIO {
             int fileLength = (int) raFile.length(); // [bytes]
             int chunkSize = fileLength - 8;
             int dataSize = fileLength - 44;
-            short blockAlign = (short) ((channels) * (bitsize % 8));
+            short blockAlign = (short) (channels * (bitsize / 8));
             int bytesPerSec = samplerate * blockAlign;
 
             // RIFF-Header
