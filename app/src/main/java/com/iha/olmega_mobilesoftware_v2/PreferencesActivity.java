@@ -161,6 +161,16 @@ public class PreferencesActivity extends PreferenceActivity {
                 return true;
             });
 
+            // Quick audio capture preference: start the ReferenceCaptureActivity and show saved path
+            Preference quickCapturePref = (Preference) findPreference("quickReferenceCapture");
+            if (quickCapturePref != null) {
+                quickCapturePref.setOnPreferenceClickListener(arg0 -> {
+                    Intent intent = new Intent(getActivity(), ReferenceCaptureActivity.class);
+                    startActivityForResult(intent, ActivityRequestCode.PreferencesActivity.ordinal());
+                    return true;
+                });
+            }
+
             Preference.OnPreferenceChangeListener temp = new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {

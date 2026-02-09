@@ -67,6 +67,12 @@
             android:summary="@string/pref_timeoutForTransmitterNotFoundMessage_summary"
         />
 
+        <Preference
+            android:key="quickReferenceCapture"
+            android:title="@string/pref_captureReference_title"
+            android:summary="@string/pref_captureReference_summary"
+        />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_head_Questionnaire">
