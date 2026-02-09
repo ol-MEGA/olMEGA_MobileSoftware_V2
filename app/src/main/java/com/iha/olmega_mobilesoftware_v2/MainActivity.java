@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean vibratorActive = true;
     private long automaticQuestTimer = Long.MIN_VALUE;
     private long eventQuestTimeout = 60 * 60; // seconds, i.e. 1h.
-    private long eventQuestTimer = System.currentTimeMillis() / 1000 - eventQuestTimeout;
+    private long eventQuestTimer = System.currentTimeMillis() / 1000;
     private long deviceNotFoundTimer = 30;
     private boolean wifiActivated = false, AppClosed = true;
     private boolean questionaireEnabled = false;
@@ -696,21 +696,19 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // start Questionnaire based on (acoustic) event
                 if (activityStates.startEventQuestionnaire) {
-                    // check for timeout of event-based questionnaire
+                    activityStates.startEventQuestionnaire = false;
                     Log.d("EVENT", "Event-based Questionnaire requested");
-                    if (System.currentTimeMillis() / 1000 - eventQuestTimer > eventQuestTimeout) {
+                    // check automatic timer, trigger event questionnaire only if timer <= auto.interval/2
+                    if (((controlService.Status().GetAutomaticQuestionaireTimer() - System.currentTimeMillis()) / 1000)
+                            <= (controlService.Status().GetAutomaticQuestionaireTimerInterval() / 2)) {
                         questionnaireMotivation = QuestionnaireMotivation.event;
-                        eventQuestTimer = System.currentTimeMillis() / 1000; // set time of event
                         startQuestionnaire();
-                        Log.d("EVENT", "Event-based Questionnaire started");
+                        Log.d("EVENT", "Event-based Questionnaire triggered and started");
                         LogIHAB.log("Event-based Questionnaire started");
-
                     } else {
                         Log.d("EVENT", "timeout active, no Questionnaire started");
-                        LogIHAB.log("Event-based Questionnaire triggered wit timeout active");
+                        LogIHAB.log("Event-based Questionnaire triggered with timeout active");
                     }
-
-
                 }
                 findViewById(R.id.Layout_CalibrationValues).setVisibility((activityStates.showCalibrationValuesError ? 0 : 1) * 8);
                 findViewById(R.id.charging).setVisibility((activityStates.isCharging ? 0 : 1) * 8);
