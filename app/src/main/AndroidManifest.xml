@@ -56,6 +56,11 @@
             android:name=".PreferencesActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ReferenceCaptureActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+        <activity
             android:name=".Help"
             android:screenOrientation="portrait" />
         <activity android:name=".LinkDeviceHelper"
