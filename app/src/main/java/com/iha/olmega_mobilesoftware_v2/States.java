@@ -7,7 +7,8 @@ public enum States {
     connected,
     requestDisconnection,
     restart,
-    usb_no_device
+    usb_no_device,
+    sid_no_reference
 }
 
 enum QuestionnaireMotivation {
