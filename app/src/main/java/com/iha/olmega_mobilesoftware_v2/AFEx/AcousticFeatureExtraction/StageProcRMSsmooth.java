@@ -55,7 +55,7 @@ public class StageProcRMSsmooth extends Stage {
             }
         } else {
             for (int ch = 0; ch < channels; ch++) {
-                smooth_rms[ch][0] = (float) (alpha * current_rms[ch][0] + (1 - alpha) * smooth_rms[ch][0]);
+                smooth_rms[ch][0] = (float) (alpha * smooth_rms[ch][0] + (1.0 - alpha) * current_rms[ch][0]);
             }
         }
 

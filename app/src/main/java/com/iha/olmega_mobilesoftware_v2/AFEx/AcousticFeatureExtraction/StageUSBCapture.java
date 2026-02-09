@@ -11,6 +11,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Looper;
+import android.content.IntentFilter;
 import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
@@ -58,8 +59,7 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
         try {
             if (!deviceConnected) {
                 Log.d(LOG, "USB device connected");
-                sendBroadcast(States.connected);
-                deviceConnected = true;
+                // do not mark connected or notify UI here; wait until AudioRecord is successfully initialized in start()
                 start();
             }
         } finally {
@@ -171,6 +171,51 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                             .build();
                 } catch (Exception e) {
                     Log.e(LOG, "Failed to create AudioRecord: " + e.getMessage());
+
+                    // start UnlockActivity to bring app into foreground & unlock screen,
+                    // then wait for MainActivity to broadcast and retry via syncStart().
+                    try {
+                        Log.d(LOG, "Attempting UnlockActivity fallback (deferred retry)");
+                        Intent ui = new Intent(context, com.iha.olmega_mobilesoftware_v2.UnlockActivity.class);
+                        ui.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        ui.putExtra("triggerSource", "StageUSBCapture_debug_deferredRetry");
+                        context.startActivity(ui);
+
+                        // register for AppForeground to retry initialization
+                        final android.content.BroadcastReceiver fgReceiver = new android.content.BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context c, Intent intent) {
+                                try {
+                                    context.unregisterReceiver(this);
+                                } catch (Exception ignored) {}
+                                Log.d(LOG, "AppForeground received — scheduling syncStart() retry (delayed 500ms)");
+                                try {
+                                    mainHandler.postDelayed(() -> syncStart(), 500);
+                                } catch (Exception ex) {
+                                    Log.w(LOG, "Failed to post syncStart(): " + ex.getMessage());
+                                }
+                            }
+                        };
+                        try {
+                          IntentFilter ff = new IntentFilter("AppForeground");
+                          context.registerReceiver(fgReceiver, ff);
+                        } catch (Exception regEx) {
+                          Log.w(LOG, "Failed to register AppForeground receiver: " + regEx.getMessage());
+                        }
+
+                        // actual retry will be triggered when MainActivity becomes foreground
+                        return;
+                    } catch (Exception uiEx) {
+                        Log.w(LOG, "Failed to launch UnlockActivity fallback: " + uiEx.getMessage());
+                    }
+                }
+
+                // if stilöl no audioRecord, report no device and return
+                if (audioRecord == null || audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                    Log.e(LOG, "AudioRecord not initialized after attempts; aborting start()");
+                    sendBroadcast(States.usb_no_device);
+                    deviceConnected = false;
+                    return;
                 }
 
                 // Set the USB device after the AudioRecord is built
@@ -179,8 +224,13 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
                 } catch (Exception e) {
                     Log.e(LOG, "Failed to set preferred device: " + e.getMessage());
                 }
-                // check for routed device
-                Log.d(LOG, "Routed device: " + audioRecord.getRoutedDevice().getProductName().toString());
+                // check for routed device (guard against null)
+                try {
+                    String routedName = "<null>";
+                    if (audioRecord.getRoutedDevice() != null && audioRecord.getRoutedDevice().getProductName() != null)
+                        routedName = audioRecord.getRoutedDevice().getProductName().toString();
+                    Log.d(LOG, "Routed device: " + routedName);
+                } catch (Exception ignore) { Log.d(LOG, "Routed device: <unknown>"); }
                 sendBroadcast(States.connected);
                 deviceConnected = true;
                 super.start();
@@ -190,17 +240,18 @@ public class StageUSBCapture extends Stage implements USBDeviceMonitor.Listener 
 
             }
         } catch (Exception e) {
-           if (usbDevice != null && usbDevice.getProductName().toString().contains(DEVICE_NAME) && e.getMessage().contains("temporal")) {
+            if (usbDevice != null && usbDevice.getProductName().toString().contains(DEVICE_NAME) && e.getMessage().contains("temporal")) {
                 Log.d(LOG, "---------------> USB device present, but : " + e.getMessage());
                 sendBroadcast(States.connected);
                 deviceConnected = true;
             } else {
                 sendBroadcast(States.usb_no_device);
                 Log.e(LOG, "Failed to initialize USB AudioRecord: " + e.getMessage());
+                e.printStackTrace();
                 deviceConnected = false;
                 //if (startup) {
-                    //startup = false;
-                    //mainHandler.postDelayed(() -> syncStart(), 500);
+                //startup = false;
+                //mainHandler.postDelayed(() -> syncStart(), 500);
                 //}
             }
         }

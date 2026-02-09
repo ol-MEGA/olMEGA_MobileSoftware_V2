@@ -31,8 +31,8 @@ public class StageProcSNR extends Stage {
     private int LOOKBACK_FRAMES = 2;
 
     // Event Parameter
-    private float EVENT_WINDOW_SEC = 600f; // seconds
-    private float EVENT_RMS_THRESHOLD = -40.0f; // dB FS
+    private float EVENT_WINDOW_SEC = 300f; // seconds
+    private float EVENT_RMS_THRESHOLD = -40.0f; // -40 dB FS -> ~75 dB SPL
     private float EVENT_SNR_THRESHOLD = 15f; // dB SNR
     private float EVENT_VAD_RATIO = 0.7f;
 
@@ -68,8 +68,8 @@ public class StageProcSNR extends Stage {
 
     private class SNR {
 
-        private float last_event = 0f; // time since last event in s
-        private float event_interval = 2; // check for event every interval s
+        private float check_event_timer = 0f; // time since last event in s
+        private float check_event_interval = 2; // check for event every interval s
         private float[][] snr_value = new float[1][1];
         private float rms_speech = 0f;
         private float rms_noise = 0f;
@@ -97,7 +97,6 @@ public class StageProcSNR extends Stage {
             float vadRaw = input[input.length - 1][0];
             boolean isSpeech = vadRaw >= 0.5f;
 
-            // Lookback
             if (ENABLE_LOOKBACK) {
                 updateVADBuffer(isSpeech);
                 if (shouldMarkLookback())
@@ -106,7 +105,6 @@ public class StageProcSNR extends Stage {
 
             float newRMS = rms(input[0]);
 
-            // --- Glättung ---
             if (ENABLE_SMOOTHING) {
                 if (isSpeech) {
                     rms_speech = ALPHA_SPEECH * rms_speech + (1 - ALPHA_SPEECH) * newRMS;
@@ -125,18 +123,22 @@ public class StageProcSNR extends Stage {
             eventDetection.update(newRMS, snr_value[0][0], isSpeech);
 
             // check for event every event_interval
-            last_event += FRAME_TIME;
-            if (last_event >= event_interval) {
+            check_event_timer += FRAME_TIME;
+            if (check_event_timer >= check_event_interval) {
                 if (eventDetection.event()) {
                     Intent intent = new Intent("QuestionnaireEvent");
                     intent.setPackage(context.getPackageName());
                     intent.putExtra("Value", true);
                     context.sendBroadcast(intent);
-                    LogIHAB.log("Event: Questionnaire triggered.");
                     Log.i(LOG, "EVENT TRIGGERED!");
+                    // if we had an event, set check_event_interval to EVENT_WINDOW_SEC to prevent
+                    // firing every check_event_interval
+                    check_event_interval = EVENT_WINDOW_SEC;
+                } else {
+                    check_event_interval = 2; // reset if EVENT_WINDOW_SEC is up to check for new events
                 }
                 // reset
-                last_event = 0f;
+                check_event_timer = 0f;
             }
 
             float[][] out = new float[1][3];
@@ -166,11 +168,11 @@ public class StageProcSNR extends Stage {
 
     class EventDetection {
 
-        private float FRAMES;
+        private int FRAMES;
 
         private ArrayDeque<Float> win_rms_db = new ArrayDeque<>();
-        private ArrayDeque<Float> win_snr_db = new ArrayDeque<>();
-        private ArrayDeque<Float> win_vad = new ArrayDeque<>();
+//        private ArrayDeque<Float> win_snr_db = new ArrayDeque<>();
+//        private ArrayDeque<Float> win_vad = new ArrayDeque<>();
 
         EventDetection(float frameTime) {
             this.FRAMES = (int) (EVENT_WINDOW_SEC / frameTime);
@@ -184,34 +186,38 @@ public class StageProcSNR extends Stage {
             if (win_rms_db.size() > FRAMES) win_rms_db.removeFirst();
 
             // SNR window
-            float snr_db = 20f * (float) Math.log10(Math.max(1e-9f, snr));
-            win_snr_db.addLast(snr_db);
-            if (win_snr_db.size() > FRAMES) win_snr_db.removeFirst();
+//            float snr_db = 20f * (float) Math.log10(Math.max(1e-9f, snr));
+//            win_snr_db.addLast(snr_db);
+//            if (win_snr_db.size() > FRAMES) win_snr_db.removeFirst();
 
             // VAD window
-            win_vad.addLast(isSpeech ? 1f : 0f);
-            if (win_vad.size() > FRAMES) win_vad.removeFirst();
+//            win_vad.addLast(isSpeech ? 1f : 0f);
+//            if (win_vad.size() > FRAMES) win_vad.removeFirst();
         }
 
         boolean event() {
+            // require the window to be (mostly) filled before evaluating quantiles
+            int requiredCount = Math.max(1, (int) Math.ceil(0.95 * FRAMES));
+            if (win_rms_db.size() < requiredCount) return false;
+
             // Quantiles
             float rms_q05 = getQuantile(win_rms_db, 0.05f);
-            float snr_q95 = getQuantile(win_snr_db, 0.95f);
+//            float snr_q95 = getQuantile(win_snr_db, 0.95f);
 
             // VAD-Ratio
-            float sum_vad = 0;
-            for (float v : win_vad) sum_vad += v;
-            float ratio_vad = sum_vad / win_vad.size();
+//            float sum_vad = 0;
+//            for (float v : win_vad) sum_vad += v;
+//            float ratio_vad = sum_vad / win_vad.size();
 
             //Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + rms_q05 + " VAD: " + ratio_vad);
 
-            return (rms_q05 >= EVENT_RMS_THRESHOLD) &&
-                    (snr_q95 <= EVENT_SNR_THRESHOLD) &&
-                    (ratio_vad >= EVENT_VAD_RATIO);
+            return (rms_q05 >= EVENT_RMS_THRESHOLD); // &&
+//                    (snr_q95 <= EVENT_SNR_THRESHOLD) &&
+//                    (ratio_vad >= EVENT_VAD_RATIO);
         }
 
         private float getQuantile(ArrayDeque<Float> win, float q) {
-            if (win.isEmpty()) return 0f;
+            if (win.isEmpty()) return Float.NEGATIVE_INFINITY;
 
             ArrayList<Float> sorted = new ArrayList<>(win);
             Collections.sort(sorted);

@@ -123,7 +123,7 @@ public class StageProcOctaves extends Stage {
                     float rms = scale * sum;
                     // recursive averaging & store data for next average
                     if (!initialized)
-                        p_temp[ch][b] = (1 - alpha) * rms;
+                        p_temp[ch][b] = rms;
                     else
                         p_temp[ch][b] = alpha * p_temp[ch][b] + (1 - alpha) * rms;
 
