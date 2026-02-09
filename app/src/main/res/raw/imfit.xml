@@ -14,7 +14,10 @@
             <stage feature="StageFeatureWrite" id="1321" prefix="SNR"/>
         </stage>
     </stage>
-    <stage feature="StageProcClassify" id="16" blocksize="15360" hopsize="15360">
+    <stage feature="StageProcSpeakerID" id="17" blocksize="16000" hopsize="8000">
+        <stage feature="StageFeatureWrite" id="171" prefix="SID"/>
+    </stage>
+    <stage feature="StageProcClassify" id="16" blocksize="15600" hopsize="15600">
         <stage feature="StageFeatureWrite" id="161" prefix="CLASS"/>
     </stage>
 </stage>

@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<stage feature="StageReadAudioFile" id="1" channels="1">
+    <stage feature="StageUSBCapture" id="1">
     <stage feature="StagePreHighpass" id="11" blocksize="400" cutoff_hz="100">
-        <stage feature="StageProcRMS" id="111" blocksize="400" hopsize="200">
-            <stage feature="StageFeatureWrite" id="1111" prefix="RMS"/>
-        </stage>
-        <stage feature="StageProcRMSsmooth" id="15" blocksize="400" hopsize="200" blockout="2000" hopout="2000">
-            <stage feature="StageFeatureWrite" id="151" prefix="RMSs"/>
+        <stage feature="StageProcRMSsmooth" id="111" blocksize="400" hopsize="200" blockout="2000" hopout="2000">
+            <stage feature="StageFeatureWrite" id="1111" prefix="RMSs"/>
         </stage>
     </stage>
     <stage feature="StageProcOctaves" id="12" blocksize="4000" hopsize="1000" blockout="8000" hopout="8000">
         <stage feature="StageFeatureWrite" id="121" prefix="OCTAVES"/>
     </stage>
-    <stage feature="StageProcVAD" id="14" blocksize="512" hopsize="512" passthrough="true">
-        <stage feature="StageFeatureWrite" id="141" prefix="VAD"/>
-        <stage feature="StageProcSNR" id="142" blocksize="512" hopsize="512">
-            <stage feature="StageFeatureWrite" id="1421" prefix="SNR"/>
+    <stage feature="StageProcVAD" id="13" blocksize="512" hopsize="512" passthrough="true">
+        <stage feature="StageFeatureWrite" id="131" prefix="VAD"/>
+        <stage feature="StageProcSNR" id="132" blocksize="512" hopsize="512">
+            <stage feature="StageFeatureWrite" id="1321" prefix="SNR"/>
         </stage>
     </stage>
-    <stage feature="StageProcRMS" id="15" blocksize="400" hopsize="200">
-        <stage feature="StageFeatureWrite" id="151" prefix="RMSu"/>
+    <stage feature="StageProcSpeakerID" id="17" blocksize="16000" hopsize="8000">
+        <stage feature="StageFeatureWrite" id="171" prefix="SID"/>
+    </stage>
+    <stage feature="StageProcClassify" id="16" blocksize="15600" hopsize="15600">
+        <stage feature="StageFeatureWrite" id="161" prefix="CLASS"/>
     </stage>
     <stage feature="StageAudioWrite" id="99" blocksize="4096" hopsize="4096"/>
 </stage>
