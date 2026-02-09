@@ -22,6 +22,7 @@
     <string name="batteryWarning">Bitte laden Sie das Smartphone.</string>
     <string name="batteryCritical">Batteriestand kritisch - Aufnahme unterbrochen.</string>
     <string name="noUSB">Mikrofon nicht verbunden.</string>
+    <string name="noSID">SpeakerID: Referenz nicht gefunden.</string>
 
     <string name="noInternet">Keine Internetverbindung.</string>
 
@@ -107,6 +108,8 @@
     <string name="pref_filterHpFrequency_title">Grenzfrequenz in Hz</string>
     <string name="pref_downsample_title">Downsampling</string>
     <string name="pref_downsample_summary">Audio downsamplen (Faktor 2)</string>
+    <string name="pref_captureReference_title">SpeakerID Referenz</string>
+    <string name="pref_captureReference_summary">Referenz für SpeakerID aufzeichnen (~10 s)</string>
     <string name="notification_hour_name">Hour</string>
 
 </resources>

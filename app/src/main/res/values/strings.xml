@@ -22,6 +22,7 @@
     <string name="batteryWarning">Please charge the smartphone.</string>
     <string name="batteryCritical">Battery level critical - Application stopped.</string>
     <string name="noUSB">Microphone not found.</string>
+    <string name="noSID">SpeakerID reference not found.</string>
 
     <string name="noInternet">No internet connection available.</string>
 
@@ -104,5 +105,7 @@
     <string name="pref_filterHpFrequency_title">Cutoff frequency in Hz</string>
     <string name="pref_downsample_title">Downsampling</string>
     <string name="pref_downsample_summary">Downsample audio (fixed factor 2)</string>
+    <string name="pref_captureReference_title">SpeakerID reference</string>
+    <string name="pref_captureReference_summary">Record reference for SpeakerID (~10 s)</string>
     <string name="notification_hour_name">Hour</string>
 </resources>
