@@ -35,6 +35,7 @@ public class SystemStatus {
     private StageManagerStates stageMangerState = StageManagerStates.undefined;
     private SystemStatusListener mySystemStatusListener;
     private long raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
+    private long automaticQuestionnaire_TimerInterval_in_s = -1;
     private BroadcastReceiver mStageStateReceiver;
     private Preferences preferences;
     private int BatteryManagerStatus = -1;
@@ -121,7 +122,7 @@ public class SystemStatus {
                         hasRFCOMM = isRFCOMM(nodes.item(i).getChildNodes());
                 }
             } catch (Exception e) {
-                LogIHAB.log("Error while checking for RFCOMM: " + e.getMessage());
+                //LogIHAB.log("Error while checking for RFCOMM: " + e.getMessage());
             }
         }
         return hasRFCOMM;
@@ -225,7 +226,8 @@ public class SystemStatus {
                             if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
                                 XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
                                 if (mXmlReader.getQuestionnaireHasTimer())
-                                    raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + mXmlReader.getNewTimerInterval() * 1000;
+                                    automaticQuestionnaire_TimerInterval_in_s = mXmlReader.getNewTimerInterval();
+                                    raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + automaticQuestionnaire_TimerInterval_in_s * 1000;
                                 //else
                                 //    raiseAutomaticQuestionaire_TimerEventAt = Long.MAX_VALUE;
                             }
@@ -235,6 +237,9 @@ public class SystemStatus {
                         if (!isCharging)
                             activityStates.InfoText = mContext.getResources().getString(R.string.noUSB);
                         break;
+                    case sid_no_reference:
+                        activityStates.InfoText = mContext.getResources().getString(R.string.noSID);
+
                 }
             }
             // Battery State
@@ -270,6 +275,14 @@ public class SystemStatus {
         raiseAutomaticQuestionaire_TimerEventAt = Long.MIN_VALUE;
         activityStates.isAutomaticQuestionaireActive = false;
         Refresh();
+    }
+
+    public Long GetAutomaticQuestionaireTimer() {
+        return raiseAutomaticQuestionaire_TimerEventAt;
+    }
+
+    public Long GetAutomaticQuestionaireTimerInterval() {
+        return automaticQuestionnaire_TimerInterval_in_s;
     }
 
     private Document startStageManager() {
@@ -405,7 +418,7 @@ public class SystemStatus {
         LogIHAB.log("   usbCutsDataStorage: " + this.preferences.usbCutsDataStorage());
         LogIHAB.log("   autoStartActivity: " + this.preferences.autoStartActivity());
         LogIHAB.log("   inputProfile: " + this.preferences.inputProfile());
-        LogIHAB.log("   timeoutForTransmitterNotFoundMessage: " + this.preferences.timeoutForTransmitterNotFoundMessage());
+        //LogIHAB.log("   timeoutForTransmitterNotFoundMessage: " + this.preferences.timeoutForTransmitterNotFoundMessage());
         LogIHAB.log("   isKioskModeNecessary: " + this.preferences.isKioskModeNecessary());
         LogIHAB.log("   isPowerOffAllowed: " + this.preferences.isPowerOffAllowed());
         LogIHAB.log("   useQuestionnaire: " + this.preferences.useQuestionnaire());
