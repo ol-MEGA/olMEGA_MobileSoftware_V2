@@ -38,6 +38,7 @@ public class ReferenceCaptureActivity extends Activity {
     private TextView timerView;
     private Button recordButton;
     private Button playButton;
+    private Button deleteButton;
     private final String DEVICE_NAME = "Sennheiser XS LAV USB-C";
 
     private volatile boolean isRecording = false;
@@ -57,10 +58,12 @@ public class ReferenceCaptureActivity extends Activity {
         int recordBtnId = R.id.rc_record_button;
         int timerId = R.id.rc_timer;
         int playBtnId = R.id.rc_play_button;
+        int deleteBtnId = R.id.rc_delete_button;
         statusView = findViewById(statusId);
         timerView = findViewById(timerId);
         recordButton = findViewById(recordBtnId);
         playButton = findViewById(playBtnId);
+        deleteButton = findViewById(deleteBtnId);
         playButton.setText("Play");
 
         recordButton.setOnClickListener(v -> {
@@ -116,6 +119,39 @@ public class ReferenceCaptureActivity extends Activity {
                 playButton.setText("Stop");
                 playReference(lastSavedPath);
             }
+        });
+
+        // delete button handler
+        deleteButton.setOnClickListener(v -> {
+            if (lastSavedPath == null) {
+                Toast.makeText(this, "No reference file to delete", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete reference")
+                    .setMessage("Delete reference.wav?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        try {
+                            File f = new File(lastSavedPath);
+                            boolean ok = f.delete();
+                            if (ok) {
+                                lastSavedPath = null;
+                                handler.post(() -> {
+                                    playButton.setEnabled(false);
+                                    deleteButton.setEnabled(false);
+                                    statusView.setText("reference.wav deleted");
+                                    timerView.setText("00:00");
+                                    Toast.makeText(this, "reference.wav deleted", Toast.LENGTH_SHORT).show();
+                                });
+                            } else {
+                                handler.post(() -> Toast.makeText(this, "Failed to delete reference.wav", Toast.LENGTH_LONG).show());
+                            }
+                        } catch (Exception ex) {
+                            handler.post(() -> Toast.makeText(this, "Error deleting file: " + ex.getMessage(), Toast.LENGTH_LONG).show());
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
 
         timerRunnable = new Runnable() {
@@ -265,10 +301,11 @@ public class ReferenceCaptureActivity extends Activity {
                 handler.post(() -> {
                     lastSavedPath = new File(lastSavedPath).getAbsolutePath();
                     playButton.setEnabled(true);
+                    deleteButton.setEnabled(true);
                     statusView.setText(status);
                     timerView.setText(timerText);
                     Toast.makeText(this, "Saved: " + lastSavedPath, Toast.LENGTH_LONG).show();
-                    recordButton.setText("Start");
+                    recordButton.setText("Record");
                     recordButton.setEnabled(true);
                 });
 
@@ -287,7 +324,7 @@ public class ReferenceCaptureActivity extends Activity {
                 handler.post(() -> {
                     statusView.setText(userMsg);
                     Toast.makeText(this, userMsg, Toast.LENGTH_LONG).show();
-                    recordButton.setText("Start");
+                    recordButton.setText("Record");
                     recordButton.setEnabled(true);
                     handler.removeCallbacks(timerRunnable);
                     timerView.setText("00:00");
@@ -421,10 +458,12 @@ public class ReferenceCaptureActivity extends Activity {
                 handler.post(() -> {
                     statusView.setText(status);
                     timerView.setText(durationForUI);
+                    deleteButton.setEnabled(true);
                 });
             } else {
                 handler.post(() -> {
                     playButton.setEnabled(false);
+                    deleteButton.setEnabled(false);
                     timerView.setText("00:00");
                 });
             }
