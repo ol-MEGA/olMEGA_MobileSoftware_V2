@@ -42,7 +42,7 @@ public class StageAudioWrite extends Stage {
 
     void rebuffer() {
 
-        // we do not want rebuffering in a writer stage, just get the data and and pass it on.
+        // we do not want rebuffering in a writer stage, just get the data and pass it on.
 
         Log.d(LOG, "----------> " + id + ": Start");
 
@@ -64,8 +64,10 @@ public class StageAudioWrite extends Stage {
             }
         }
 
-        if (io != null)
+        if (io != null) {
             io.closeDataOutStream();
+            stream = null;
+        }
 
         Log.d(LOG, id + ": Stopped consuming");
     }
