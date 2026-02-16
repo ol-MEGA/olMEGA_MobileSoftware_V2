@@ -36,7 +36,7 @@ public class StageProcSNR extends Stage {
     private float EVENT_SNR_THRESHOLD = 15f; // dB SNR
     private float EVENT_VAD_RATIO = 0.7f;
     private float event_rms_threshold; // = -40.0f; // -40 dB FS -> ~75 dB SPL
-    private float event_rms_quantile; // = 0.4// f
+    private float event_rms_quantile; // = 0.6 // 40 % over threshold
     private float event_window_sec; // = 300f; // seconds
 
     public StageProcSNR(HashMap parameter) {
@@ -59,8 +59,8 @@ public class StageProcSNR extends Stage {
         }
 
         if (parameter.get("event_quantile") == null) {
-            event_rms_quantile = 0.4f;
-            LogIHAB.log("Event threshold quantile not found, using default (0.4)");
+            event_rms_quantile = 0.6f;
+            LogIHAB.log("Event threshold quantile not found, using default (0.6)");
         } else {
             event_rms_quantile = Integer.parseInt((String) parameter.get("event_quantile")) / 100.0f;
             LogIHAB.log("Event threshold quantile set to " + event_rms_quantile);
