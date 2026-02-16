@@ -14,6 +14,8 @@ import java.util.Collections;
 /**
  * Feature extraction: Estimate SNR based on segments with and without voice.
  * Uses output of StageProcVAD.
+ *
+ * This stage also triggers an event-based questionnaire. Currently, only the RMS is used.
  */
 public class StageProcSNR extends Stage {
 
@@ -31,12 +33,40 @@ public class StageProcSNR extends Stage {
     private int LOOKBACK_FRAMES = 2;
 
     // Event Parameter
-    private float EVENT_WINDOW_SEC = 300f; // seconds
-    private float EVENT_RMS_THRESHOLD = -40.0f; // -40 dB FS -> ~75 dB SPL
     private float EVENT_SNR_THRESHOLD = 15f; // dB SNR
     private float EVENT_VAD_RATIO = 0.7f;
+    private float event_rms_threshold; // = -40.0f; // -40 dB FS -> ~75 dB SPL
+    private float event_rms_quantile; // = 0.4// f
+    private float event_window_sec; // = 300f; // seconds
 
-    public StageProcSNR(HashMap parameter) { super(parameter); }
+    public StageProcSNR(HashMap parameter) {
+        super(parameter);
+
+        if (parameter.get("event_threshold") == null) {
+            event_rms_threshold = -40.0f;
+            LogIHAB.log("Event threshold not found, using default (-40 dB FS)");
+        }else {
+            event_rms_threshold = Integer.parseInt((String) parameter.get("event_threshold"));
+            LogIHAB.log("Event threshold set to " + event_rms_threshold + " dB FS");
+        }
+
+        if (parameter.get("event_window") == null) {
+            event_window_sec = 300f;
+            LogIHAB.log("Event window length not found, using default (300 s)");
+        } else {
+            event_window_sec = Integer.parseInt((String) parameter.get("event_window"));
+            LogIHAB.log("Event window length set to " + event_window_sec + " s");
+        }
+
+        if (parameter.get("event_quantile") == null) {
+            event_rms_quantile = 0.4f;
+            LogIHAB.log("Event threshold quantile not found, using default (0.4)");
+        } else {
+            event_rms_quantile = Integer.parseInt((String) parameter.get("event_quantile")) / 100.0f;
+            LogIHAB.log("Event threshold quantile set to " + event_rms_quantile);
+        }
+
+    }
 
     @Override
     void start() {
@@ -133,7 +163,7 @@ public class StageProcSNR extends Stage {
                     Log.i(LOG, "EVENT TRIGGERED!");
                     // if we had an event, set check_event_interval to EVENT_WINDOW_SEC to prevent
                     // firing every check_event_interval
-                    check_event_interval = EVENT_WINDOW_SEC;
+                    check_event_interval = event_window_sec;
                 } else {
                     check_event_interval = 2; // reset if EVENT_WINDOW_SEC is up to check for new events
                 }
@@ -175,7 +205,7 @@ public class StageProcSNR extends Stage {
 //        private ArrayDeque<Float> win_vad = new ArrayDeque<>();
 
         EventDetection(float frameTime) {
-            this.FRAMES = (int) (EVENT_WINDOW_SEC / frameTime);
+            this.FRAMES = (int) (event_window_sec / frameTime);
         }
 
         void update(float rms, float snr, boolean isSpeech) {
@@ -196,12 +226,12 @@ public class StageProcSNR extends Stage {
         }
 
         boolean event() {
-            // require the window to be (mostly) filled before evaluating quantiles
-            int requiredCount = Math.max(1, (int) Math.ceil(0.95 * FRAMES));
-            if (win_rms_db.size() < requiredCount) return false;
+            // require the window to be filled before evaluating quantiles
+            int required_count = Math.max(1, (int) Math.ceil(0.95 * FRAMES));
+            if (win_rms_db.size() < required_count) return false;
 
             // Quantiles
-            float rms_q05 = getQuantile(win_rms_db, 0.05f);
+            float current_rms_quantile = getQuantile(win_rms_db, event_rms_quantile);
 //            float snr_q95 = getQuantile(win_snr_db, 0.95f);
 
             // VAD-Ratio
@@ -209,9 +239,9 @@ public class StageProcSNR extends Stage {
 //            for (float v : win_vad) sum_vad += v;
 //            float ratio_vad = sum_vad / win_vad.size();
 
-            //Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + rms_q05 + " VAD: " + ratio_vad);
+            //Log.d(LOG, "EVENT DETECTION: SNR: " + snr_q95 + " RMS: " + current_rms_quantile + " VAD: " + ratio_vad);
 
-            return (rms_q05 >= EVENT_RMS_THRESHOLD); // &&
+            return (current_rms_quantile >= event_rms_threshold); // &&
 //                    (snr_q95 <= EVENT_SNR_THRESHOLD) &&
 //                    (ratio_vad >= EVENT_VAD_RATIO);
         }
