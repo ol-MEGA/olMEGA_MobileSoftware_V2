@@ -339,18 +339,12 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!SystemStatus.AFExConfigFolder.exists())
                 SystemStatus.AFExConfigFolder.mkdirs();
-            int[] fileListIn = {R.raw.example_mic_in_speaker_out,
-                    R.raw.example_rfcomm_in_audio_out,
-                    R.raw.example_standalone,
-                    R.raw.rfcomm,
+            int[] fileListIn = {
                     R.raw.imfit,
-                    R.raw.imfit_test};
-            String[] fileListOut = {"example_mic_in_speaker_out.xml",
-                    "example_rfcomm_in_audio_out.xml",
-                    "standalone.xml",
-                    "rfcomm.xml",
+                    R.raw.imfit_rundgang};
+            String[] fileListOut = {
                     "imfit.xml",
-                    "imfit_test.xml"};
+                    "imfit_rundgang.xml"};
             // always rewrite configurations
             //if (SystemStatus.AFExConfigFolder.listFiles() == null || SystemStatus.AFExConfigFolder.listFiles().length == 0) {
                 try {
