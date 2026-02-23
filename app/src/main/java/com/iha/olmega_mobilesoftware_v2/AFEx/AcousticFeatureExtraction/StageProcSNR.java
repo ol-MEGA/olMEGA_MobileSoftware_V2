@@ -205,7 +205,7 @@ public class StageProcSNR extends Stage {
 //        private ArrayDeque<Float> win_vad = new ArrayDeque<>();
 
         EventDetection(float frameTime) {
-            this.FRAMES = (int) (event_window_sec / frameTime);
+            this.FRAMES = Math.max(1, (int) (event_window_sec / frameTime));
         }
 
         void update(float rms, float snr, boolean isSpeech) {
@@ -227,7 +227,7 @@ public class StageProcSNR extends Stage {
 
         boolean event() {
             // require the window to be filled before evaluating quantiles
-            int required_count = Math.max(1, (int) Math.ceil(0.95 * FRAMES));
+            int required_count = Math.max(1, FRAMES);
             if (win_rms_db.size() < required_count) return false;
 
             // Quantiles
