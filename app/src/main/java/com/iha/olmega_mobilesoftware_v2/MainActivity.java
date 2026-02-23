@@ -262,7 +262,9 @@ public class MainActivity extends AppCompatActivity {
                     else
                         findViewById(R.id.Action_Wifi).setVisibility(View.VISIBLE);
                 }
-                if (isLocked == false && questionnaireMotivation == QuestionnaireMotivation.auto && controlService.Status().getCurentActivity() == ActivityRequestCode.MainActivity) {
+                if (isLocked == false &&
+                        (questionnaireMotivation == QuestionnaireMotivation.auto || questionnaireMotivation == QuestionnaireMotivation.event) &&
+                        controlService.Status().getCurentActivity() == ActivityRequestCode.MainActivity) {
                     if (automaticQuestTimer <= 0)
                         automaticQuestTimer = 30 * 60;
                     if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
@@ -646,6 +648,11 @@ public class MainActivity extends AppCompatActivity {
 
                 public void updateAutomaticQuestionnaireTimer(String Message, long TimeRemaining) {
                     TextView NextQuestTextView = findViewById(R.id.nextQuestTextView);
+                    // do nothing on event, i.e. don't display remaining time and keep motivation for event and do not set to auto after timer runs out.
+                    if (questionnaireMotivation == QuestionnaireMotivation.event) {
+                        NextQuestTextView.setText("");
+                        return;
+                    }
                     if (TimeRemaining > 0)
                         NextQuestTextView.setText(Message);
                     else
@@ -702,9 +709,10 @@ public class MainActivity extends AppCompatActivity {
                     if (((controlService.Status().GetAutomaticQuestionaireTimer() - System.currentTimeMillis()) / 1000)
                             <= (controlService.Status().GetAutomaticQuestionaireTimerInterval() / 2)) {
                         questionnaireMotivation = QuestionnaireMotivation.event;
-                        startQuestionnaire();
-                        Log.d("EVENT", "Event-based Questionnaire triggered and started");
-                        LogIHAB.log("Event-based Questionnaire started");
+                        //startQuestionnaire(); // DO not start the Questionnaire, but unlock, bring activity back to front so the user can start the q. see SystemStatus.java:350
+                        controlService.startMainActivity(true);
+                        Log.d("EVENT", "Event-based Questionnaire triggered");
+                        LogIHAB.log("Event-based Questionnaire triggered");
                     } else {
                         Log.d("EVENT", "timeout active, no Questionnaire started");
                         LogIHAB.log("Event-based Questionnaire triggered with timeout active");
