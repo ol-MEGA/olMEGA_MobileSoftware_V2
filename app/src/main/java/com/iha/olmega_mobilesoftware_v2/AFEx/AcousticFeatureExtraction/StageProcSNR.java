@@ -33,39 +33,49 @@ public class StageProcSNR extends Stage {
     private int LOOKBACK_FRAMES = 2;
 
     // Event Parameter
+    private boolean event_detection_enabled = true;
     private float EVENT_SNR_THRESHOLD = 15f; // dB SNR
     private float EVENT_VAD_RATIO = 0.7f;
-    private float event_rms_threshold; // = -40.0f; // -40 dB FS -> ~75 dB SPL
-    private float event_rms_quantile; // = 0.6 // 40 % over threshold
-    private float event_window_sec; // = 300f; // seconds
+    private float event_rms_threshold = -40.0f; // -40 dB FS -> ~75 dB SPL
+    private float event_rms_quantile = 0.6f; // 40 % over threshold
+    private float event_window_sec = 300f; // seconds
 
     public StageProcSNR(HashMap parameter) {
         super(parameter);
 
-        if (parameter.get("event_threshold") == null) {
-            event_rms_threshold = -40.0f;
-            LogIHAB.log("Event threshold not found, using default (-40 dB FS)");
+        if (parameter.get("event") == null) {
+            event_detection_enabled = true;
+            LogIHAB.log("Event detection toggle not found, using default (enabled)");
         }else {
-            event_rms_threshold = Integer.parseInt((String) parameter.get("event_threshold"));
-            LogIHAB.log("Event threshold set to " + event_rms_threshold + " dB FS");
+            event_detection_enabled = Integer.parseInt((String) parameter.get("event")) == 1;
+            LogIHAB.log("Event detection set to " + event_detection_enabled);
         }
 
-        if (parameter.get("event_window") == null) {
-            event_window_sec = 300f;
-            LogIHAB.log("Event window length not found, using default (300 s)");
-        } else {
-            event_window_sec = Integer.parseInt((String) parameter.get("event_window"));
-            LogIHAB.log("Event window length set to " + event_window_sec + " s");
-        }
+        if (event_detection_enabled) {
+            if (parameter.get("event_threshold") == null) {
+                event_rms_threshold = -40.0f;
+                LogIHAB.log("Event threshold not found, using default (-40 dB FS)");
+            } else {
+                event_rms_threshold = Integer.parseInt((String) parameter.get("event_threshold"));
+                LogIHAB.log("Event threshold set to " + event_rms_threshold + " dB FS");
+            }
 
-        if (parameter.get("event_quantile") == null) {
-            event_rms_quantile = 0.6f;
-            LogIHAB.log("Event threshold quantile not found, using default (0.6)");
-        } else {
-            event_rms_quantile = Integer.parseInt((String) parameter.get("event_quantile")) / 100.0f;
-            LogIHAB.log("Event threshold quantile set to " + event_rms_quantile);
-        }
+            if (parameter.get("event_window") == null) {
+                event_window_sec = 300f;
+                LogIHAB.log("Event window length not found, using default (300 s)");
+            } else {
+                event_window_sec = Integer.parseInt((String) parameter.get("event_window"));
+                LogIHAB.log("Event window length set to " + event_window_sec + " s");
+            }
 
+            if (parameter.get("event_quantile") == null) {
+                event_rms_quantile = 0.6f;
+                LogIHAB.log("Event threshold quantile not found, using default (0.6)");
+            } else {
+                event_rms_quantile = Integer.parseInt((String) parameter.get("event_quantile")) / 100.0f;
+                LogIHAB.log("Event threshold quantile set to " + event_rms_quantile);
+            }
+        }
     }
 
     @Override
@@ -110,7 +120,6 @@ public class StageProcSNR extends Stage {
         private final float ALPHA_SPEECH;
         private final float ALPHA_SPEECH_WRITE;
         private final float ALPHA_NOISE;
-
         private EventDetection eventDetection;
 
         SNR() {
@@ -119,7 +128,8 @@ public class StageProcSNR extends Stage {
             ALPHA_SPEECH_WRITE = (float) Math.exp(-FRAME_TIME / TAU_SPEECH_WRITE);
             ALPHA_NOISE  = (float) Math.exp(-FRAME_TIME / TAU_NOISE);
 
-            eventDetection = new EventDetection(FRAME_TIME);
+            if (event_detection_enabled)
+                eventDetection = new EventDetection(FRAME_TIME);
         }
 
         void calculate(float[][] input) {
@@ -150,25 +160,28 @@ public class StageProcSNR extends Stage {
                 snr_value[0][0] = rms_speech / Math.max(rms_noise, 1e-9f);
             }
 
-            eventDetection.update(newRMS, snr_value[0][0], isSpeech);
+            if (event_detection_enabled) {
 
-            // check for event every event_interval
-            check_event_timer += FRAME_TIME;
-            if (check_event_timer >= check_event_interval) {
-                if (eventDetection.event()) {
-                    Intent intent = new Intent("QuestionnaireEvent");
-                    intent.setPackage(context.getPackageName());
-                    intent.putExtra("Value", true);
-                    context.sendBroadcast(intent);
-                    Log.i(LOG, "EVENT TRIGGERED!");
-                    // if we had an event, set check_event_interval to EVENT_WINDOW_SEC to prevent
-                    // firing every check_event_interval
-                    check_event_interval = event_window_sec;
-                } else {
-                    check_event_interval = 2; // reset if EVENT_WINDOW_SEC is up to check for new events
+                eventDetection.update(newRMS, snr_value[0][0], isSpeech);
+
+                // check for event every event_interval
+                check_event_timer += FRAME_TIME;
+                if (check_event_timer >= check_event_interval) {
+                    if (eventDetection.event()) {
+                        Intent intent = new Intent("QuestionnaireEvent");
+                        intent.setPackage(context.getPackageName());
+                        intent.putExtra("Value", true);
+                        context.sendBroadcast(intent);
+                        Log.i(LOG, "EVENT TRIGGERED!");
+                        // if we had an event, set check_event_interval to EVENT_WINDOW_SEC to prevent
+                        // firing every check_event_interval
+                        check_event_interval = event_window_sec;
+                    } else {
+                        check_event_interval = 2; // reset if EVENT_WINDOW_SEC is up to check for new events
+                    }
+                    // reset
+                    check_event_timer = 0f;
                 }
-                // reset
-                check_event_timer = 0f;
             }
 
             float[][] out = new float[1][3];
