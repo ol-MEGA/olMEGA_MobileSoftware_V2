@@ -225,9 +225,11 @@ public class SystemStatus {
                             activityStates.InfoText = mContext.getResources().getString(R.string.menuText);
                             if (raiseAutomaticQuestionaire_TimerEventAt == Long.MIN_VALUE) { // Preferences().useQuestionnaireTimer() &&
                                 XMLReader mXmlReader = new XMLReader(mContext, preferences.selectedQuest());
-                                if (mXmlReader.getQuestionnaireHasTimer())
+                                // TODO: re-check!
+                                if (mXmlReader.getQuestionnaireHasTimer()) {
                                     automaticQuestionnaire_TimerInterval_in_s = mXmlReader.getNewTimerInterval();
                                     raiseAutomaticQuestionaire_TimerEventAt = System.currentTimeMillis() + automaticQuestionnaire_TimerInterval_in_s * 1000;
+                                }
                                 //else
                                 //    raiseAutomaticQuestionaire_TimerEventAt = Long.MAX_VALUE;
                             }
@@ -325,6 +327,7 @@ public class SystemStatus {
 
     private void updateAutomaticQuestionnaireTimer() {
         if (mySystemStatusListener != null) {
+            // if active and event in bounds
             if (activityStates.isAutomaticQuestionaireActive && raiseAutomaticQuestionaire_TimerEventAt != Long.MIN_VALUE && raiseAutomaticQuestionaire_TimerEventAt != Long.MAX_VALUE) {
                 String mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
                 String[] mTempTextCountDownRemaining = mCountDownString.split("%");
@@ -340,9 +343,12 @@ public class SystemStatus {
                             mTempTextCountDownRemaining[3]);
                 } else
                     activityStates.NextQuestText = "";
+                // update text in activity
                 mySystemStatusListener.updateAutomaticQuestionnaireTimer(activityStates.NextQuestText, remaining);
+                // event is between 5 and 10 s away, start activity
                 if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() < 10 * 1000 && raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() > 5 * 1000)
                     mContext.startMainActivity(true);
+                // timer's up, trigger event
                 else if (raiseAutomaticQuestionaire_TimerEventAt - System.currentTimeMillis() <= 0) {
                     if (AutomaticQuestionaireIsTriggered == false)
                         LogIHAB.log("StateProposing");
