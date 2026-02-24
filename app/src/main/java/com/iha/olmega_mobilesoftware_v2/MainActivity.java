@@ -93,7 +93,8 @@ public class MainActivity extends AppCompatActivity {
     private long eventQuestTimer = System.currentTimeMillis() / 1000;
     private long deviceNotFoundTimer = 30;
     private boolean wifiActivated = false, AppClosed = true;
-    private boolean questionaireEnabled = false;
+    private boolean questionnaireEnabled = false;
+    private int questionnaireReminders = 3;
     private States profileState = States.undefined;
 
     private static Context context;
@@ -198,9 +199,9 @@ public class MainActivity extends AppCompatActivity {
         public boolean onTouch(View view, MotionEvent motionEvent) {
             switch (motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if (!questionaireEnabled && profileState == States.connecting)
+                    if (!questionnaireEnabled && profileState == States.connecting)
                         timerLongClick.start();
-                    else if (questionaireEnabled)
+                    else if (questionnaireEnabled)
                         startQuestionnaire();
                     break;
                 case MotionEvent.ACTION_UP:
@@ -210,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         // Timer enabling long click for user access to preferences menu
-        private long durationLongClick = 2 * 1000;
+        private long durationLongClick = 5 * 1000;
 
         private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
             @Override
@@ -218,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                if (!questionaireEnabled && profileState == States.connecting) {
+                if (!questionnaireEnabled && profileState == States.connecting) {
                     Toast.makeText(MainActivity.this, "Restarting App...", Toast.LENGTH_SHORT).show();
                     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                     if (mBluetoothAdapter.isEnabled())
@@ -265,20 +266,33 @@ public class MainActivity extends AppCompatActivity {
                 if (isLocked == false &&
                         (questionnaireMotivation == QuestionnaireMotivation.auto || questionnaireMotivation == QuestionnaireMotivation.event) &&
                         controlService.Status().getCurentActivity() == ActivityRequestCode.MainActivity) {
-                    if (automaticQuestTimer <= 0)
-                        automaticQuestTimer = 30 * 60;
-                    if (automaticQuestTimer >= 29 * 60 && controlService.Status().Preferences().silentAlarmActive == false) {
-                        vibratorQuest.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-                        LogIHAB.log("Vibration: 500");
+                    if (automaticQuestTimer <= 0 && questionnaireReminders >= 0) {   // if timer is up,
+                        automaticQuestTimer = 15 * 60;  // set to 15 minutes until next reminders
+                        questionnaireReminders -= 1;    // update reminders left
                     }
-                    TextView tempView = findViewById(R.id.InfoTextView);
-                    if (tempView.getCurrentTextColor() == ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
-                        setInfoTextView(true);
-                    else
-                        setInfoTextView(false);
-                    automaticQuestTimer = automaticQuestTimer - 1;
+                    if (questionnaireReminders >= 0) {  // only continue if there are reminders left
+                        // vibrate for 30 seconds after resetting timer above (15*60 - 29*30 = 900 - 870 = 30)
+                        if (automaticQuestTimer >= 29 * 30 && controlService.Status().Preferences().silentAlarmActive == false) {
+                            vibratorQuest.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                            LogIHAB.log("Vibration: 500");
+                        }
+                        TextView tempView = findViewById(R.id.InfoTextView);
+                        if (tempView.getCurrentTextColor() == ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
+                            setInfoTextView(true);
+                        else
+                            setInfoTextView(false);
+                        automaticQuestTimer = automaticQuestTimer - 1;
+                    } else {
+                        // reset questionnaire-related variables
+                        LogIHAB.log("No questionnaire started after 3 reminders, resetting timers");
+                        controlService.Status().ResetAutomaticQuestionaireTimer();
+                        automaticQuestTimer = Long.MIN_VALUE;
+                        questionnaireMotivation = QuestionnaireMotivation.manual;
+                        questionnaireReminders = 3;
+                    }
                 } else
                     setInfoTextView(false);
+
                 dateTimeHandler.postDelayed(this, 1000);
             }
         }, 0);
@@ -715,8 +729,8 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.Layout_CalibrationValues).setVisibility((activityStates.showCalibrationValuesError ? 0 : 1) * 8);
                 findViewById(R.id.charging).setVisibility((activityStates.isCharging ? 0 : 1) * 8);
                 InfoTextView.setText(activityStates.InfoText);
-                questionaireEnabled = activityStates.questionaireEnabled;
-                if (questionaireEnabled && controlService != null && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
+                questionnaireEnabled = activityStates.questionaireEnabled;
+                if (questionnaireEnabled && controlService != null && controlService.Status().Preferences().allowSilentAlarm() && findViewById(R.id.disableVibration).getVisibility() != View.VISIBLE)
                     findViewById(R.id.disableVibration).setVisibility(View.VISIBLE);
                 if (controlService != null && controlService.Status().Preferences().isAdmin())
                     findViewById(R.id.logo).setBackgroundResource(R.color.BatteryGreen);
