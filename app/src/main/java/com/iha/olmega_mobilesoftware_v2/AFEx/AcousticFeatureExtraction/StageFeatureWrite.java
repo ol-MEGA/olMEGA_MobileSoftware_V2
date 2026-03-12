@@ -118,7 +118,7 @@ public class StageFeatureWrite extends Stage {
     }
 
     void rebuffer() {
-        // we do not want rebuffering in a writer stage, just get the data and and pass it on.
+        // we do not want rebuffering in a writer stage, just get the data and pass it on.
         boolean abort = false;
         Log.d(LOG, "----------> " + id + ": Start processing");
         while (!Thread.currentThread().isInterrupted() & !abort) {
@@ -143,6 +143,7 @@ public class StageFeatureWrite extends Stage {
             }
         }
         closeFeatureFile();
+        startTime = null;
         Log.d(LOG, id + ": Stopped consuming");
     }
 
