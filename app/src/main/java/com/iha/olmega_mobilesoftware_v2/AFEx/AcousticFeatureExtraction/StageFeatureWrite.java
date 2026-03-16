@@ -160,7 +160,7 @@ public class StageFeatureWrite extends Stage {
         if (featureRAF != null) {
             closeFeatureFile();
         }
-        if (startTime == null) {
+        if (startTime == null || currentTime == null) {
             startTime = Stage.startTime;
             currentTime = startTime;
         }
